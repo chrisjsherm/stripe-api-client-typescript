@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2021", // Target version of JavaScript
+    "module": "commonjs",
+    "strict": true, // Enable strict type-checking options
+    "strictPropertyInitialization": false,
+    "esModuleInterop": true, // Enable easier importing of CommonJS modules
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "forceConsistentCasingInFileNames": true, // Enforce consistent file naming
+    "outDir": "./dist", // Output directory for compiled files
+    "sourceMap": true, // Generate source maps for debugging
+    "resolveJsonModule": true, // Allow importing JSON modules
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": [
+    "src/**/*.ts" // Path to your TypeScript files,
+  ],
+  "exclude": [
+    "node_modules" // Exclude node_modules directory
+  ]
+}

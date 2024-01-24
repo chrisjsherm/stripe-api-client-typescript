@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import getStripe from "../helpers/get-stripe.helper";
 
@@ -22,21 +23,30 @@ export async function createPaymentIntent(
     },
   };
 
+  res.type("application/json");
   try {
     const paymentIntent: Stripe.PaymentIntent =
       await stripe.paymentIntents.create(params);
 
-    // Send publishable key and PaymentIntent client_secret to client.
     res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
-  } catch (e) {
-    console.error("❗️ Error creating payment intent.", e);
-
-    res.status(400).send({
-      error: {
-        message: (e as Error).message,
+      data: {
+        clientSecret: paymentIntent.client_secret,
       },
+    });
+  } catch (err) {
+    const defaultMessage = "❗️Error creating payment intent.";
+    const defaultStatusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+    console.error(defaultMessage, err);
+
+    if (err instanceof Stripe.errors.StripeAPIError) {
+      res
+        .status(err.statusCode ?? defaultStatusCode)
+        .send({ message: err.message });
+      return;
+    }
+
+    res.status(defaultStatusCode).send({
+      message: defaultMessage,
     });
   }
 }

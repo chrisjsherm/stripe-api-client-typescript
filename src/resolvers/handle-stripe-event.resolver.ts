@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
+import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import getStripe from "../helpers/get-stripe.helper";
 
-const stripe = getStripe();
+const config = getEnvironmentConfiguration();
+const stripe = getStripe(config);
 
 /**
  * Handle Stripe events via this webhook endpoint.
@@ -15,7 +17,7 @@ export async function handleStripeEvent(
   res: Response
 ): Promise<void> {
   const signature = req.headers["stripe-signature"] ?? "";
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const secret = config.payments.webhookSigningSecret;
 
   if (secret === undefined) {
     const error = new Error(

@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
+import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import getStripe from "../helpers/get-stripe.helper";
 
-const stripe = getStripe();
+const config = getEnvironmentConfiguration();
+const stripe = getStripe(config);
 
 /**
  * Create a Stripe PaymentIntent and return the unique identifier to the client.
@@ -30,7 +32,7 @@ export async function createPaymentIntent(
 
     res.send({
       data: {
-        clientSecret: paymentIntent.client_secret,
+        client_secret: paymentIntent.client_secret,
       },
     });
   } catch (err) {

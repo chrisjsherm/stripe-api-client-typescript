@@ -1,14 +1,22 @@
+import cors from "cors";
 import express from "express";
+import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { createPaymentIntent } from "./resolvers/create-payment-intent.resolver";
 import { handleStripeEvent } from "./resolvers/handle-stripe-event.resolver";
-
-const DEFAULT_PORT = 4242;
 
 /**
  * Start the Express web server.
  */
 export async function startServer() {
+  const config = getEnvironmentConfiguration();
   const app = express();
+
+  app.use(express.json());
+  app.use(
+    cors({
+      origin: config.cors.allowedOrigins,
+    })
+  );
 
   app.post("/payment-intent", createPaymentIntent);
   app.post(
@@ -17,11 +25,9 @@ export async function startServer() {
     handleStripeEvent
   );
 
-  const port = process.env.PORT || DEFAULT_PORT;
-
   try {
-    await app.listen(port);
-    console.info(`🚀 Server running at http://localhost:${port}`);
+    await app.listen(config.port);
+    console.info(`🚀 Server running at http://localhost:${config.port}`);
   } catch (error) {
     console.error("❗️ Error starting server", error);
     throw error;

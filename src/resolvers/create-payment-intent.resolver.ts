@@ -37,17 +37,16 @@ export async function createPaymentIntent(
     });
   } catch (err) {
     const defaultMessage = "❗️Error creating payment intent.";
-    const defaultStatusCode = StatusCodes.INTERNAL_SERVER_ERROR;
     console.error(defaultMessage, err);
 
-    if (err instanceof Stripe.errors.StripeAPIError) {
+    if (err instanceof Stripe.errors.StripeError) {
       res
-        .status(err.statusCode ?? defaultStatusCode)
+        .status(err.statusCode ?? StatusCodes.BAD_GATEWAY)
         .send({ message: err.message });
       return;
     }
 
-    res.status(defaultStatusCode).send({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
       message: defaultMessage,
     });
   }

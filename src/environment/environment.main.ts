@@ -6,17 +6,32 @@ import { getEnvironmentFilePath } from "./helpers/get-environment-file-path.help
 import { writeEnvironmentFiles } from "./helpers/write-environment-files.helper";
 import { productionConfiguration } from "./production.configuration";
 
+const defaultHttpRequestTimeoutMs = 5000;
+const defaultPort = 4242;
+
 // Write the environment files when Node runs this file.
 (function main(...environmentFiles: IEnvironmentFile[]): void {
   writeEnvironmentFiles(...environmentFiles);
 })(
   {
     filePath: getEnvironmentFilePath(BuildTarget.Development),
-    buildEnvironment: developmentConfiguration,
+    buildEnvironment: {
+      httpRequestTimeoutMs: Number.parseInt(
+        process.env.HTTP_REQUEST_TIMEOUT_MS ??
+          defaultHttpRequestTimeoutMs.toString()
+      ),
+      port: Number.parseInt(process.env.PORT ?? defaultPort.toString()),
+      ...developmentConfiguration,
+    },
   },
   {
     filePath: getEnvironmentFilePath(BuildTarget.Production),
     buildEnvironment: {
+      httpRequestTimeoutMs: Number.parseInt(
+        process.env.HTTP_REQUEST_TIMEOUT_MS ??
+          defaultHttpRequestTimeoutMs.toString()
+      ),
+      port: Number.parseInt(process.env.PORT ?? defaultPort.toString()),
       ...productionConfiguration,
       isDebug: false,
     },

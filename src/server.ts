@@ -1,7 +1,7 @@
 import cors from "cors";
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
+import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
-import { timeoutMiddleware } from "./middleware/timeout.middleware";
 import { createPaymentIntent } from "./resolvers/create-payment-intent.resolver";
 import { handleStripeEvent } from "./resolvers/handle-stripe-event.resolver";
 
@@ -12,13 +12,24 @@ export async function startServer() {
   const config = getEnvironmentConfiguration();
   const app = express();
 
-  app.use(timeoutMiddleware(config.httpRequestTimeoutMs));
   app.use(express.json());
   app.use(
     cors({
       origin: config.cors.allowedOrigins,
     })
   );
+  app.use(function configureTimeout(
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    res.setTimeout(config.httpRequestTimeoutMs, () => {
+      const statusCode = StatusCodes.REQUEST_TIMEOUT;
+      res.status(statusCode).json({ message: getReasonPhrase(statusCode) });
+    });
+
+    next();
+  });
 
   app.post("/payment-intent", createPaymentIntent);
   app.post(

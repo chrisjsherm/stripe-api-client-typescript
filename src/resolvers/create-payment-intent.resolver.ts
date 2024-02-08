@@ -36,6 +36,11 @@ export async function createPaymentIntent(
       },
     });
   } catch (err) {
+    if (res.headersSent) {
+      // Error already handled (e.g., by middleware timeout).
+      return;
+    }
+
     const defaultMessage = "❗️Error creating payment intent.";
     console.error(defaultMessage, err);
 

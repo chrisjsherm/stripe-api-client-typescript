@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import getStripe from "../helpers/get-stripe.helper";
+import { handleStripeApiError } from "../helpers/handle-stripe-error.helper";
 
 const config = getEnvironmentConfiguration();
 const stripe = getStripe(config);
@@ -36,23 +36,6 @@ export async function createPaymentIntent(
       },
     });
   } catch (err) {
-    if (res.headersSent) {
-      // Error already handled (e.g., by middleware timeout).
-      return;
-    }
-
-    const defaultMessage = "❗️Error creating payment intent.";
-    console.error(defaultMessage, err);
-
-    if (err instanceof Stripe.errors.StripeError) {
-      res
-        .status(err.statusCode ?? StatusCodes.BAD_GATEWAY)
-        .send({ message: err.message });
-      return;
-    }
-
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
-      message: defaultMessage,
-    });
+    handleStripeApiError(err, "❗️ Error creating payment intent.", res);
   }
 }

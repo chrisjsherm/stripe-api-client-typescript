@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { createPaymentIntent } from "./resolvers/create-payment-intent.resolver";
+import { getPaymentIntent } from "./resolvers/get-payment-intent.controller";
 import { handleStripeEvent } from "./resolvers/handle-stripe-event.resolver";
 
 /**
@@ -32,6 +33,7 @@ export async function startServer() {
   });
 
   app.post("/payment-intent", createPaymentIntent);
+  app.post("/payment-intent/:id", getPaymentIntent);
   app.post(
     "/webhook",
     express.raw({ type: "application/json" }),

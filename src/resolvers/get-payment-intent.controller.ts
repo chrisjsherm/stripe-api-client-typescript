@@ -31,16 +31,18 @@ export async function getPaymentIntent(
 
   try {
     const paymentIntent: Stripe.Response<Stripe.PaymentIntent> =
-      await stripe.paymentIntents.retrieve(id, {
-        client_secret: clientSecret,
-      });
+      await stripe.paymentIntents.retrieve(id);
 
     res.send({
       data: {
-        id: paymentIntent.id,
-        client_secret: paymentIntent.client_secret,
-        status: paymentIntent.status,
         amount: paymentIntent.amount,
+        client_secret: paymentIntent.client_secret,
+        currency: paymentIntent.currency,
+        description: paymentIntent.description,
+        id: paymentIntent.id,
+        last_payment_error: paymentIntent.last_payment_error,
+        receipt_email: paymentIntent.receipt_email,
+        status: paymentIntent.status,
       },
     });
   } catch (err) {

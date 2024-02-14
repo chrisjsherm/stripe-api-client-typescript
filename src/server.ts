@@ -1,7 +1,9 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
+import { verifyJWT } from "./helpers/verify-jwt.helper";
 import { createPaymentIntent } from "./resolvers/create-payment-intent.resolver";
 import { getPaymentIntent } from "./resolvers/get-payment-intent.controller";
 import { handleStripeEvent } from "./resolvers/handle-stripe-event.resolver";
@@ -19,6 +21,7 @@ export async function startServer() {
       origin: config.cors.allowedOrigins,
     })
   );
+  app.use(cookieParser());
   app.use(function configureTimeout(
     _req: Request,
     res: Response,
@@ -31,6 +34,7 @@ export async function startServer() {
 
     next();
   });
+  app.use(verifyJWT);
 
   app.post("/payment-intent", createPaymentIntent);
   app.post("/payment-intent/:id", getPaymentIntent);

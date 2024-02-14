@@ -19,6 +19,7 @@ export async function startServer() {
   app.use(
     cors({
       origin: config.cors.allowedOrigins,
+      credentials: true,
     })
   );
   app.use(cookieParser());

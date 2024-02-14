@@ -27,8 +27,6 @@ export async function getPaymentIntent(
     return;
   }
 
-  const clientSecret = req.body.clientSecret;
-
   try {
     const paymentIntent: Stripe.Response<Stripe.PaymentIntent> =
       await stripe.paymentIntents.retrieve(id);
@@ -43,6 +41,8 @@ export async function getPaymentIntent(
         last_payment_error: paymentIntent.last_payment_error,
         receipt_email: paymentIntent.receipt_email,
         status: paymentIntent.status,
+        statement_descriptor: paymentIntent.statement_descriptor,
+        statement_descriptor_suffix: paymentIntent.statement_descriptor_suffix,
       },
     });
   } catch (err) {

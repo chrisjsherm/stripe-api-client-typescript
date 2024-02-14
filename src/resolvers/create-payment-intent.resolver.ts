@@ -19,10 +19,13 @@ export async function createPaymentIntent(
   // Create a PaymentIntent with the order amount and currency.
   const params: Stripe.PaymentIntentCreateParams = {
     amount: 1099,
-    currency: "USD",
     automatic_payment_methods: {
       enabled: true,
     },
+    currency: "USD",
+    description: "BTX Now annual subscription",
+    statement_descriptor: "BTX Now 1 yr subscribe",
+    statement_descriptor_suffix: "BTX Now 1 yr subscribe",
   };
 
   res.type("application/json");

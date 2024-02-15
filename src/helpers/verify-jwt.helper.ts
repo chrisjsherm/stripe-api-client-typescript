@@ -44,13 +44,13 @@ export async function verifyJWT(
     } catch (e) {
       if (e instanceof jose.errors.JOSEError) {
         res.status(401);
-        res.send({ error: e.message, code: e.code });
+        res.send({ message: e.message, code: e.code });
       } else {
         const code = StatusCodes.INTERNAL_SERVER_ERROR;
         console.error(getReasonPhrase(code) + ":");
         console.dir(e);
         res.status(code);
-        res.send({ error: JSON.stringify(e, null, 2) });
+        res.send({ message: JSON.stringify(e, null, 2) });
       }
       next(e);
     }

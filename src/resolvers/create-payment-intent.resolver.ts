@@ -22,7 +22,7 @@ export async function createPaymentIntent(
     automatic_payment_methods: {
       enabled: true,
     },
-    currency: "USD",
+    currency: "usd",
     description: "BTX Now annual subscription",
     statement_descriptor: "BTX Now 1 yr subscribe",
     statement_descriptor_suffix: "BTX Now 1 yr subscribe",

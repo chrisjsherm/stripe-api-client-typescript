@@ -34,11 +34,14 @@ export async function getPaymentIntent(
     res.send({
       data: {
         amount: paymentIntent.amount,
+        canceled_at: paymentIntent.canceled_at,
+        cancellation_reason: paymentIntent.cancellation_reason,
         client_secret: paymentIntent.client_secret,
         currency: paymentIntent.currency,
         description: paymentIntent.description,
         id: paymentIntent.id,
         last_payment_error: paymentIntent.last_payment_error,
+        payment_method: paymentIntent.payment_method,
         receipt_email: paymentIntent.receipt_email,
         status: paymentIntent.status,
         statement_descriptor: paymentIntent.statement_descriptor,

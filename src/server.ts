@@ -2,12 +2,12 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import { createPaymentIntent } from "./controllers/create-payment-intent.resolver";
+import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
+import { handleStripeEvent } from "./controllers/handle-stripe-event.resolver";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasRole } from "./helpers/has-role.helper";
 import { verifyJWT } from "./helpers/verify-jwt.helper";
-import { createPaymentIntent } from "./resolvers/create-payment-intent.resolver";
-import { getPaymentIntent } from "./resolvers/get-payment-intent.controller";
-import { handleStripeEvent } from "./resolvers/handle-stripe-event.resolver";
 
 /**
  * Start the Express web server.

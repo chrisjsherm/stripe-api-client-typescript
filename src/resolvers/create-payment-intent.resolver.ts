@@ -35,6 +35,7 @@ export async function createPaymentIntent(
 
     res.send({
       data: {
+        id: paymentIntent.id,
         client_secret: paymentIntent.client_secret,
       },
     });

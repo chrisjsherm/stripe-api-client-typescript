@@ -9,6 +9,10 @@ export const developmentConfiguration: Omit<
   "httpRequestTimeoutMs" | "port"
 > = {
   isDebug: true,
+  auth: {
+    apiSecret: process.env.AUTH_FUSION_AUTH_API_SECRET,
+    url: process.env.AUTH_BASE_URL,
+  },
   cors: {
     allowedOrigins: ["http://localhost:4200"],
   },

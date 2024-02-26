@@ -5,13 +5,15 @@ let stripe: Stripe;
 
 /**
  * Get the Stripe SDK object as a singleton.
+ * @param environment Build environment metadata.
  * @returns Stripe SDK object.
+ * @throws Error if environment variable for payments secret is not set
  */
-function getStripe(environment: IBuildConfiguration) {
+function getStripe(environment: IBuildConfiguration): Stripe {
   const stripeKey = environment.payments.secretKey;
 
   if (!stripeKey) {
-    throw new Error(`Environment variable for payments secret key is not set.`);
+    throw new Error("Environment variable for payments secret key is not set.");
   }
 
   if (!stripe) {

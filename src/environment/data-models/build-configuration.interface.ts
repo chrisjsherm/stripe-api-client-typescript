@@ -6,6 +6,11 @@ export interface IBuildConfiguration {
 
   isDebug?: boolean;
 
+  auth: {
+    apiSecret: string | undefined;
+    url: string | undefined;
+  };
+
   cors: {
     allowedOrigins: string[];
   };

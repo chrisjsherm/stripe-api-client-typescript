@@ -5,6 +5,7 @@ import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { createPaymentIntent } from "./controllers/create-payment-intent.controller";
 import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
 import { handleStripeEvent } from "./controllers/handle-stripe-event.controller";
+import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasRole } from "./helpers/has-role.helper";
 import { verifyJWT } from "./helpers/verify-jwt.helper";
@@ -38,11 +39,16 @@ export async function startServer() {
   });
   app.use(verifyJWT);
 
+  // FusionAuth
+  app.post("/customer/verify-email", resendEmailVerificationMessage);
+
+  // Stripe
   app.post("/payment-intent", hasRole(["make-payments"]), createPaymentIntent);
   app.post("/payment-intent/:id", hasRole(["make-payments"]), getPaymentIntent);
   app.post(
     "/webhook",
     express.raw({ type: "application/json" }),
+    hasRole(["read-payment-events"]),
     handleStripeEvent
   );
 

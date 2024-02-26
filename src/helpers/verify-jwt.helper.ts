@@ -4,7 +4,7 @@ import * as jose from "jose";
 
 const COOKIE_KEY_ACCESS_TOKEN = "app.at";
 const jwksClient = jose.createRemoteJWKSet(
-  new URL(`${process.env.BASE_URL}/.well-known/jwks.json`)
+  new URL(`${process.env.AUTH_BASE_URL}/.well-known/jwks.json`)
 );
 
 /**
@@ -35,8 +35,8 @@ export async function verifyJWT(
   } else {
     try {
       await jose.jwtVerify(accessToken, jwksClient, {
-        issuer: process.env.BASE_URL,
-        audience: process.env.CLIENT_ID,
+        issuer: process.env.AUTH_BASE_URL,
+        audience: process.env.AUTH_FUSION_AUTH_CLIENT_ID,
       });
 
       (req as Request & { verifiedToken: string }).verifiedToken = accessToken;

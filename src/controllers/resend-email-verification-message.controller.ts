@@ -41,7 +41,7 @@ export async function resendEmailVerificationMessage(
 
     res.status(StatusCodes.CREATED).send({
       data: {
-        verificationId: result.response.verificationId,
+        sentTimestampUtcMs: new Date().getTime(),
       },
     });
   } catch (e) {

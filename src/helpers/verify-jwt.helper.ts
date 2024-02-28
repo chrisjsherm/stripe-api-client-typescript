@@ -36,7 +36,7 @@ export async function verifyJWT(
     try {
       await jose.jwtVerify(accessToken, jwksClient, {
         issuer: process.env.AUTH_BASE_URL,
-        audience: process.env.AUTH_FUSION_AUTH_CLIENT_ID,
+        audience: process.env.AUTH_FUSION_AUTH_APP_ID,
       });
 
       (req as Request & { verifiedToken: string }).verifiedToken = accessToken;

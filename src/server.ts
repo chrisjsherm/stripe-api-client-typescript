@@ -7,7 +7,7 @@ import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
 import { handleStripeEvent } from "./controllers/handle-stripe-event.controller";
 import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
-import { hasRole } from "./helpers/has-role.helper";
+import { hasAnyRole } from "./helpers/has-any-role.helper";
 import { verifyJWT } from "./helpers/verify-jwt.helper";
 
 /**
@@ -43,12 +43,12 @@ export async function startServer() {
   app.post("/customer/verify-email", resendEmailVerificationMessage);
 
   // Stripe
-  app.post("/payment-intent", hasRole(["make-payments"]), createPaymentIntent);
-  app.post("/payment-intent/:id", hasRole(["make-payments"]), getPaymentIntent);
+  app.post("/payment-intent", hasAnyRole([]), createPaymentIntent);
+  app.post("/payment-intent/:id", hasAnyRole([]), getPaymentIntent);
   app.post(
     "/webhook",
     express.raw({ type: "application/json" }),
-    hasRole(["read-payment-events"]),
+    hasAnyRole(["read-payment-events"]),
     handleStripeEvent
   );
 

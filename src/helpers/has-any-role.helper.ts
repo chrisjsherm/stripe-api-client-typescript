@@ -3,25 +3,26 @@ import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { JWTPayload, decodeJwt } from "jose";
 
 /**
- * Determine whether the user has any of the required roles for the protected
- * resource.
+ * Determine whether a verified customer has any of the required roles for the
+ * protected resource. Unverified customers will automatically be denied.
  * @param roles Roles which have access to the resource
  */
-export function hasRole(roles: string[]) {
+export function hasAnyRole(roles: string[]) {
   return function handleRequest(
     req: Request,
     res: Response,
     next: NextFunction
   ): void {
-    const authToken: JWTPayload & { roles: string[] } = decodeJwt(
-      (req as Request & { verifiedToken: string }).verifiedToken
-    );
+    const authToken: JWTPayload & { email_verified: boolean; roles: string[] } =
+      decodeJwt((req as Request & { verifiedToken: string }).verifiedToken);
     const userRoles = new Set<string>(authToken.roles);
 
     if (
-      roles.some((role: string): boolean => {
-        return userRoles.has(role);
-      })
+      authToken.email_verified &&
+      (roles.length === 0 ||
+        roles.some((role: string): boolean => {
+          return userRoles.has(role);
+        }))
     ) {
       return next();
     }

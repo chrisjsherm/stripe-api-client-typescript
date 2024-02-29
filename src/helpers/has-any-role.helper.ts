@@ -17,12 +17,21 @@ export function hasAnyRole(roles: string[]) {
       decodeJwt((req as Request & { verifiedToken: string }).verifiedToken);
     const userRoles = new Set<string>(authToken.roles);
 
+    if (!authToken.email_verified) {
+      const code = StatusCodes.FORBIDDEN;
+      const message = `${getReasonPhrase(
+        code
+      )}: Your email must be verified to access this resource.`;
+      res.status(code);
+      res.send({ message });
+      return next(new Error(message));
+    }
+
     if (
-      authToken.email_verified &&
-      (roles.length === 0 ||
-        roles.some((role: string): boolean => {
-          return userRoles.has(role);
-        }))
+      roles.length === 0 ||
+      roles.some((role: string): boolean => {
+        return userRoles.has(role);
+      })
     ) {
       return next();
     }

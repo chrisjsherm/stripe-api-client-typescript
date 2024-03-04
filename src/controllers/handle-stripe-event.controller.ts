@@ -1,9 +1,14 @@
 import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
+import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
+import { handleError } from "../helpers/handle-error.helper";
+import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 const config = getEnvironmentConfiguration();
+const authClient = getFusionAuth(config);
 const stripe = getStripe(config);
 
 /**
@@ -20,48 +25,111 @@ export async function handleStripeEvent(
   const secret = config.payments.webhookSigningSecret;
 
   if (secret === undefined) {
-    const error = new Error(
-      "Environment variable STRIPE_WEBHOOK_SECRET is not set."
-    );
-    console.error(`❗️ ${error.message}`);
-    throw error;
+    const message = "Environment variable STRIPE_WEBHOOK_SECRET is not set.";
+    const error = new Error(message);
+    return handleError(error, message, StatusCodes.INTERNAL_SERVER_ERROR, res);
   }
 
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(req.body, signature, secret);
   } catch (err) {
-    console.error(`❗️ Webhook signature verification failed.`);
-    res.sendStatus(400);
-    return;
+    const message = `❗️ Webhook signature verification failed.`;
+    return handleError(err, message, StatusCodes.BAD_REQUEST, res);
   }
 
-  // Extract the data from the event.
   const data: Stripe.Event.Data = event.data;
   const eventType: string = event.type;
 
-  if (eventType === "payment_intent.succeeded") {
-    // Cast the event into a PaymentIntent to make use of the types.
-    const paymentIntent: Stripe.PaymentIntent =
-      data.object as Stripe.PaymentIntent;
-    // Funds have been captured
-    // Fulfill any orders, e-mail receipts, etc
-    // To cancel the payment after capture you will need to issue a Refund (https://stripe.com/docs/api/refunds).
-    console.info(
-      `🔔  Webhook received on ${new Date(
-        event.created * 1000
-      ).toUTCString()}: ${paymentIntent.object} ${paymentIntent.status}`
-    );
-    console.info(`${new Date().toUTCString()}: 💰 Payment captured `);
-  } else if (eventType === "payment_intent.payment_failed") {
-    // Cast the event into a PaymentIntent to make use of the types.
-    const pi: Stripe.PaymentIntent = data.object as Stripe.PaymentIntent;
-    console.info(
-      `🔔  Webhook received on ${new Date(
-        event.created * 1000
-      ).toUTCString()}: ${pi.object} ${pi.status}`
-    );
-    console.error(`${new Date().toUTCString()}: ❗️ Payment failed.`);
+  console.info(
+    `🔔 Stripe event occurred on ${new Date(
+      event.created * 1000
+    ).toUTCString()}: ${eventType}`
+  );
+
+  switch (eventType) {
+    case "payment_intent.succeeded":
+      await handlePaymentIntentSucceededEvent(
+        data.object as Stripe.PaymentIntent,
+        res
+      );
+      break;
+
+    case "payment_intent.payment_failed":
+      handlePaymentIntentFailedEvent(data.object as Stripe.PaymentIntent);
+      break;
   }
-  res.sendStatus(200);
+
+  if (!res.headersSent) {
+    res.sendStatus(StatusCodes.OK);
+  }
+}
+
+/**
+ * Handle a PaymentIntent success event.
+ * @param paymentIntent Payment intent from which the successful charge originated
+ * @param res HTTP response
+ * @returns Promise
+ */
+async function handlePaymentIntentSucceededEvent(
+  paymentIntent: Stripe.PaymentIntent,
+  res: Response
+): Promise<void> {
+  console.info(
+    `${new Date().toUTCString()}:💰 Payment captured for payment intent ${
+      paymentIntent.id
+    }.`
+  );
+
+  const groupId = ConstantConfiguration.auth_group_id_facilityManagers;
+  const customerId: string | undefined =
+    paymentIntent.metadata[
+      ConstantConfiguration.stripe_paymentIntent_metadataKey_customerId
+    ];
+  if (customerId === undefined) {
+    const message =
+      `❗️ Payment intent ${paymentIntent.id} does not have a customer ID ` +
+      "associated with it.";
+    const err = new Error(message);
+    return handleError(err, message, StatusCodes.BAD_REQUEST, res);
+  }
+
+  try {
+    await authClient.createGroupMembers({
+      members: {
+        [groupId]: [
+          {
+            userId: customerId,
+            data: {
+              [ConstantConfiguration.auth_group_metadataKey_paymentIntentId]:
+                paymentIntent.id,
+            },
+          },
+        ],
+      },
+    });
+    console.info(`🔔 Added customer ${customerId} to group ${groupId}.`);
+
+    res.sendStatus(StatusCodes.OK);
+    return;
+  } catch (err) {
+    const message =
+      `❗️ Failed to add customer with ID ${customerId} to group ` +
+      `with ID ${groupId}`;
+    return handleError(err, message, StatusCodes.BAD_GATEWAY, res);
+  }
+}
+
+/**
+ * Handle a PaymentIntent failed event.
+ * @param paymentIntent PaymentIntent for which the charge failed
+ */
+function handlePaymentIntentFailedEvent(
+  paymentIntent: Stripe.PaymentIntent
+): void {
+  console.info(
+    `${new Date().toUTCString()}: ❗️ Payment failed for payment intent ${
+      paymentIntent.id
+    }.`
+  );
 }

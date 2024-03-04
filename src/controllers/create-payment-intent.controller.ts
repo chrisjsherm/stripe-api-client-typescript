@@ -5,6 +5,7 @@ import { getCustomerInfo } from "../helpers/get-customer-info.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { handleStripeApiError } from "../helpers/handle-stripe-error.helper";
+import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 const config = getEnvironmentConfiguration();
 const stripe = getStripe(config);
@@ -36,7 +37,8 @@ export async function createPaymentIntent(
     currency: "usd",
     description: "BTX Now annual subscription",
     metadata: {
-      customer_id: customerId,
+      [ConstantConfiguration.stripe_paymentIntent_metadataKey_customerId]:
+        customerId,
     },
     receipt_email: customerEmail,
     statement_descriptor: "BTX Now 1 yr subscribe",

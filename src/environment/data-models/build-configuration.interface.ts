@@ -8,6 +8,7 @@ export interface IBuildConfiguration {
 
   auth: {
     apiSecret: string | undefined;
+    group_id_facilityManagers: string | undefined;
     url: string | undefined;
   };
 

@@ -17,14 +17,7 @@ export async function startServer() {
   const config = getEnvironmentConfiguration();
   const app = express();
 
-  app.use(express.json());
-  app.use(
-    cors({
-      origin: config.cors.allowedOrigins,
-      credentials: true,
-    })
-  );
-  app.use(cookieParser());
+  // Configuration for all endpoints.
   app.use(function configureTimeout(
     _req: Request,
     res: Response,
@@ -37,20 +30,31 @@ export async function startServer() {
 
     next();
   });
-  app.use(verifyJWT);
 
-  // FusionAuth
-  app.post("/customer/verify-email", resendEmailVerificationMessage);
-
-  // Stripe
-  app.post("/payment-intent", hasAnyRole([]), createPaymentIntent);
-  app.post("/payment-intent/:id", hasAnyRole([]), getPaymentIntent);
+  // Stripe events webhook
   app.post(
     "/webhook",
     express.raw({ type: "application/json" }),
-    hasAnyRole(["read-payment-events"]),
     handleStripeEvent
   );
+
+  // Configuration for API endpoints.
+  app.use(
+    cors({
+      origin: config.cors.allowedOrigins,
+      credentials: true,
+    })
+  );
+  app.use(cookieParser());
+  app.use(express.json());
+  app.use(verifyJWT);
+
+  // FusionAuth API
+  app.post("/customer/verify-email", resendEmailVerificationMessage);
+
+  // Stripe API
+  app.post("/payment-intent", hasAnyRole([]), createPaymentIntent);
+  app.post("/payment-intent/:id", hasAnyRole([]), getPaymentIntent);
 
   try {
     await app.listen(config.port);

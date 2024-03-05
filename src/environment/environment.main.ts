@@ -5,6 +5,7 @@ import { IEnvironmentFile } from "./data-models/environment-file.interface";
 import { developmentConfiguration } from "./development.configuration";
 import { getEnvironmentFilePath } from "./helpers/get-environment-file-path.helper";
 import { writeEnvironmentFiles } from "./helpers/write-environment-files.helper";
+import { productionConfiguration } from "./production.configuration";
 
 const defaultHttpRequestTimeoutMs = 5000;
 const defaultPort = 4242;
@@ -47,7 +48,7 @@ const sharedConfiguration: Pick<
     filePath: getEnvironmentFilePath(BuildTarget.Production),
     buildEnvironment: {
       ...sharedConfiguration,
-      isDebug: false,
+      ...productionConfiguration,
     },
   }
 );

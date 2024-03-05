@@ -12,20 +12,11 @@ let fusionAuth: FusionAuthClient;
 export function getFusionAuth(
   environment: IBuildConfiguration
 ): FusionAuthClient {
-  const apiKey = environment.auth.apiSecret;
-  if (!apiKey) {
-    throw new Error(
-      "Environment variable for FusionAuth API secret is not set."
-    );
-  }
-
-  const authUrl = environment.auth.url;
-  if (!authUrl) {
-    throw new Error("Environment variable for FusionAuth URL is not set.");
-  }
-
   if (!fusionAuth) {
-    fusionAuth = new FusionAuthClient(apiKey, authUrl);
+    fusionAuth = new FusionAuthClient(
+      environment.auth.apiKey,
+      environment.auth.url
+    );
   }
 
   return fusionAuth;

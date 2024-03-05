@@ -10,11 +10,7 @@ let stripe: Stripe;
  * @throws Error if environment variable for payments secret is not set
  */
 function getStripe(environment: IBuildConfiguration): Stripe {
-  const stripeKey = environment.payments.secretKey;
-
-  if (!stripeKey) {
-    throw new Error("Environment variable for payments secret key is not set.");
-  }
+  const stripeKey = environment.payments.apiKey;
 
   if (!stripe) {
     stripe = new Stripe(stripeKey, {

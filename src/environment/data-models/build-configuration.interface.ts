@@ -2,23 +2,29 @@
  * Build configuration shared across all build environments.
  */
 export interface IBuildConfiguration {
-  httpRequestTimeoutMs: number;
-
-  isDebug?: boolean;
-
   auth: {
-    apiSecret: string | undefined;
-    group_id_facilityManagers: string | undefined;
-    url: string | undefined;
+    apiKey: string;
+    appId: string;
+    group_id_facilityManagers: string;
+    url: string;
+    webhookSigningKey: string;
   };
 
   cors: {
     allowedOrigins: string[];
   };
 
+  http: {
+    payloadLimit: string;
+    retryDelayMs: number;
+    requestTimeoutMs: number;
+  };
+
+  isDebug?: boolean;
+
   payments: {
-    secretKey: string | undefined;
-    webhookSigningSecret: string | undefined;
+    apiKey: string;
+    webhookSigningKey: string;
   };
 
   port: number;

@@ -23,9 +23,9 @@ export async function startServer() {
     res: Response,
     next: NextFunction
   ) {
-    res.setTimeout(config.httpRequestTimeoutMs, () => {
+    res.setTimeout(config.http.requestTimeoutMs, () => {
       console.info(
-        `❗️ Timing out request ${req.method} ${req.url} after ${config.httpRequestTimeoutMs} ms.`
+        `❗️ Timing out request ${req.method} ${req.url} after ${config.http.requestTimeoutMs} ms.`
       );
       const statusCode = StatusCodes.REQUEST_TIMEOUT;
       res.status(statusCode).json({ message: getReasonPhrase(statusCode) });
@@ -36,8 +36,11 @@ export async function startServer() {
 
   // Stripe events webhook
   app.post(
-    "/webhook",
-    express.raw({ type: "application/json" }),
+    "/webhooks/stripe",
+    express.raw({
+      type: "application/json",
+      limit: config.http.payloadLimit,
+    }),
     handleStripeEvent
   );
 
@@ -49,7 +52,11 @@ export async function startServer() {
     })
   );
   app.use(cookieParser());
-  app.use(express.json());
+  app.use(
+    express.json({
+      limit: config.http.payloadLimit,
+    })
+  );
   app.use(verifyJWT);
 
   // FusionAuth API

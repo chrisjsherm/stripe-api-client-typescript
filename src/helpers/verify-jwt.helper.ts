@@ -1,10 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import * as jose from "jose";
+import { ConstantConfiguration } from "../services/constant-configuration.service";
+import { getEnvironmentConfiguration } from "./get-environment-configuration.helper";
 
-const COOKIE_KEY_ACCESS_TOKEN = "app.at";
+const config = getEnvironmentConfiguration();
+const accessTokenCookie = ConstantConfiguration.fusionAuth_accessTokenCookie;
 const jwksClient = jose.createRemoteJWKSet(
-  new URL(`${process.env.AUTH_BASE_URL}/.well-known/jwks.json`)
+  new URL(`${config.auth.url}/.well-known/jwks.json`)
 );
 
 /**
@@ -23,8 +26,8 @@ export async function verifyJWT(
 
   let accessToken = bearerToken;
   // Prefer cookies for security.
-  if (req.cookies && req.cookies[COOKIE_KEY_ACCESS_TOKEN]) {
-    accessToken = req.cookies[COOKIE_KEY_ACCESS_TOKEN];
+  if (req.cookies && req.cookies[accessTokenCookie]) {
+    accessToken = req.cookies[accessTokenCookie];
   }
 
   if (!accessToken) {
@@ -35,8 +38,8 @@ export async function verifyJWT(
   } else {
     try {
       await jose.jwtVerify(accessToken, jwksClient, {
-        issuer: process.env.AUTH_BASE_URL,
-        audience: process.env.AUTH_FUSION_AUTH_APP_ID,
+        issuer: config.auth.url,
+        audience: config.auth.appId,
       });
 
       (req as Request & { verifiedToken: string }).verifiedToken = accessToken;

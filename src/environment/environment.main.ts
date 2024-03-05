@@ -7,30 +7,47 @@ import { getEnvironmentFilePath } from "./helpers/get-environment-file-path.help
 import { writeEnvironmentFiles } from "./helpers/write-environment-files.helper";
 import { productionConfiguration } from "./production.configuration";
 
-const defaultHttpRequestTimeoutMs = 5000;
-const defaultPort = 4242;
+const requiredEnvironmentVariables = new Set<string>([
+  "AUTH_API_KEY",
+  "AUTH_APP_ID",
+  "AUTH_BASE_URL",
+  "AUTH_GROUP_ID_FACILITY_MANAGERS",
+  "AUTH_WEBHOOK_SIGNING_KEY",
+  "STRIPE_API_KEY",
+  "STRIPE_WEBHOOK_SIGNING_KEY",
+]);
+for (const key of requiredEnvironmentVariables) {
+  if (process.env[key] === undefined) {
+    throw new Error(`Environment variable ${key} is not set`);
+  }
+}
 
 const sharedConfiguration: Pick<
   IBuildConfiguration,
-  "auth" | "cors" | "httpRequestTimeoutMs" | "payments" | "port"
+  "auth" | "cors" | "http" | "payments" | "port"
 > = {
   auth: {
-    apiSecret: process.env.AUTH_FUSION_AUTH_API_SECRET,
-    group_id_facilityManagers: process.env.AUTH_GROUP_ID_FACILITY_MANAGERS,
-    url: process.env.AUTH_BASE_URL,
+    apiKey: process.env.AUTH_API_KEY!,
+    appId: process.env.AUTH_APP_ID!,
+    group_id_facilityManagers: process.env.AUTH_GROUP_ID_FACILITY_MANAGERS!,
+    url: process.env.AUTH_BASE_URL!,
+    webhookSigningKey: process.env.AUTH_WEBHOOK_SIGNING_KEY!,
   },
   cors: {
     allowedOrigins: process.env.CORS_ALLOWED_ORIGINS?.split(",") ?? [],
   },
-  httpRequestTimeoutMs: Number.parseInt(
-    process.env.HTTP_REQUEST_TIMEOUT_MS ??
-      defaultHttpRequestTimeoutMs.toString()
-  ),
-  payments: {
-    secretKey: process.env.STRIPE_SECRET_KEY,
-    webhookSigningSecret: process.env.STRIPE_WEBHOOK_SECRET,
+  http: {
+    payloadLimit: process.env.HTTP_PAYLOAD_LIMIT ?? "500kb",
+    requestTimeoutMs: Number.parseInt(
+      process.env.HTTP_REQUEST_TIMEOUT_MS ?? "2500"
+    ),
+    retryDelayMs: Number.parseInt(process.env.HTTP_RETRY_DELAY_MS ?? "250"),
   },
-  port: Number.parseInt(process.env.PORT ?? defaultPort.toString()),
+  payments: {
+    apiKey: process.env.STRIPE_API_KEY!,
+    webhookSigningKey: process.env.STRIPE_WEBHOOK_SIGNING_KEY!,
+  },
+  port: Number.parseInt(process.env.SERVER_PORT ?? "4242"),
 };
 
 // Write the environment files when Node runs this file.

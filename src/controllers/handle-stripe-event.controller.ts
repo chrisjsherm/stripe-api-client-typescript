@@ -13,6 +13,7 @@ import { ConstantConfiguration } from "../services/constant-configuration.servic
 const config = getEnvironmentConfiguration();
 const authClient = getFusionAuth(config);
 const stripe = getStripe(config);
+const signingKey = config.payments.webhookSigningKey;
 
 /**
  * Handle Stripe events via this webhook endpoint.
@@ -25,17 +26,9 @@ export async function handleStripeEvent(
   res: Response
 ): Promise<void> {
   const signature = req.headers["stripe-signature"] ?? "";
-  const secret = config.payments.webhookSigningSecret;
-
-  if (secret === undefined) {
-    const message = "Environment variable STRIPE_WEBHOOK_SECRET is not set.";
-    const error = new Error(message);
-    return handleError(error, message, StatusCodes.INTERNAL_SERVER_ERROR, res);
-  }
-
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, signature, secret);
+    event = stripe.webhooks.constructEvent(req.body, signature, signingKey);
   } catch (err) {
     const message = `❗️ Webhook signature verification failed.`;
     return handleError(err, message, StatusCodes.BAD_REQUEST, res);
@@ -84,7 +77,6 @@ async function handlePaymentIntentSucceededEvent(
     }.`
   );
 
-  const groupId = ConstantConfiguration.auth_group_id_facilityManagers;
   const customerId: string | undefined =
     paymentIntent.metadata[
       ConstantConfiguration.stripe_paymentIntent_metadataKey_customerId
@@ -100,17 +92,13 @@ async function handlePaymentIntentSucceededEvent(
   try {
     await backoffRetry<ClientResponse<MemberResponse>>(
       3,
-      ConstantConfiguration.httpRetryDelayMs,
+      config.http.retryDelayMs,
       () => {
         return authClient.createGroupMembers({
           members: {
-            [groupId]: [
+            [config.auth.group_id_facilityManagers]: [
               {
                 userId: customerId,
-                data: {
-                  [ConstantConfiguration.auth_group_metadataKey_paymentIntentId]:
-                    paymentIntent.id,
-                },
               },
             ],
           },
@@ -120,14 +108,14 @@ async function handlePaymentIntentSucceededEvent(
       res
     );
 
-    console.info(`🔔 Added customer ${customerId} to group ${groupId}.`);
+    console.info(`🔔 Added customer ${customerId} to facility managers group.`);
 
     res.sendStatus(StatusCodes.OK);
     return;
   } catch (err) {
     const message =
       `❗️ Failed to add customer with ID ${customerId} to group ` +
-      `with ID ${groupId}`;
+      `with ID ${config.auth.group_id_facilityManagers}.`;
     return handleError(err, message, StatusCodes.BAD_GATEWAY, res);
   }
 }

@@ -19,11 +19,14 @@ export async function startServer() {
 
   // Configuration for all endpoints.
   app.use(function configureTimeout(
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction
   ) {
     res.setTimeout(config.httpRequestTimeoutMs, () => {
+      console.info(
+        `❗️ Timing out request ${req.method} ${req.url} after ${config.httpRequestTimeoutMs} ms.`
+      );
       const statusCode = StatusCodes.REQUEST_TIMEOUT;
       res.status(statusCode).json({ message: getReasonPhrase(statusCode) });
     });

@@ -1,14 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
-import * as jose from "jose";
+import { errors, jwtVerify } from "jose";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 import { getEnvironmentConfiguration } from "./get-environment-configuration.helper";
+import { getJwksClient } from "./get-jwks-client.helper";
 
 const config = getEnvironmentConfiguration();
 const accessTokenCookie = ConstantConfiguration.fusionAuth_accessTokenCookie;
-const jwksClient = jose.createRemoteJWKSet(
-  new URL(`${config.auth.url}/.well-known/jwks.json`)
-);
+const jwksClient = getJwksClient();
 
 /**
  * Verify the JSON Web Token is valid.
@@ -37,7 +36,7 @@ export async function verifyJWT(
     next(new Error(message));
   } else {
     try {
-      await jose.jwtVerify(accessToken, jwksClient, {
+      await jwtVerify(accessToken, jwksClient, {
         issuer: config.auth.url,
         audience: config.auth.appId,
       });
@@ -45,7 +44,7 @@ export async function verifyJWT(
       (req as Request & { verifiedToken: string }).verifiedToken = accessToken;
       next();
     } catch (e) {
-      if (e instanceof jose.errors.JOSEError) {
+      if (e instanceof errors.JOSEError) {
         res.status(401);
         res.send({ message: e.message, code: e.code });
       } else {

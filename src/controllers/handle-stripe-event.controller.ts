@@ -1,6 +1,9 @@
+import { MemberResponse } from "@fusionauth/typescript-client";
+import ClientResponse from "@fusionauth/typescript-client/build/src/ClientResponse";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
+import { backoffRetry } from "../helpers/backoff-retry.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
@@ -95,19 +98,28 @@ async function handlePaymentIntentSucceededEvent(
   }
 
   try {
-    await authClient.createGroupMembers({
-      members: {
-        [groupId]: [
-          {
-            userId: customerId,
-            data: {
-              [ConstantConfiguration.auth_group_metadataKey_paymentIntentId]:
-                paymentIntent.id,
-            },
+    await backoffRetry<ClientResponse<MemberResponse>>(
+      3,
+      ConstantConfiguration.httpRetryDelayMs,
+      () => {
+        return authClient.createGroupMembers({
+          members: {
+            [groupId]: [
+              {
+                userId: customerId,
+                data: {
+                  [ConstantConfiguration.auth_group_metadataKey_paymentIntentId]:
+                    paymentIntent.id,
+                },
+              },
+            ],
           },
-        ],
+        });
       },
-    });
+      "Add customer to Group on PaymentIntent success event.",
+      res
+    );
+
     console.info(`🔔 Added customer ${customerId} to group ${groupId}.`);
 
     res.sendStatus(StatusCodes.OK);

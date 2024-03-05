@@ -7,7 +7,6 @@ export interface IBuildConfiguration {
     appId: string;
     group_id_facilityManagers: string;
     url: string;
-    webhookSigningKey: string;
   };
 
   cors: {

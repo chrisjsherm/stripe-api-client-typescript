@@ -16,7 +16,7 @@ const stripe = getStripe(config);
 const signingKey = config.payments.webhookSigningKey;
 
 /**
- * Handle Stripe events via this webhook endpoint.
+ * Handle Stripe events via this webhook.
  * Stripe must be configured to use this endpoint via the CLI or Stripe Dashboard.
  * @param req HTTP request
  * @param res HTTP response

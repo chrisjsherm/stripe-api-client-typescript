@@ -10,12 +10,13 @@ const accessTokenCookie = ConstantConfiguration.fusionAuth_accessTokenCookie;
 const jwksClient = getJwksClient();
 
 /**
- * Verify the JSON Web Token is valid.
+ * Verify the JSON Web Token for the API request is valid.
  * @param req HTTP request
  * @param res HTTP response
  * @param next Callback to initiate next handler in ExpressJS chain
+ * @returns Promise
  */
-export async function verifyJWT(
+export async function verifyApiJwt$(
   req: Request,
   res: Response,
   next: NextFunction
@@ -31,7 +32,7 @@ export async function verifyJWT(
 
   if (!accessToken) {
     const message = "Missing authentication token.";
-    res.status(401);
+    res.status(StatusCodes.UNAUTHORIZED);
     res.send({ message });
     next(new Error(message));
   } else {

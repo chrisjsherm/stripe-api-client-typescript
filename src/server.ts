@@ -4,11 +4,13 @@ import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { createPaymentIntent } from "./controllers/create-payment-intent.controller";
 import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
+import { handleFusionAuthEvent } from "./controllers/handle-fusion-auth-event.controller";
 import { handleStripeEvent } from "./controllers/handle-stripe-event.controller";
 import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasAnyRole } from "./helpers/has-any-role.helper";
-import { verifyJWT } from "./helpers/verify-jwt.helper";
+import { verifyApiJwt$ } from "./helpers/verify-api-jwt.helper";
+import { verifyFusionAuthWebhookJwt$ } from "./helpers/verify-fusion-auth-webhook-jwt.helper";
 
 /**
  * Start the Express web server.
@@ -34,7 +36,7 @@ export async function startServer() {
     next();
   });
 
-  // Stripe events webhook
+  // Stripe events webhook.
   app.post(
     "/webhooks/stripe",
     express.raw({
@@ -42,6 +44,17 @@ export async function startServer() {
       limit: config.http.payloadLimit,
     }),
     handleStripeEvent
+  );
+
+  // FusionAuth events webhook.
+  app.post(
+    "/webhooks/fusion-auth",
+    express.raw({
+      type: "application/json",
+      limit: config.http.payloadLimit,
+    }),
+    verifyFusionAuthWebhookJwt$,
+    handleFusionAuthEvent
   );
 
   // Configuration for API endpoints.
@@ -57,7 +70,7 @@ export async function startServer() {
       limit: config.http.payloadLimit,
     })
   );
-  app.use(verifyJWT);
+  app.use(verifyApiJwt$);
 
   // FusionAuth API
   app.post("/customer/verify-email", resendEmailVerificationMessage);

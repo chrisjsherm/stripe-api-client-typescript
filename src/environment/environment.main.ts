@@ -12,7 +12,6 @@ const requiredEnvironmentVariables = new Set<string>([
   "AUTH_APP_ID",
   "AUTH_BASE_URL",
   "AUTH_GROUP_ID_FACILITY_MANAGERS",
-  "AUTH_WEBHOOK_SIGNING_KEY",
   "STRIPE_API_KEY",
   "STRIPE_WEBHOOK_SIGNING_KEY",
 ]);
@@ -31,7 +30,6 @@ const sharedConfiguration: Pick<
     appId: process.env.AUTH_APP_ID!,
     group_id_facilityManagers: process.env.AUTH_GROUP_ID_FACILITY_MANAGERS!,
     url: process.env.AUTH_BASE_URL!,
-    webhookSigningKey: process.env.AUTH_WEBHOOK_SIGNING_KEY!,
   },
   cors: {
     allowedOrigins: process.env.CORS_ALLOWED_ORIGINS?.split(",") ?? [],

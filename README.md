@@ -6,9 +6,6 @@ Web server for interacting with the Stripe API. Written in TypeScript.
 
 1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli).
 2. Copy `.env.example` as `.env` and fill in the values with your configuration.
-3. Adjust the values in
-   `src/environment/development.configuration.ts` and
-   `src/environment/production.configuration.ts`.
 
 ### Stripe
 

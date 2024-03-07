@@ -12,12 +12,12 @@ export function backoffRetry<T>(
   baseDelayMs: number,
   operation: () => Promise<T>,
   operationName: string,
-  res: Response
+  res?: Response
 ): Promise<T> {
   let attemptCount = 0;
 
   async function attemptOperation(): Promise<T> {
-    if (res.headersSent) {
+    if (res?.headersSent) {
       // Response already sent.
       return Promise.reject();
     }

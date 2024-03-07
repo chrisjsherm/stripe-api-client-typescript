@@ -4,5 +4,7 @@
 export const ConstantConfiguration = {
   fusionAuth_accessTokenCookie: "app.at",
   fusionAuth_jwksRoute: "/.well-known/jwks.json",
-  stripe_paymentIntent_metadataKey_customerId: "customer_id",
+  stripe_customer_metadata_fusionAuthUserId: "tenant__user_id",
+  stripe_paymentIntent_metadata_customerId: "customer_id",
+  stripe_paymentIntent_metadata_groupMembershipsCsv: "group_memberships",
 };

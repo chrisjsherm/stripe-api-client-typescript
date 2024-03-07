@@ -3,7 +3,7 @@ import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { getCustomerInfo } from "../helpers/get-customer-info.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
-import { handleError } from "../helpers/handle-error.helper";
+import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const config = getEnvironmentConfiguration();
 const authClient = getFusionAuth(config);
@@ -31,10 +31,10 @@ export async function resendEmailVerificationMessage(
     const result = await authClient.resendEmailVerification(customerEmail);
 
     if (result.exception) {
-      return handleError(
+      return onErrorProcessingHttpRequest(
         result.exception,
         result.exception.message,
-        StatusCodes.BAD_GATEWAY,
+        result.statusCode,
         res
       );
     }
@@ -45,10 +45,10 @@ export async function resendEmailVerificationMessage(
       },
     });
   } catch (e) {
-    handleError(
+    onErrorProcessingHttpRequest(
       e,
       "Error resending verification email.",
-      StatusCodes.BAD_GATEWAY,
+      StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );
   }

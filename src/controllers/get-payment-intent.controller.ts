@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import getStripe from "../helpers/get-stripe.helper";
-import { handleStripeApiError } from "../helpers/handle-stripe-error.helper";
+import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const config = getEnvironmentConfiguration();
 const stripe = getStripe(config);
@@ -49,6 +49,11 @@ export async function getPaymentIntent(
       },
     });
   } catch (err) {
-    handleStripeApiError(err, "❗️Error retrieving payment intent.", res);
+    onErrorProcessingHttpRequest(
+      err,
+      "❗️Error retrieving payment intent.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
   }
 }

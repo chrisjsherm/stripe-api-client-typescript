@@ -7,9 +7,21 @@ Web server for interacting with the Stripe API. Written in TypeScript.
 1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli).
 2. Copy `.env.example` as `.env` and fill in the values with your configuration.
 
+### FusionAuth
+
+Create an API key for the `.env` file with access to the following:
+
+- /api/group/member ALL
+- /api/user GET
+- /api/user/verify-email PUT
+
+Create a Group named "Subscription: Basic".
+
 ### Stripe
 
-PaymentIntent objects should have a metadata entry with a key of `customer_id` with the value matching the `id` property of the FusionAuth user for which the PaymentIntent was created.
+PaymentIntent objects should have a metadata entry with a key of `customer_id`
+with the value matching the `id` property of the FusionAuth user for which the
+PaymentIntent was created.
 
 ## Development
 

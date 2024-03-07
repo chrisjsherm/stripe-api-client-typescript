@@ -5,7 +5,7 @@ export interface IBuildConfiguration {
   auth: {
     apiKey: string;
     appId: string;
-    group_id_facilityManagers: string;
+    groupId_subscriptionBasicAnnual: string;
     url: string;
   };
 

@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { jwtVerify } from "jose";
 import { getJwksClient } from "./get-jwks-client.helper";
-import { handleError } from "./handle-error.helper";
+import { onErrorProcessingHttpRequest } from "./on-error-processing-http-request.helper";
 
 const jwksClient = getJwksClient();
 const signatureHeader = "X-FusionAuth-Signature-JWT";
@@ -40,7 +40,12 @@ export async function verifyFusionAuthWebhookJwt$(
 
     next();
   } catch (err) {
-    handleError(err, "Invalid JWT header.", StatusCodes.UNAUTHORIZED, res);
+    onErrorProcessingHttpRequest(
+      err,
+      "Invalid JWT header.",
+      StatusCodes.UNAUTHORIZED,
+      res
+    );
     next(err);
   }
 }

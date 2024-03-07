@@ -13,6 +13,7 @@ export async function handleFusionAuthEvent(
   res: Response
 ): Promise<void> {
   const { event } = JSON.parse(req.body.toString()) as EventRequest;
+  console.log(`Received FusionAuth event: ${event?.type}`);
   console.dir(event);
   res.json({ message: "Success" });
 }

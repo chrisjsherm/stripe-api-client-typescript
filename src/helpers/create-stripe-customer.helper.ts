@@ -5,7 +5,7 @@ import { ConstantConfiguration } from "../services/constant-configuration.servic
 
 /**
  * Create a Stripe customer from a FusionAuth user.
- * @param fusionAuthUser FusionAuth user
+ * @param fusionAuthUserId FusionAuth user ID
  * @param authClient FusionAuth client
  * @param stripeClient Stripe client
  * @returns Stripe Customer

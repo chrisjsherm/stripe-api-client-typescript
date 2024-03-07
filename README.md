@@ -15,7 +15,13 @@ Create an API key for the `.env` file with access to the following:
 - /api/user GET
 - /api/user/verify-email PUT
 
-Create a Group named "Subscription: Basic".
+Create a Group for the `.env` file named "Subscription: Basic".
+
+Configure a Webhook pointing to this server at the path `/webhooks/fusion-auth`
+with `user.email.verified` enabled.
+
+- Configure your tenant to have its `user.email.verified` webhook enabled and
+  set the transaction so that all webhooks must succeed.
 
 ### Stripe
 

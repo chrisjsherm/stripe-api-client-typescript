@@ -8,7 +8,15 @@ import { IBasicUser } from "../data-models/basic-user.interface";
 import { getGroupMemberships$ } from "./get-group-memberships.helper";
 import { getStripeCustomerByFusionAuthUser$ } from "./get-stripe-customer-by-fusion-auth-user.helper";
 
-export async function updateGroupMembership$(
+/**
+ * Refresh the user's group memberships.
+ * @param fusionAuthUser FusionAuth user
+ * @param stripeClient Stripe API client
+ * @param authClient FusionAuth API client
+ * @returns FusionAuth user with refreshed memberships
+ * @throws Error
+ */
+export async function refreshGroupMembership$(
   fusionAuthUser: IBasicUser,
   stripeClient: Stripe,
   authClient: FusionAuthClient

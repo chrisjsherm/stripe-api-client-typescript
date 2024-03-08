@@ -6,6 +6,7 @@ import { createPaymentIntent } from "./controllers/create-payment-intent.control
 import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
+import { refreshGroupMemberships } from "./controllers/refresh-group-memberships.controller";
 import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasAnyRole } from "./helpers/has-any-role.helper";
@@ -74,6 +75,7 @@ export async function startServer() {
 
   // FusionAuth API
   app.post("/customer/verify-email", resendEmailVerificationMessage);
+  app.post("/customer/refresh-group-memberships", refreshGroupMemberships);
 
   // Stripe API
   app.post("/payment-intent", hasAnyRole([]), createPaymentIntent);

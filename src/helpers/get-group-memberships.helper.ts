@@ -9,10 +9,10 @@ import { getSuccessfulCharges$ } from "./get-successful-charges.helper";
  * @param stripeClient Stripe API client
  * @returns Array of FusionAuth group IDs
  */
-export async function getGroupMembership$(
+export async function getGroupMemberships$(
   stripeCustomerId: string,
   stripeClient: Stripe
-): Promise<string[]> {
+): Promise<Set<string>> {
   const recentCharges = await getSuccessfulCharges$(
     stripeCustomerId,
     DateTime.now().minus({ year: 1 }),
@@ -43,5 +43,5 @@ export async function getGroupMembership$(
     new Set<string>()
   );
 
-  return Array.from(memberships);
+  return memberships;
 }

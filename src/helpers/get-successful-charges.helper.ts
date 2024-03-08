@@ -7,12 +7,14 @@ import { StripeQueries } from "./stripe-queries.helper";
  * @param stripeCustomerId Stripe customer ID
  * @param since Time from which to query
  * @param stripeClient Stripe API client
+ * @param expandFields Charge fields to expand (https://docs.stripe.com/expand)
  * @returns Stripe charges
  */
 export async function getSuccessfulCharges$(
   stripeCustomerId: string,
   since: DateTime,
-  stripeClient: Stripe
+  stripeClient: Stripe,
+  expandFields = new Array<string>()
 ): Promise<Stripe.Charge[]> {
   const query = StripeQueries.charge_successfulByCustomer(
     stripeCustomerId,
@@ -21,6 +23,7 @@ export async function getSuccessfulCharges$(
 
   const { data: searchResults } = await stripeClient.charges.search({
     query,
+    expand: expandFields,
   });
   return searchResults;
 }

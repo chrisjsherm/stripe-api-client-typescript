@@ -6,9 +6,9 @@ import {
 import { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
-import { createStripeCustomer$ } from "../helpers/create-stripe-customer.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
+import { getOrCreateStripeCustomer$ } from "../helpers/get-or-create-stripe-customer.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
@@ -33,16 +33,21 @@ export async function handleFusionAuthEvent(
     switch (event?.type) {
       case EventType.UserEmailVerified:
         const emailVerifiedEvent = event as UserEmailVerifiedEvent;
-        if (emailVerifiedEvent.user?.id === undefined) {
+        if (
+          emailVerifiedEvent.user?.id === undefined ||
+          emailVerifiedEvent.user?.email === undefined
+        ) {
           throw createHttpError.BadGateway(
             'FusionAuth UserEmailVerifiedEvent did not set "user" property.'
           );
         }
 
-        await createStripeCustomer$(
-          (event as UserEmailVerifiedEvent).user!.id!,
-          authClient,
-          stripeClient
+        // Use get-or-create to handle possible duplicate events from retries.
+        await getOrCreateStripeCustomer$(
+          emailVerifiedEvent.user.id,
+          emailVerifiedEvent.user.email,
+          stripeClient,
+          authClient
         );
         break;
     }

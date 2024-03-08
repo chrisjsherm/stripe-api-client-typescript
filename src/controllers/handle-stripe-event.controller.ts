@@ -32,7 +32,7 @@ export async function handleStripeEvent(
       signingKey
     );
   } catch (err) {
-    const message = `❗️ Webhook signature verification failed.`;
+    const message = `❗️ Stripe webhook signature verification failed.`;
     return onErrorProcessingHttpRequest(
       err,
       message,

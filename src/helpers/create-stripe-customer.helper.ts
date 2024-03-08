@@ -34,6 +34,13 @@ export async function createStripeCustomer$(
     );
   }
 
+  if (!fusionAuthUser.verified) {
+    throw createError.BadRequest(
+      `FusionAuth user ${fusionAuthUser} is not verified. Verify before ` +
+        "creating an associated Stripe customer."
+    );
+  }
+
   console.info(
     `Attempting to create Stipe Customer associated with FusionAuth user ${fusionAuthUserId}.`
   );

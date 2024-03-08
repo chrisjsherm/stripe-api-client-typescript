@@ -19,7 +19,7 @@ const signingKey = config.payments.webhookSigningKey;
  * @param req HTTP request
  * @param res HTTP response
  */
-export async function handleStripeEvent(
+export async function onStripeEvent(
   req: Request,
   res: Response
 ): Promise<void> {

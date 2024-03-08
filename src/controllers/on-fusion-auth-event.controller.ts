@@ -23,7 +23,7 @@ const stripeClient = getStripe(config);
  * @param res HTTP response
  * @param buf HTTP buffer
  */
-export async function handleFusionAuthEvent(
+export async function onFusionAuthEvent(
   req: Request,
   res: Response
 ): Promise<void> {

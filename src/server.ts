@@ -4,8 +4,8 @@ import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { createPaymentIntent } from "./controllers/create-payment-intent.controller";
 import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
-import { handleFusionAuthEvent } from "./controllers/handle-fusion-auth-event.controller";
-import { handleStripeEvent } from "./controllers/handle-stripe-event.controller";
+import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
+import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasAnyRole } from "./helpers/has-any-role.helper";
@@ -43,7 +43,7 @@ export async function startServer() {
       type: "application/json",
       limit: config.http.payloadLimit,
     }),
-    handleStripeEvent
+    onStripeEvent
   );
 
   // FusionAuth events webhook.
@@ -54,7 +54,7 @@ export async function startServer() {
       limit: config.http.payloadLimit,
     }),
     verifyFusionAuthWebhookJwt$,
-    handleFusionAuthEvent
+    onFusionAuthEvent
   );
 
   // Configuration for API endpoints.

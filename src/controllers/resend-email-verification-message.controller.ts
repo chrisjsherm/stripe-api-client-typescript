@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
-import { getCustomerInfo } from "../helpers/get-customer-info.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
+import { getUserInfo } from "../helpers/get-user-info.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const config = getEnvironmentConfiguration();
@@ -17,9 +17,9 @@ export async function resendEmailVerificationMessage(
   req: Request,
   res: Response
 ): Promise<void> {
-  const { email: customerEmail } = getCustomerInfo(req);
+  const { email: userEmail } = getUserInfo(req);
 
-  if (customerEmail === undefined) {
+  if (userEmail === undefined) {
     const statusCode = StatusCodes.UNAUTHORIZED;
     res.status(statusCode).json({
       message: getReasonPhrase(statusCode),
@@ -28,7 +28,7 @@ export async function resendEmailVerificationMessage(
   }
 
   try {
-    const result = await authClient.resendEmailVerification(customerEmail);
+    const result = await authClient.resendEmailVerification(userEmail);
 
     if (result.exception) {
       return onErrorProcessingHttpRequest(

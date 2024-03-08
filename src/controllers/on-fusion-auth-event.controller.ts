@@ -8,7 +8,7 @@ import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
-import { getOrCreateStripeCustomer$ } from "../helpers/get-or-create-stripe-customer.helper";
+import { getOrCreateStripeCustomerByFusionAuthUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
@@ -43,16 +43,18 @@ export async function onFusionAuthEvent(
         }
 
         // Use get-or-create to handle possible duplicate events from retries.
-        await getOrCreateStripeCustomer$(
-          emailVerifiedEvent.user.id,
-          emailVerifiedEvent.user.email,
+        await getOrCreateStripeCustomerByFusionAuthUser$(
+          {
+            id: emailVerifiedEvent.user.id,
+            email: emailVerifiedEvent.user.email,
+          },
           stripeClient,
           authClient
         );
         break;
     }
 
-    res.json({ message: "Processed" });
+    res.sendStatus(StatusCodes.OK);
   } catch (error) {
     let message = "Error processing FusionAuth event.";
     if (event) {

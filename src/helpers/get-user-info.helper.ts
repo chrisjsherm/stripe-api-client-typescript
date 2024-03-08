@@ -2,11 +2,11 @@ import { Request } from "express";
 import { JWTPayload, decodeJwt } from "jose";
 
 /**
- * Get metadata about the customer who initiated the request.
+ * Get metadata about the user who initiated the request.
  * @param req HTTP request
- * @returns Customer information
+ * @returns User information
  */
-export function getCustomerInfo(req: Request): {
+export function getUserInfo(req: Request): {
   id: string | undefined;
   email: string | undefined;
 } {

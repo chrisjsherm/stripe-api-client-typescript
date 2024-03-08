@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import Stripe from "stripe";
-import { getCustomerInfo } from "../helpers/get-customer-info.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
-import { getOrCreateStripeCustomer$ } from "../helpers/get-or-create-stripe-customer.helper";
+import { getOrCreateStripeCustomerByFusionAuthUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
+import { getUserInfo } from "../helpers/get-user-info.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 
@@ -23,8 +23,8 @@ export async function createPaymentIntent(
   res: Response
 ): Promise<void> {
   try {
-    const { id: customerId, email: customerEmail } = getCustomerInfo(req);
-    if (customerId === undefined || customerEmail === undefined) {
+    const { id: userId, email: userEmail } = getUserInfo(req);
+    if (userId === undefined || userEmail === undefined) {
       const statusCode = StatusCodes.UNAUTHORIZED;
       res.status(statusCode).json({
         message: getReasonPhrase(statusCode),
@@ -32,12 +32,12 @@ export async function createPaymentIntent(
       return;
     }
 
-    const { id: stripeCustomerId } = await getOrCreateStripeCustomer$(
-      customerId,
-      customerEmail,
-      stripeClient,
-      authClient
-    );
+    const { id: stripeCustomerId } =
+      await getOrCreateStripeCustomerByFusionAuthUser$(
+        { id: userId, email: userEmail },
+        stripeClient,
+        authClient
+      );
 
     const params: Stripe.PaymentIntentCreateParams = {
       amount: 1099,
@@ -49,11 +49,11 @@ export async function createPaymentIntent(
       description: "BTX Now annual subscription",
       metadata: {
         [ConstantConfiguration.stripe_paymentIntent_metadata_customerId]:
-          customerId,
+          userId,
         [ConstantConfiguration.stripe_paymentIntent_metadata_groupMembershipsCsv]:
           config.auth.groupId_subscriptionBasicAnnual,
       },
-      receipt_email: customerEmail,
+      receipt_email: userEmail,
       statement_descriptor: "BTX Now 1 yr subscribe",
       statement_descriptor_suffix: "BTX Now 1 yr subscribe",
     };

@@ -16,9 +16,7 @@ export async function getStripeCustomerByFusionAuthUser$(
   fusionAuthUser: IBasicUser,
   stripeClient: Stripe
 ): Promise<Stripe.Customer | null> {
-  const query = StripeQueries.getStripeCustomerByFusionAuthUserId(
-    fusionAuthUser.id
-  );
+  const query = StripeQueries.customer_byFusionAuthUserId(fusionAuthUser.id);
   const { data: searchResults } = await stripeClient.customers.search({
     query,
   });

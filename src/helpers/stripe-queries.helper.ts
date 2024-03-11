@@ -29,7 +29,7 @@ function getChargesByCustomer(
   since: DateTime
 ): string {
   return (
-    `created>=${since} AND ` +
+    `created>=${since.toMillis()} AND ` +
     `status:'succeeded' AND ` +
     `refunded:'false' AND ` +
     `customer:'${stripeCustomerId}'`

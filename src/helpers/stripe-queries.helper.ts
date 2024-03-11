@@ -29,9 +29,9 @@ function getChargesByCustomer(
   since: DateTime
 ): string {
   return (
-    `created>=${since.toMillis()} AND ` +
+    `created>=${Math.floor(since.toSeconds())} AND ` +
     `status:'succeeded' AND ` +
-    `refunded:'false' AND ` +
-    `customer:'${stripeCustomerId}'`
+    `customer:'${stripeCustomerId}' AND ` +
+    `refunded:null`
   );
 }

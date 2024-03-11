@@ -36,7 +36,7 @@ export async function refreshGroupMemberships(
       authClient
     );
 
-    res.sendStatus(StatusCodes.OK);
+    res.status(StatusCodes.OK).send();
   } catch (error) {
     onErrorProcessingHttpRequest(
       error,

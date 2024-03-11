@@ -2,6 +2,7 @@ import FusionAuthClient from "@fusionauth/typescript-client";
 import * as createError from "http-errors";
 import Stripe from "stripe";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
+import { getAuthUserById$ } from "./get-auth-user-by-id.helper";
 
 /**
  * Create a Stripe customer from a FusionAuth user.
@@ -16,23 +17,7 @@ export async function createStripeCustomer$(
   authClient: FusionAuthClient,
   stripeClient: Stripe
 ): Promise<Stripe.Customer> {
-  console.info(`Querying FusionAuth for user with ID ${fusionAuthUserId}.`);
-  const getUserResponse = await authClient.retrieveUser(fusionAuthUserId);
-  console.info(`Retrieved user with id ${fusionAuthUserId} from FusionAuth.`);
-
-  if (getUserResponse.exception) {
-    console.info(
-      `Encountered an exception querying FusionAuth for user with ID ${fusionAuthUserId}.`
-    );
-    throw createError.BadGateway(getUserResponse.exception.message);
-  }
-
-  const fusionAuthUser = getUserResponse.response.user;
-  if (fusionAuthUser === undefined) {
-    throw createError.NotFound(
-      `FusionAuth user with ID ${fusionAuthUserId} not found.`
-    );
-  }
+  const fusionAuthUser = await getAuthUserById$(fusionAuthUserId, authClient);
 
   if (!fusionAuthUser.verified) {
     throw createError.BadRequest(

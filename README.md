@@ -11,7 +11,7 @@ Web server for interacting with the Stripe API. Written in TypeScript.
 
 Create an API key for the `.env` file with access to the following:
 
-- /api/group/member ALL
+- /api/group/member POST DELETE
 - /api/user GET
 - /api/user/verify-email PUT
 

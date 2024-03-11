@@ -5,6 +5,7 @@ import FusionAuthClient, {
 import * as createError from "http-errors";
 import Stripe from "stripe";
 import { IBasicUser } from "../data-models/basic-user.interface";
+import { getAuthUserById$ } from "./get-auth-user-by-id.helper";
 import { getGroupMemberships$ } from "./get-group-memberships.helper";
 import { getStripeCustomerByFusionAuthUser$ } from "./get-stripe-customer-by-fusion-auth-user.helper";
 
@@ -31,62 +32,60 @@ export async function refreshGroupMembership$(
     );
   }
 
-  const groupMembershipsAccordingToCharges = await getGroupMemberships$(
+  const groupMemberships = await getGroupMemberships$(
     stripeCustomer.id,
     stripeClient
   );
 
-  const getUserResult = await authClient.retrieveUser(fusionAuthUser.id);
-  if (getUserResult.exception) {
-    throw getUserResult.exception;
-  }
+  const user = await getAuthUserById$(fusionAuthUser.id, authClient);
+  const currentMemberships = user.memberships ?? [];
 
-  if (getUserResult.response.user === undefined) {
-    throw createError.NotFound(`Could not find user ${fusionAuthUser.id}.`);
-  }
-
-  const currentMemberships = getUserResult.response.user?.memberships ?? [];
   if (
-    currentMemberships.length === groupMembershipsAccordingToCharges.size &&
+    currentMemberships.length === groupMemberships.size &&
     currentMemberships.every((groupMembership: GroupMember): boolean => {
       if (groupMembership.groupId === undefined) {
         return false;
       }
 
-      return groupMembershipsAccordingToCharges.has(groupMembership.groupId);
+      return groupMemberships.has(groupMembership.groupId);
     })
   ) {
     // Memberships are up to date.
-    return getUserResult.response.user;
+    return user;
   }
 
-  const updatedMemberships: GroupMember[] = [];
-  groupMembershipsAccordingToCharges.forEach((groupId: string): void => {
-    updatedMemberships.push({
-      groupId,
-      userId: fusionAuthUser.id,
-    });
-  });
-
-  const updateMembershipsResult = await authClient.updateUser(
-    fusionAuthUser.id,
-    {
-      user: {
-        ...getUserResult.response.user,
-        memberships: updatedMemberships,
-      },
+  for (const membership of currentMemberships) {
+    if (membership.groupId === undefined) {
+      continue;
     }
-  );
 
-  if (updateMembershipsResult.exception) {
-    throw updateMembershipsResult.exception;
-  }
+    if (groupMemberships.has(membership.groupId)) {
+      // User already has this membership. Remove from the list of memberships
+      // we will add.
+      groupMemberships.delete(membership.groupId);
+      continue;
+    }
 
-  if (updateMembershipsResult.response.user === undefined) {
-    throw createError.NotFound(
-      `Could not find user ${fusionAuthUser.id} to update group memberships.`
+    // Membership is no longer active according to recent Charges.
+    console.info(
+      `Removing user ${fusionAuthUser.id} from group ${membership.groupId}.`
     );
+    await authClient.deleteGroupMembers({
+      members: {
+        [membership.groupId]: [fusionAuthUser.id],
+      },
+    });
   }
 
-  return updateMembershipsResult.response.user;
+  // Add missing memberships.
+  for (const groupId of groupMemberships) {
+    console.info(`Adding user ${fusionAuthUser.id} to group ${groupId}.`);
+    await authClient.createGroupMembers({
+      members: {
+        [groupId]: [{ userId: fusionAuthUser.id }],
+      },
+    });
+  }
+
+  return await getAuthUserById$(fusionAuthUser.id, authClient);
 }

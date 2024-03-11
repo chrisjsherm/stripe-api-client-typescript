@@ -17,7 +17,7 @@ export async function getGroupMemberships$(
     stripeCustomerId,
     DateTime.now().minus({ year: 1 }),
     stripeClient,
-    ["payment_intent"]
+    ["data.payment_intent"]
   );
 
   const memberships = recentCharges.reduce(

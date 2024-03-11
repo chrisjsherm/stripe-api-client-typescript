@@ -30,15 +30,13 @@ export async function refreshGroupMemberships(
   }
 
   try {
-    const user = refreshGroupMembership$(
+    await refreshGroupMembership$(
       { id: userId, email: userEmail },
       stripeClient,
       authClient
     );
 
-    res.send({
-      data: user,
-    });
+    res.sendStatus(StatusCodes.OK);
   } catch (error) {
     onErrorProcessingHttpRequest(
       error,

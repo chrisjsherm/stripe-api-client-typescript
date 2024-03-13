@@ -1,12 +1,17 @@
 import { Request, Response } from "express";
-import { StatusCodes } from "http-status-codes";
+import * as createError from "http-errors";
+import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import Stripe from "stripe";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
+import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
+import { getOrCreateStripeCustomerByFusionAuthUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
+import { getUserInfo } from "../helpers/get-user-info.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const config = getEnvironmentConfiguration();
-const stripe = getStripe(config);
+const stripeClient = getStripe(config);
+const authClient = getFusionAuth(config);
 
 /**
  * Retrieve details about a PaymentIntent from the Stripe API.
@@ -28,8 +33,29 @@ export async function getPaymentIntent(
   }
 
   try {
+    const { id: userId, email: userEmail } = getUserInfo(req);
+    if (userId === undefined || userEmail === undefined) {
+      throw createError.Unauthorized(getReasonPhrase(StatusCodes.UNAUTHORIZED));
+    }
+
+    const { id: stripeCustomerId } =
+      await getOrCreateStripeCustomerByFusionAuthUser$(
+        { id: userId, email: userEmail },
+        stripeClient,
+        authClient
+      );
+
     const paymentIntent: Stripe.Response<Stripe.PaymentIntent> =
-      await stripe.paymentIntents.retrieve(id);
+      await stripeClient.paymentIntents.retrieve(id);
+
+    if (
+      !paymentIntent.customer ||
+      paymentIntent.customer !== stripeCustomerId
+    ) {
+      throw createError.Unauthorized(
+        "Authenticated customer does not match the customer on the PaymentIntent."
+      );
+    }
 
     res.send({
       data: {

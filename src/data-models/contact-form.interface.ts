@@ -9,7 +9,7 @@ export interface ContactForm {
   message: string;
   subject: string;
 
-  captchaToken?: string;
+  cfTurnstileResponse?: string;
 }
 
 /**
@@ -22,7 +22,7 @@ export const contactFormJsonSchema: JSONSchemaType<ContactForm> = {
     fromName: { type: "string" },
     message: { type: "string" },
     subject: { type: "string" },
-    captchaToken: { type: "string", nullable: true },
+    cfTurnstileResponse: { type: "string", nullable: true },
   },
   required: ["fromEmailAddress", "fromName", "message", "subject"],
   additionalProperties: false,

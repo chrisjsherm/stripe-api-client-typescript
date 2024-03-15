@@ -11,8 +11,10 @@ import {
   take,
   tap,
 } from "rxjs";
+import { getEnvironmentConfiguration } from "../../helpers/get-environment-configuration.helper";
 import { ParameterService } from "../parameter-store/parameter-store.service";
 
+const { captcha: captchaConfig } = getEnvironmentConfiguration();
 /**
  * Validate a human has initiated a request by validating the supplied token
  */
@@ -43,6 +45,11 @@ export class CaptchaService {
    * @returns Fetch API Response
    */
   validateToken(token: string, ip?: string): Observable<boolean> {
+    if (captchaConfig.enabled === false) {
+      console.info(`Captcha is disabled. Considering token valid.`);
+      return of(true);
+    }
+
     return this.secretKey.pipe(
       map((key: string) => {
         let xFormBody = `${encodeURI("secret")}=${encodeURI(key)}&${encodeURI(

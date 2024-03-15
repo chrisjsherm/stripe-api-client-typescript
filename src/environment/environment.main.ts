@@ -12,6 +12,7 @@ const requiredEnvironmentVariables = new Set<string>([
   "AUTH_APP_ID",
   "AUTH_BASE_URL",
   "AUTH_GROUP_ID__SUBSCRIPTION_BASIC_ANNUAL_REV_0",
+  "CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL",
   "STRIPE_API_KEY",
   "STRIPE_WEBHOOK_SIGNING_KEY",
 ]);
@@ -23,7 +24,7 @@ for (const key of requiredEnvironmentVariables) {
 
 const sharedConfiguration: Pick<
   IBuildConfiguration,
-  "auth" | "cors" | "http" | "payments" | "port"
+  "auth" | "captcha" | "cors" | "customerContact" | "http" | "payments" | "port"
 > = {
   auth: {
     apiKey: process.env.AUTH_API_KEY!,
@@ -32,8 +33,31 @@ const sharedConfiguration: Pick<
       process.env.AUTH_GROUP_ID__SUBSCRIPTION_BASIC_ANNUAL_REV_0!,
     url: process.env.AUTH_BASE_URL!,
   },
+  captcha: {
+    enabled: !!process.env.CAPTCHA_ENABLED,
+    secretKeyPath: (function getPath(
+      isCaptchaEnabled: boolean,
+      secretKeyPath: string | undefined
+    ): string {
+      if (isCaptchaEnabled && secretKeyPath === undefined) {
+        throw new Error(
+          "Captcha is enabled and environment variable " +
+            "CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH is not set."
+        );
+      }
+
+      return secretKeyPath ?? "";
+    })(
+      !!process.env.CAPTCHA_ENABLED,
+      process.env.CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH
+    ),
+  },
   cors: {
     allowedOrigins: process.env.CORS_ALLOWED_ORIGINS?.split(",") ?? [],
+  },
+  customerContact: {
+    subjectSuffix: process.env.CUSTOMER_CONTACT_SUBJECT_SUFFIX ?? "",
+    toEmail: process.env.CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL!,
   },
   http: {
     payloadLimit: process.env.HTTP_PAYLOAD_LIMIT ?? "500kb",

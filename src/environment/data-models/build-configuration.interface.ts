@@ -9,8 +9,18 @@ export interface IBuildConfiguration {
     url: string;
   };
 
+  captcha: {
+    enabled: boolean;
+    secretKeyPath: string;
+  };
+
   cors: {
     allowedOrigins: string[];
+  };
+
+  customerContact: {
+    toEmail: string;
+    subjectSuffix: string;
   };
 
   http: {

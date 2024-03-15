@@ -11,10 +11,8 @@ import {
   take,
   tap,
 } from "rxjs";
-import { getEnvironmentConfiguration } from "../../helpers/get-environment-configuration.helper";
 import { ParameterService } from "../parameter-store/parameter-store.service";
 
-const { captcha: captchaConfig } = getEnvironmentConfiguration();
 /**
  * Validate a human has initiated a request by validating the supplied token
  */
@@ -23,7 +21,8 @@ export class CaptchaService {
 
   constructor(
     parameterService: ParameterService,
-    secretKeyParameterPath: string
+    secretKeyParameterPath: string,
+    private isCaptchaEnabled = true
   ) {
     this.secretKey = new ReplaySubject(1);
     parameterService
@@ -39,13 +38,12 @@ export class CaptchaService {
 
   /**
    * Validate a token against the captcha API
-   *
    * @param token Token to validate
    * @param ip IP address of the request
-   * @returns Fetch API Response
+   * @returns Whether the captcha token is valid
    */
-  validateToken(token: string, ip?: string): Observable<boolean> {
-    if (captchaConfig.enabled === false) {
+  validateToken$(token: string, ip?: string): Observable<boolean> {
+    if (this.isCaptchaEnabled === false) {
       console.info(`Captcha is disabled. Considering token valid.`);
       return of(true);
     }

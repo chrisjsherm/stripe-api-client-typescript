@@ -12,12 +12,12 @@ export class EmailService {
   constructor(private sesClient: SESClient) {}
 
   /**
-   * Send an email
-   *
+   * Send an email. Email properties should be validated and sanitized before
+   * calling this method.
    * @param email Email data
    * @returns ID of the created message
    */
-  async sendMessage(email: IEmail): Promise<string | undefined> {
+  async sendMessage$(email: IEmail): Promise<string | undefined> {
     const emailParams: SendEmailCommandInput = {
       Source: email.sourceEmailAddress,
       ReturnPath: email.sourceEmailAddress,

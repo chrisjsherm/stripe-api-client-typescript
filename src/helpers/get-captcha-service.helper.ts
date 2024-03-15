@@ -12,7 +12,11 @@ const { captcha } = getEnvironmentConfiguration();
  */
 export function getCaptchaService(): CaptchaService {
   if (!service) {
-    service = new CaptchaService(parameterService, captcha.secretKeyPath);
+    service = new CaptchaService(
+      parameterService,
+      captcha.secretKeyPath,
+      captcha.enabled
+    );
   }
 
   return service;

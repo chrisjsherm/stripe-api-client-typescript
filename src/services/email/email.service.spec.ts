@@ -24,7 +24,7 @@ describe("Email service", (): void => {
     });
 
     // Act
-    const result = await service.sendMessage({
+    const result = await service.sendMessage$({
       replyToEmailAddresses: ["danno@gmail.com"],
       subject: "Hello, World",
       message: "Good morning",
@@ -46,7 +46,7 @@ describe("Email service", (): void => {
     // Assert
     expect(
       async () =>
-        await service.sendMessage({
+        await service.sendMessage$({
           replyToEmailAddresses: ["danno@gmail.com"],
           subject: "Hello, World",
           message: "Good morning",

@@ -34,7 +34,7 @@ describe("Captcha service", (): void => {
       .reply(200, { success: true });
 
     // Act
-    const result$ = service.validateToken("my-token", "192.1.1.1");
+    const result$ = service.validateToken$("my-token", "192.1.1.1");
     // Cannot use marbles: https://rxjs.dev/guide/testing/marble-testing#rxjs-code-that-consumes-promises-cannot-be-directly-tested
     const result = await lastValueFrom(result$);
 
@@ -49,7 +49,7 @@ describe("Captcha service", (): void => {
       .reply(200, { success: true });
 
     // Act
-    const result$ = service.validateToken("my-token");
+    const result$ = service.validateToken$("my-token");
     // Cannot use marbles: https://rxjs.dev/guide/testing/marble-testing#rxjs-code-that-consumes-promises-cannot-be-directly-tested
     const result = await lastValueFrom(result$);
 
@@ -67,7 +67,7 @@ describe("Captcha service", (): void => {
     jest.spyOn(console, "error").mockImplementation(() => {});
 
     // Act
-    const result$ = service.validateToken("my-token");
+    const result$ = service.validateToken$("my-token");
     // Cannot use marbles: https://rxjs.dev/guide/testing/marble-testing#rxjs-code-that-consumes-promises-cannot-be-directly-tested
     const result = await lastValueFrom(result$);
 
@@ -85,7 +85,7 @@ describe("Captcha service", (): void => {
     jest.spyOn(console, "error").mockImplementation(() => {});
 
     // Act
-    const result$ = service.validateToken("my-token");
+    const result$ = service.validateToken$("my-token");
     // Cannot use marbles: https://rxjs.dev/guide/testing/marble-testing#rxjs-code-that-consumes-promises-cannot-be-directly-tested
     const result = await lastValueFrom(result$);
 

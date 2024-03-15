@@ -1,4 +1,5 @@
 import Ajv from "ajv";
+import addFormats from "ajv-formats";
 
 let validator: Ajv;
 
@@ -9,6 +10,7 @@ let validator: Ajv;
 export function getJsonValidator() {
   if (!validator) {
     validator = new Ajv();
+    addFormats(validator);
   }
 
   return validator;

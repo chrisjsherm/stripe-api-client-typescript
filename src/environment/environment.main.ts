@@ -34,7 +34,7 @@ const sharedConfiguration: Pick<
     url: process.env.AUTH_BASE_URL!,
   },
   captcha: {
-    enabled: !!process.env.CAPTCHA_ENABLED,
+    enabled: process.env.CAPTCHA_ENABLED === "true",
     secretKeyPath: (function getPath(
       isCaptchaEnabled: boolean,
       secretKeyPath: string | undefined

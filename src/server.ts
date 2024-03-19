@@ -2,14 +2,17 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import { createCustomerContact } from "./controllers/create-contact-message.controller";
 import { createPaymentIntent } from "./controllers/create-payment-intent.controller";
 import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import { refreshGroupMemberships } from "./controllers/refresh-group-memberships.controller";
 import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
+import { contactFormJsonSchema } from "./data-models/contact-form.interface";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasAnyRole } from "./helpers/has-any-role.helper";
+import { generateRequestBodyValidator } from "./helpers/validate-request-body.middleware";
 import { verifyApiJwt$ } from "./helpers/verify-api-jwt.helper";
 import { verifyFusionAuthWebhookJwt$ } from "./helpers/verify-fusion-auth-webhook-jwt.helper";
 
@@ -71,6 +74,15 @@ export async function startServer() {
       limit: config.http.payloadLimit,
     })
   );
+
+  // Contact Us API
+  app.post(
+    "/contact-us",
+    generateRequestBodyValidator(contactFormJsonSchema),
+    createCustomerContact
+  );
+
+  // Configuration for API endpoints that require authentication.
   app.use(verifyApiJwt$);
 
   // FusionAuth API

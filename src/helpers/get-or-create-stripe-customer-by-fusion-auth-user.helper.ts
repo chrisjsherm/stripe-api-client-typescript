@@ -1,6 +1,6 @@
 import FusionAuthClient from "@fusionauth/typescript-client";
 import Stripe from "stripe";
-import { IBasicUser } from "../data-models/basic-user.interface";
+import { IBasicUser } from "../data-models/interfaces/basic-user.interface";
 import { createStripeCustomer$ } from "./create-stripe-customer.helper";
 import { getStripeCustomerByFusionAuthUser$ } from "./get-stripe-customer-by-fusion-auth-user.helper";
 

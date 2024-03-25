@@ -3,7 +3,7 @@ import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import { lastValueFrom, take } from "rxjs";
 import htmlSanitize from "sanitize-html";
-import { ContactForm } from "../data-models/contact-form.interface";
+import { ContactForm } from "../data-models/interfaces/contact-form.interface";
 import { getCaptchaService } from "../helpers/get-captcha-service.helper";
 import { getEmailService } from "../helpers/get-email-service.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";

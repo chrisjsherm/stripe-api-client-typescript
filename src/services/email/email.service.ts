@@ -3,7 +3,7 @@ import {
   SendEmailCommandInput,
   SESClient,
 } from "@aws-sdk/client-ses";
-import { IEmail } from "../../data-models/email.interface";
+import { IEmail } from "../../data-models/interfaces/email.interface";
 
 /**
  * Send email messages.

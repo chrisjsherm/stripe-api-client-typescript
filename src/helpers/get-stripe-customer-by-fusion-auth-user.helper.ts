@@ -1,6 +1,6 @@
 import * as createError from "http-errors";
 import Stripe from "stripe";
-import { IBasicUser } from "../data-models/basic-user.interface";
+import { IBasicUser } from "../data-models/interfaces/basic-user.interface";
 import { StripeQueries } from "./stripe-queries.helper";
 import { synchronizeCustomerEmail } from "./synchronize-customer-email.helper";
 

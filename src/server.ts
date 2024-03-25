@@ -9,7 +9,7 @@ import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import { refreshGroupMemberships } from "./controllers/refresh-group-memberships.controller";
 import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
-import { contactFormJsonSchema } from "./data-models/contact-form.interface";
+import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasAnyRole } from "./helpers/has-any-role.helper";
 import { generateRequestBodyValidator } from "./helpers/validate-request-body.middleware";

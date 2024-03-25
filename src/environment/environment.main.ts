@@ -13,6 +13,11 @@ const requiredEnvironmentVariables = new Set<string>([
   "AUTH_BASE_URL",
   "AUTH_GROUP_ID__SUBSCRIPTION_BASIC_ANNUAL_REV_0",
   "CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL",
+  "DB_HOST",
+  "DB_NAME",
+  "DB_PASSWORD",
+  "DB_PORT",
+  "DB_USERNAME",
   "STRIPE_API_KEY",
   "STRIPE_WEBHOOK_SIGNING_KEY",
 ]);
@@ -24,7 +29,14 @@ for (const key of requiredEnvironmentVariables) {
 
 const sharedConfiguration: Pick<
   IBuildConfiguration,
-  "auth" | "captcha" | "cors" | "customerContact" | "http" | "payments" | "port"
+  | "auth"
+  | "captcha"
+  | "cors"
+  | "customerContact"
+  | "db"
+  | "http"
+  | "payments"
+  | "port"
 > = {
   auth: {
     apiKey: process.env.AUTH_API_KEY!,
@@ -59,18 +71,26 @@ const sharedConfiguration: Pick<
     subjectSuffix: process.env.CUSTOMER_CONTACT_SUBJECT_SUFFIX ?? "",
     toEmail: process.env.CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL!,
   },
+  db: {
+    host: process.env.DB_HOST!,
+    name: process.env.DB_NAME!,
+    password: process.env.DB_PASSWORD!,
+    port: Number.parseInt(process.env.DB_PORT ?? "5432", 10),
+    username: process.env.DB_USERNAME!,
+  },
   http: {
     payloadLimit: process.env.HTTP_PAYLOAD_LIMIT ?? "500kb",
     requestTimeoutMs: Number.parseInt(
-      process.env.HTTP_REQUEST_TIMEOUT_MS ?? "2500"
+      process.env.HTTP_REQUEST_TIMEOUT_MS ?? "2500",
+      10
     ),
-    retryDelayMs: Number.parseInt(process.env.HTTP_RETRY_DELAY_MS ?? "250"),
+    retryDelayMs: Number.parseInt(process.env.HTTP_RETRY_DELAY_MS ?? "250", 10),
   },
   payments: {
     apiKey: process.env.STRIPE_API_KEY!,
     webhookSigningKey: process.env.STRIPE_WEBHOOK_SIGNING_KEY!,
   },
-  port: Number.parseInt(process.env.SERVER_PORT ?? "4242"),
+  port: Number.parseInt(process.env.SERVER_PORT ?? "4242", 10),
 };
 
 // Write the environment files when Node runs this file.

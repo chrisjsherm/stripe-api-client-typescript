@@ -23,6 +23,14 @@ export interface IBuildConfiguration {
     subjectSuffix: string;
   };
 
+  db: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    name: string;
+  };
+
   http: {
     payloadLimit: string;
     retryDelayMs: number;

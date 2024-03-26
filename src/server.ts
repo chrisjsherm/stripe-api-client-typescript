@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { createCustomerContact } from "./controllers/create-contact-message.controller";
+import { createOrganization } from "./controllers/create-organization.controller";
 import { createPaymentIntent } from "./controllers/create-payment-intent.controller";
 import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
@@ -84,6 +85,9 @@ export async function startServer() {
 
   // Configuration for API endpoints that require authentication.
   app.use(verifyApiJwt$);
+
+  // Organization API
+  app.post("/organization", hasAnyRole([]), createOrganization);
 
   // FusionAuth API
   app.post("/customer/verify-email", resendEmailVerificationMessage);

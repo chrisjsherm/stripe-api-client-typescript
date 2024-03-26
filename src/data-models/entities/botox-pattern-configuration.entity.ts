@@ -1,5 +1,6 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
 import { CoreEntity } from "./core-entity.model";
+import { Organization } from "./organization.entity";
 
 /**
  * Standard botulinum toxin pattern within an organization.
@@ -8,9 +9,13 @@ import { CoreEntity } from "./core-entity.model";
  */
 @Entity()
 export class BotoxPatternConfiguration extends CoreEntity {
-  @Column("uuid")
-  organizationId: string;
-
   @Column("jsonb")
   configuration: { [key: string]: number[] };
+
+  @OneToOne(
+    () => Organization,
+    (organization) => organization.botoxPatternConfiguration
+  )
+  @JoinColumn()
+  organization: Organization;
 }

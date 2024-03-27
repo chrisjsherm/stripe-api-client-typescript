@@ -52,3 +52,46 @@ export async function createOrganization(
     );
   }
 }
+
+/**
+ * Get the organization associated with the authenticated user.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+export async function getUserOrganization(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const userInfo = getUserInfo(req);
+    if (userInfo.id === undefined || userInfo.email === undefined) {
+      throw createError.Unauthorized();
+    }
+
+    const user = await AppDataSource.getRepository(User).findOne({
+      where: {
+        fusionAuthId: userInfo.id,
+      },
+      relations: {
+        organization: true,
+      },
+    });
+
+    if (user === null) {
+      throw createError.NotFound(
+        "Could not find an organization associated with the authenticated user."
+      );
+    }
+
+    res.json({
+      data: user.organization,
+    });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "❗️ Error finding authenticated user's organization.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}

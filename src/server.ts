@@ -3,11 +3,14 @@ import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { createCustomerContact } from "./controllers/create-contact-message.controller";
-import { createOrganization } from "./controllers/create-organization.controller";
 import { createPaymentIntent } from "./controllers/create-payment-intent.controller";
 import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
+import {
+  createOrganization,
+  getUserOrganization,
+} from "./controllers/organization.controller";
 import { refreshGroupMemberships } from "./controllers/refresh-group-memberships.controller";
 import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
@@ -88,6 +91,7 @@ export async function startServer() {
 
   // Organization API
   app.post("/organization", hasAnyRole([]), createOrganization);
+  app.get("/organization", hasAnyRole([]), getUserOrganization);
 
   // FusionAuth API
   app.post("/customer/verify-email", resendEmailVerificationMessage);

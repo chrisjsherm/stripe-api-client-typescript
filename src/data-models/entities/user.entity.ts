@@ -7,7 +7,7 @@ import { Organization } from "./organization.entity";
  */
 @Entity()
 export class User extends CoreEntity {
-  @Column({ type: "uuid", nullable: false })
+  @Column({ type: "uuid", nullable: false, unique: true })
   fusionAuthId: string;
 
   @ManyToOne(() => Organization, (organization) => organization.users)

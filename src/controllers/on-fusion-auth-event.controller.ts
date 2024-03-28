@@ -40,7 +40,7 @@ export async function onFusionAuthEvent(
           userCreateCompleteEvent.user?.id === undefined ||
           userCreateCompleteEvent.user?.email === undefined
         ) {
-          throw createHttpError.BadGateway(
+          throw createHttpError.BadRequest(
             'FusionAuth "UserEmailVerifiedEvent" did not set "user" property.'
           );
         }
@@ -63,7 +63,7 @@ export async function onFusionAuthEvent(
           emailVerifiedEvent.user?.id === undefined ||
           emailVerifiedEvent.user?.email === undefined
         ) {
-          throw createHttpError.BadGateway(
+          throw createHttpError.BadRequest(
             'FusionAuth "UserEmailVerifiedEvent" did not set "user" property.'
           );
         }

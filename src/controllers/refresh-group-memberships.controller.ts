@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import { StatusCodes } from "http-status-codes";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
@@ -20,16 +20,8 @@ export async function refreshGroupMemberships(
   req: Request,
   res: Response
 ): Promise<void> {
-  const { id: userId, email: userEmail } = getUserInfo(req);
-  if (userId === undefined || userEmail === undefined) {
-    const statusCode = StatusCodes.UNAUTHORIZED;
-    res.status(statusCode).json({
-      message: getReasonPhrase(statusCode),
-    });
-    return;
-  }
-
   try {
+    const { id: userId, email: userEmail } = getUserInfo(req);
     await refreshGroupMembership$(
       { id: userId, email: userEmail },
       stripeClient,
@@ -40,7 +32,7 @@ export async function refreshGroupMemberships(
   } catch (error) {
     onErrorProcessingHttpRequest(
       error,
-      `❗️ Error refreshing user ${userId}'s group memberships.`,
+      `❗️ Error refreshing user's group memberships.`,
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

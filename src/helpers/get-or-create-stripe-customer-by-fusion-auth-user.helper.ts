@@ -1,6 +1,6 @@
 import FusionAuthClient from "@fusionauth/typescript-client";
 import Stripe from "stripe";
-import { IBasicUser } from "../data-models/interfaces/basic-user.interface";
+import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { createStripeCustomer$ } from "./create-stripe-customer.helper";
 import { getStripeCustomerByFusionAuthUser$ } from "./get-stripe-customer-by-fusion-auth-user.helper";
 
@@ -13,7 +13,7 @@ import { getStripeCustomerByFusionAuthUser$ } from "./get-stripe-customer-by-fus
  * @throws Error
  */
 export async function getOrCreateStripeCustomerByFusionAuthUser$(
-  fusionAuthUser: IBasicUser,
+  fusionAuthUser: AppUser,
   stripeClient: Stripe,
   authClient: FusionAuthClient
 ): Promise<Stripe.Customer> {

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
@@ -24,14 +24,6 @@ export async function createPaymentIntent(
 ): Promise<void> {
   try {
     const { id: userId, email: userEmail } = getUserInfo(req);
-    if (userId === undefined || userEmail === undefined) {
-      const statusCode = StatusCodes.UNAUTHORIZED;
-      res.status(statusCode).json({
-        message: getReasonPhrase(statusCode),
-      });
-      return;
-    }
-
     const { id: stripeCustomerId } =
       await getOrCreateStripeCustomerByFusionAuthUser$(
         { id: userId, email: userEmail },

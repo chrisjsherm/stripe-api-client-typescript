@@ -1,14 +1,11 @@
 import {
   EventRequest,
   EventType,
-  UserCreateCompleteEvent,
   UserEmailVerifiedEvent,
 } from "@fusionauth/typescript-client";
 import { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
-import { User } from "../data-models/entities/user.entity";
-import { AppDataSource } from "../db/data-source";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { getOrCreateStripeCustomerByFusionAuthUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
@@ -32,31 +29,9 @@ export async function onFusionAuthEvent(
 ): Promise<void> {
   const { event } = JSON.parse(req.body.toString()) as EventRequest;
   console.info(`FusionAuth event: ${event?.type}`);
+
   try {
     switch (event?.type) {
-      case EventType.UserCreateComplete:
-        const userCreateCompleteEvent = event as UserCreateCompleteEvent;
-        if (
-          userCreateCompleteEvent.user?.id === undefined ||
-          userCreateCompleteEvent.user?.email === undefined
-        ) {
-          throw createHttpError.BadRequest(
-            'FusionAuth "UserEmailVerifiedEvent" did not set "user" property.'
-          );
-        }
-        try {
-          const userRepository = AppDataSource.getRepository(User);
-          const user = userRepository.create({
-            fusionAuthId: userCreateCompleteEvent.user.id,
-          });
-          await userRepository.save(user);
-        } catch (err) {
-          throw createHttpError.InternalServerError(
-            "❗️ Error creating User entity."
-          );
-        }
-        break;
-
       case EventType.UserEmailVerified:
         const emailVerifiedEvent = event as UserEmailVerifiedEvent;
         if (

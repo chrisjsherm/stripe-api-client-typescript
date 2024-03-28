@@ -1,6 +1,6 @@
 import * as createError from "http-errors";
 import Stripe from "stripe";
-import { IBasicUser } from "../data-models/interfaces/basic-user.interface";
+import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { StripeQueries } from "./stripe-queries.helper";
 import { synchronizeCustomerEmail } from "./synchronize-customer-email.helper";
 
@@ -13,7 +13,7 @@ import { synchronizeCustomerEmail } from "./synchronize-customer-email.helper";
  * @throws HttpError
  */
 export async function getStripeCustomerByFusionAuthUser$(
-  fusionAuthUser: IBasicUser,
+  fusionAuthUser: AppUser,
   stripeClient: Stripe
 ): Promise<Stripe.Customer | null> {
   const query = StripeQueries.customer_byFusionAuthUserId(fusionAuthUser.id);

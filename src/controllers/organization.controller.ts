@@ -2,10 +2,16 @@ import { Request, Response } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import { Organization } from "../data-models/entities/organization.entity";
-import { User } from "../data-models/entities/user.entity";
 import { AppDataSource } from "../db/data-source";
+import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
+import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
+import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { getUserInfo } from "../helpers/get-user-info.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
+import { ConstantConfiguration } from "../services/constant-configuration.service";
+
+const config = getEnvironmentConfiguration();
+const authClient = getFusionAuth(config);
 
 /**
  * Create an organization entity
@@ -20,22 +26,38 @@ export async function createOrganization(
 
   try {
     const userInfo = getUserInfo(req);
-    if (userInfo.id === undefined || userInfo.email === undefined) {
-      throw createError.Unauthorized();
-    }
-
-    const userRepository = AppDataSource.getRepository(User);
-    let user = await userRepository.findOne({
-      where: { fusionAuthId: userInfo.id },
-    });
-    if (user === null) {
-      user = await userRepository.create({ fusionAuthId: userInfo.id }).save();
+    const authUser = await getAuthUserById$(userInfo.id, authClient);
+    const organizationId = authUser.data?.[
+      ConstantConfiguration.fusionAuth_user_data_organizationId
+    ] as string;
+    if (userInfo.organizationId !== undefined || organizationId !== undefined) {
+      throw createError.BadRequest(
+        "User is already associated with an organization."
+      );
     }
 
     const organizationRepository = AppDataSource.getRepository(Organization);
-    const createdOrganization = await organizationRepository
-      .create({ ...organization, users: [user] })
-      .save();
+    const createdOrganization = await organizationRepository.create(
+      organization
+    );
+
+    try {
+      await authClient.updateUser(userInfo.id, {
+        user: {
+          ...authUser,
+          data: {
+            ...authUser.data,
+            [ConstantConfiguration.fusionAuth_user_data_organizationId]:
+              createdOrganization.id,
+          },
+        },
+      });
+    } catch (err) {
+      createdOrganization.softRemove();
+      throw createError.InternalServerError(
+        "Error associating user with organization."
+      );
+    }
 
     res.status(StatusCodes.CREATED).json({
       data: {
@@ -64,27 +86,25 @@ export async function getUserOrganization(
 ): Promise<void> {
   try {
     const userInfo = getUserInfo(req);
-    if (userInfo.id === undefined || userInfo.email === undefined) {
-      throw createError.Unauthorized();
+    if (userInfo.organizationId === undefined) {
+      throw createError.BadRequest(
+        "User is not associated with an organization."
+      );
     }
 
-    const user = await AppDataSource.getRepository(User).findOne({
-      where: {
-        fusionAuthId: userInfo.id,
-      },
-      relations: {
-        organization: true,
-      },
+    const organizationRepo = AppDataSource.getRepository(Organization);
+    const organization = await organizationRepo.findOne({
+      where: { id: userInfo.organizationId },
     });
 
-    if (user === null) {
+    if (organization === null) {
       throw createError.NotFound(
-        "Could not find an organization associated with the authenticated user."
+        `Organization with id "${userInfo.organizationId}" was not found.`
       );
     }
 
     res.json({
-      data: user.organization,
+      data: organization,
     });
   } catch (err) {
     onErrorProcessingHttpRequest(

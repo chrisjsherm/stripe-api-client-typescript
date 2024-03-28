@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import { StatusCodes } from "http-status-codes";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { getUserInfo } from "../helpers/get-user-info.helper";
@@ -17,17 +17,8 @@ export async function resendEmailVerificationMessage(
   req: Request,
   res: Response
 ): Promise<void> {
-  const { email: userEmail } = getUserInfo(req);
-
-  if (userEmail === undefined) {
-    const statusCode = StatusCodes.UNAUTHORIZED;
-    res.status(statusCode).json({
-      message: getReasonPhrase(statusCode),
-    });
-    return;
-  }
-
   try {
+    const { email: userEmail } = getUserInfo(req);
     const result = await authClient.resendEmailVerification(userEmail);
 
     if (result.exception) {

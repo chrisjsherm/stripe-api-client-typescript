@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as createError from "http-errors";
-import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
@@ -34,10 +34,6 @@ export async function getPaymentIntent(
 
   try {
     const { id: userId, email: userEmail } = getUserInfo(req);
-    if (userId === undefined || userEmail === undefined) {
-      throw createError.Unauthorized(getReasonPhrase(StatusCodes.UNAUTHORIZED));
-    }
-
     const { id: stripeCustomerId } =
       await getOrCreateStripeCustomerByFusionAuthUser$(
         { id: userId, email: userEmail },

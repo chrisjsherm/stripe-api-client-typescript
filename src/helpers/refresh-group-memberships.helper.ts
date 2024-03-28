@@ -4,7 +4,7 @@ import FusionAuthClient, {
 } from "@fusionauth/typescript-client";
 import * as createError from "http-errors";
 import Stripe from "stripe";
-import { IBasicUser } from "../data-models/interfaces/basic-user.interface";
+import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { getAuthUserById$ } from "./get-auth-user-by-id.helper";
 import { getGroupMemberships$ } from "./get-group-memberships.helper";
 import { getStripeCustomerByFusionAuthUser$ } from "./get-stripe-customer-by-fusion-auth-user.helper";
@@ -18,7 +18,7 @@ import { getStripeCustomerByFusionAuthUser$ } from "./get-stripe-customer-by-fus
  * @throws Error
  */
 export async function refreshGroupMembership$(
-  fusionAuthUser: IBasicUser,
+  fusionAuthUser: AppUser,
   stripeClient: Stripe,
   authClient: FusionAuthClient
 ): Promise<User> {

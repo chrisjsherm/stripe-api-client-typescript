@@ -37,16 +37,14 @@ export async function createOrganization(
     }
 
     const organizationRepository = AppDataSource.getRepository(Organization);
-    const createdOrganization = await organizationRepository.create(
-      organization
-    );
+    const createdOrganization = await organizationRepository
+      .create(organization)
+      .save();
 
     try {
-      await authClient.updateUser(userInfo.id, {
+      await authClient.patchUser(userInfo.id, {
         user: {
-          ...authUser,
           data: {
-            ...authUser.data,
             [ConstantConfiguration.fusionAuth_user_data_organizationId]:
               createdOrganization.id,
           },
@@ -54,9 +52,7 @@ export async function createOrganization(
       });
     } catch (err) {
       createdOrganization.softRemove();
-      throw createError.InternalServerError(
-        "Error associating user with organization."
-      );
+      throw err;
     }
 
     res.status(StatusCodes.CREATED).json({

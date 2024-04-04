@@ -3,10 +3,10 @@ import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import { Organization } from "../data-models/entities/organization.entity";
 import { AppDataSource } from "../db/data-source";
+import { getAppUser } from "../helpers/get-app-user.helper";
 import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
-import { getUserInfo } from "../helpers/get-user-info.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 
@@ -25,7 +25,7 @@ export async function createOrganization(
   const organization: Organization = req.body;
 
   try {
-    const userInfo = getUserInfo(req);
+    const userInfo = getAppUser(req);
     const authUser = await getAuthUserById$(userInfo.id, authClient);
     const organizationId = authUser.data?.[
       ConstantConfiguration.fusionAuth_user_data_organizationId
@@ -81,7 +81,7 @@ export async function getUserOrganization(
   res: Response
 ): Promise<void> {
   try {
-    const userInfo = getUserInfo(req);
+    const userInfo = getAppUser(req);
     if (userInfo.organizationId === undefined) {
       throw createError.BadRequest(
         "User is not associated with an organization."

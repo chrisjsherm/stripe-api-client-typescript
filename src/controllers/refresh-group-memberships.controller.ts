@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import { getAppUser } from "../helpers/get-app-user.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
-import { getUserInfo } from "../helpers/get-user-info.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 import { refreshGroupMembership$ } from "../helpers/refresh-group-memberships.helper";
 
@@ -21,12 +21,8 @@ export async function refreshGroupMemberships(
   res: Response
 ): Promise<void> {
   try {
-    const { id: userId, email: userEmail } = getUserInfo(req);
-    await refreshGroupMembership$(
-      { id: userId, email: userEmail },
-      stripeClient,
-      authClient
-    );
+    const user = getAppUser(req);
+    await refreshGroupMembership$(user, stripeClient, authClient);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {

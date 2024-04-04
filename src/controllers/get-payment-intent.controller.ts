@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
+import { getAppUser } from "../helpers/get-app-user.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { getOrCreateStripeCustomerByFusionAuthUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
-import { getUserInfo } from "../helpers/get-user-info.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const config = getEnvironmentConfiguration();
@@ -33,13 +33,9 @@ export async function getPaymentIntent(
   }
 
   try {
-    const { id: userId, email: userEmail } = getUserInfo(req);
+    const user = getAppUser(req);
     const { id: stripeCustomerId } =
-      await getOrCreateStripeCustomerByFusionAuthUser$(
-        { id: userId, email: userEmail },
-        stripeClient,
-        authClient
-      );
+      await getOrCreateStripeCustomerByFusionAuthUser$(user, stripeClient);
 
     const paymentIntent: Stripe.Response<Stripe.PaymentIntent> =
       await stripeClient.paymentIntents.retrieve(id);

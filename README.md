@@ -7,22 +7,6 @@ Web server for interacting with the Stripe API. Written in TypeScript.
 1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli).
 2. Copy `.env.example` as `.env` and fill in the values with your configuration.
 
-### FusionAuth
-
-Create an API key for the `.env` file with access to the following:
-
-- /api/group/member POST DELETE
-- /api/user GET
-- /api/user/verify-email PUT
-
-Create a Group for the `.env` file named "Subscription: Basic".
-
-Configure a Webhook pointing to this server at the path `/webhooks/fusion-auth`
-with `user.email.verified` enabled.
-
-- Configure your tenant to have its `user.email.verified` webhook enabled and
-  set the transaction so that all webhooks must succeed.
-
 ### Stripe
 
 PaymentIntent objects should have a metadata entry with a key of `customer_id`

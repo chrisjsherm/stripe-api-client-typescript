@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import { getAppUser } from "../helpers/get-app-user.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
-import { getUserInfo } from "../helpers/get-user-info.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const config = getEnvironmentConfiguration();
@@ -18,7 +18,7 @@ export async function resendEmailVerificationMessage(
   res: Response
 ): Promise<void> {
   try {
-    const { email: userEmail } = getUserInfo(req);
+    const { email: userEmail } = getAppUser(req);
     const result = await authClient.resendEmailVerification(userEmail);
 
     if (result.exception) {

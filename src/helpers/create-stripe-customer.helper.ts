@@ -1,25 +1,20 @@
-import FusionAuthClient from "@fusionauth/typescript-client";
 import * as createError from "http-errors";
 import Stripe from "stripe";
+import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
-import { getAuthUserById$ } from "./get-auth-user-by-id.helper";
 
 /**
  * Create a Stripe customer from a FusionAuth user.
- * @param fusionAuthUserId FusionAuth user ID
- * @param authClient FusionAuth client
+ * @param fusionAuthUser FusionAuth user
  * @param stripeClient Stripe client
  * @returns Stripe Customer
  * @throws Error
  */
 export async function createStripeCustomer$(
-  fusionAuthUserId: string,
-  authClient: FusionAuthClient,
+  fusionAuthUser: AppUser,
   stripeClient: Stripe
 ): Promise<Stripe.Customer> {
-  const fusionAuthUser = await getAuthUserById$(fusionAuthUserId, authClient);
-
-  if (!fusionAuthUser.verified) {
+  if (!fusionAuthUser.emailVerified) {
     throw createError.BadRequest(
       `FusionAuth user ${fusionAuthUser} is not verified. Verify before ` +
         "creating an associated Stripe customer."
@@ -27,7 +22,7 @@ export async function createStripeCustomer$(
   }
 
   console.info(
-    `Attempting to create Stipe Customer associated with FusionAuth user ${fusionAuthUserId}.`
+    `Attempting to create Stipe Customer associated with FusionAuth user ${fusionAuthUser.id}.`
   );
   const stripeCustomer = await stripeClient.customers.create({
     email: fusionAuthUser.email,
@@ -35,7 +30,7 @@ export async function createStripeCustomer$(
     phone: fusionAuthUser.mobilePhone,
     metadata: {
       [ConstantConfiguration.stripe_customer_metadata_fusionAuthUserId]:
-        fusionAuthUserId,
+        fusionAuthUser.id,
     },
   });
   console.info(`Created Stripe Customer with id ${stripeCustomer.id}.`);

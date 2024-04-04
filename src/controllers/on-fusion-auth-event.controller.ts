@@ -6,14 +6,13 @@ import {
 import { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
+import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
-import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { getOrCreateStripeCustomerByFusionAuthUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const config = getEnvironmentConfiguration();
-const authClient = getFusionAuth(config);
 const stripeClient = getStripe(config);
 
 /**
@@ -46,27 +45,26 @@ export async function onFusionAuthEvent(
         // Use get-or-create to handle possible duplicate events from retries.
         await getOrCreateStripeCustomerByFusionAuthUser$(
           {
-            id: emailVerifiedEvent.user.id,
-            email: emailVerifiedEvent.user.email,
-          },
-          stripeClient,
-          authClient
+            ...emailVerifiedEvent.user,
+            emailVerified: emailVerifiedEvent.user.verified ?? false,
+          } as AppUser,
+          stripeClient
         );
         break;
     }
-
-    res.sendStatus(StatusCodes.OK);
   } catch (error) {
     let message = "Error processing FusionAuth event.";
     if (event) {
       message = `${message} Details: ${event?.id} ${event?.type}`;
     }
 
-    onErrorProcessingHttpRequest(
+    return onErrorProcessingHttpRequest(
       error,
       message,
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );
   }
+
+  res.sendStatus(StatusCodes.OK);
 }

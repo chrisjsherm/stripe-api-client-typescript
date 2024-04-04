@@ -22,6 +22,13 @@ export async function refreshGroupMembership$(
   stripeClient: Stripe,
   authClient: FusionAuthClient
 ): Promise<User> {
+  if (!fusionAuthUser.emailVerified) {
+    console.info(
+      "Users must be verified to refresh group memberships. Skipping refresh."
+    );
+    return fusionAuthUser;
+  }
+
   const stripeCustomer = await getStripeCustomerByFusionAuthUser$(
     fusionAuthUser,
     stripeClient

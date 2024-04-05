@@ -24,7 +24,8 @@ export interface IFusionAuthJwt {
   /**
    * Custom fields added via lambda function.
    */
-  full_name: string;
+  first_name: string;
+  last_name: string;
   mobile_phone: string;
   organization_id: string | undefined;
 }

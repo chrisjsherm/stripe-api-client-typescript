@@ -26,7 +26,7 @@ export async function createStripeCustomer$(
   );
   const stripeCustomer = await stripeClient.customers.create({
     email: fusionAuthUser.email,
-    name: fusionAuthUser.fullName,
+    name: `${fusionAuthUser.firstName} ${fusionAuthUser.lastName}`,
     phone: fusionAuthUser.mobilePhone,
     metadata: {
       [ConstantConfiguration.stripe_customer_metadata_fusionAuthUserId]:

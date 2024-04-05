@@ -23,7 +23,8 @@ export function getAppUser(req: Request): AppUser {
     id: authToken.sub,
     email: authToken.email,
     emailVerified: authToken.email_verified ?? false,
-    fullName: authToken.full_name,
+    firstName: authToken.first_name,
+    lastName: authToken.last_name,
     mobilePhone: authToken.mobile_phone,
     organizationId: authToken.organization_id,
   };

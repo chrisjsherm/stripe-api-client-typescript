@@ -6,9 +6,7 @@ import {
 import { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
-import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
-import { getOrCreateStripeCustomerByFusionAuthUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
@@ -42,13 +40,9 @@ export async function onFusionAuthEvent(
           );
         }
 
-        // Use get-or-create to handle possible duplicate events from retries.
-        await getOrCreateStripeCustomerByFusionAuthUser$(
-          {
-            ...emailVerifiedEvent.user,
-            emailVerified: emailVerifiedEvent.user.verified ?? false,
-          } as AppUser,
-          stripeClient
+        console.info(
+          `FusionAuth user ${emailVerifiedEvent.user.id} ` +
+            `(${emailVerifiedEvent.user.email}) email address is now verified.`
         );
         break;
     }

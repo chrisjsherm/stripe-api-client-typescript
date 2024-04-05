@@ -26,7 +26,7 @@ export async function getStripeCustomerByFusionAuthUser$(
   }
 
   if (searchResults.length > 1) {
-    throw createError.FailedDependency(
+    throw createError.InternalServerError(
       `Multiple Stripe Customers found with FusionAuth user ID ${fusionAuthUser.id}.`
     );
   }

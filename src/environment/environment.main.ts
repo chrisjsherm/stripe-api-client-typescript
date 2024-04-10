@@ -12,6 +12,8 @@ const requiredEnvironmentVariables = new Set<string>([
   "AUTH_APP_ID",
   "AUTH_BASE_URL",
   "AUTH_GROUP_ID__SUBSCRIPTION_BASIC_ANNUAL_REV_0",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
   "CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL",
   "DB_HOST",
   "DB_NAME",
@@ -22,7 +24,7 @@ const requiredEnvironmentVariables = new Set<string>([
   "STRIPE_WEBHOOK_SIGNING_KEY",
 ]);
 for (const key of requiredEnvironmentVariables) {
-  if (process.env[key] === undefined) {
+  if (process.env[key] === undefined || process.env[key] === "") {
     throw new Error(`Environment variable ${key} is not set`);
   }
 }

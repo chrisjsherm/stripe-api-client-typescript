@@ -26,7 +26,7 @@ export async function createCustomerContact(
 
   try {
     const validatedToken$ = captchaService
-      .validateToken$(contactForm.cfTurnstileResponse ?? "", req.ip)
+      .validateToken$(contactForm.captchaToken ?? "", req.ip)
       .pipe(take(1));
 
     if ((await lastValueFrom(validatedToken$)) === false) {

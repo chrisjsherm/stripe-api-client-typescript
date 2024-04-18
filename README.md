@@ -59,9 +59,14 @@ Once connected to pgAdmin, add a server. On the "Connection" tab:
 
 ## Development
 
-1. Open a terminal and run: `npm start`
-2. Open another terminal and run: `stripe login`
-3. After logging in, run: `stripe listen --forward-to localhost:4242/webhooks/stripe`
-4. Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
-5. Open another terminal and run: `stripe trigger --help` to see a list of
+1. Open a terminal and run: `docker-compose up`
+2. Open a terminal and run: `npm start`
+3. Open another terminal and run: `stripe login`
+4. After logging in, run: `stripe listen --forward-to localhost:4242/webhooks/stripe`
+5. Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
+6. Open another terminal and run: `stripe trigger --help` to see a list of
    Stripe events you can generate.
+
+To stop and remove the Docker containers: `docker-compose down`
+To also remove the Docker volumes: `docker-compose down -v`
+To stop the container without removing: `docker-compose stop`

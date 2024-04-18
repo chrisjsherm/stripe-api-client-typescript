@@ -14,6 +14,7 @@ import {
 import { refreshGroupMemberships } from "./controllers/refresh-group-memberships.controller";
 import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
+import { createOrganizationJsonSchema } from "./data-models/json-schemas/organization-create.json-schema";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasAnyRole } from "./helpers/has-any-role.helper";
 import { generateRequestBodyValidator } from "./helpers/validate-request-body.middleware";
@@ -90,7 +91,12 @@ export async function startServer() {
   app.use(verifyApiJwt$);
 
   // Organization API
-  app.post("/organization", hasAnyRole([]), createOrganization);
+  app.post(
+    "/organization",
+    hasAnyRole([]),
+    generateRequestBodyValidator(createOrganizationJsonSchema),
+    createOrganization
+  );
   app.get("/organization", hasAnyRole([]), getUserOrganization);
 
   // FusionAuth API

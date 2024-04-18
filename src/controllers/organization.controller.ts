@@ -59,6 +59,7 @@ export async function createOrganization(
       data: {
         id: createdOrganization.id,
         name: createdOrganization.name,
+        mailingAddress: createdOrganization.mailingAddress,
       },
     });
   } catch (err) {

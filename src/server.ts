@@ -11,8 +11,7 @@ import {
   createOrganization,
   getUserOrganization,
 } from "./controllers/organization.controller";
-import { refreshGroupMemberships } from "./controllers/refresh-group-memberships.controller";
-import { resendEmailVerificationMessage } from "./controllers/resend-email-verification-message.controller";
+import { usersRouter } from "./controllers/users.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
 import { createOrganizationJsonSchema } from "./data-models/json-schemas/organization-create.json-schema";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
@@ -99,13 +98,12 @@ export async function startServer() {
   );
   app.get("/organization", hasAnyRole([]), getUserOrganization);
 
-  // FusionAuth API
-  app.post("/customer/verify-email", resendEmailVerificationMessage);
-  app.post("/customer/refresh-group-memberships", refreshGroupMemberships);
-
   // Stripe API
   app.post("/payment-intent", hasAnyRole([]), createPaymentIntent);
   app.post("/payment-intent/:id", hasAnyRole([]), getPaymentIntent);
+
+  // Users API
+  app.use("/users", usersRouter);
 
   try {
     await app.listen(config.port);

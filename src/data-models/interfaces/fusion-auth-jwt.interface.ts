@@ -28,4 +28,5 @@ export interface IFusionAuthJwt {
   last_name: string;
   mobile_phone: string;
   organization_id: string | undefined;
+  stripe_customer_id: string | undefined;
 }

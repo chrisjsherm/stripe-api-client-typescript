@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import { getAppUser } from "../helpers/get-app-user.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
-import { getOrCreateStripeCustomerByFusionAuthUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
+import { getOrCreateStripeCustomerByUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
@@ -22,8 +22,10 @@ export async function createPaymentIntent(
 ): Promise<void> {
   try {
     const user = getAppUser(req);
-    const { id: stripeCustomerId } =
-      await getOrCreateStripeCustomerByFusionAuthUser$(user, stripeClient);
+    const { id: stripeCustomerId } = await getOrCreateStripeCustomerByUser$(
+      user,
+      stripeClient
+    );
 
     const params: Stripe.PaymentIntentCreateParams = {
       amount: 1099,

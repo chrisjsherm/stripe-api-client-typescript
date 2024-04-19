@@ -1,12 +1,15 @@
 import {
+  BaseEvent,
   EventRequest,
   EventType,
-  UserEmailVerifiedEvent,
+  User as FusionAuthUser,
 } from "@fusionauth/typescript-client";
 import { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
+import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
+import { getOrCreateStripeCustomerByUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
@@ -25,25 +28,17 @@ export async function onFusionAuthEvent(
   res: Response
 ): Promise<void> {
   const { event } = JSON.parse(req.body.toString()) as EventRequest;
-  console.info(`FusionAuth event: ${event?.type}`);
+  console.info(`FusionAuth event: ${event?.type ?? "unknown"}`);
+  const user = getUserFromEvent(event);
 
   try {
     switch (event?.type) {
-      case EventType.UserEmailVerified:
-        const emailVerifiedEvent = event as UserEmailVerifiedEvent;
-        if (
-          emailVerifiedEvent.user?.id === undefined ||
-          emailVerifiedEvent.user?.email === undefined
-        ) {
-          throw createHttpError.BadRequest(
-            'FusionAuth "UserEmailVerifiedEvent" did not set "user" property.'
-          );
+      case EventType.UserCreate:
+        if (user === null) {
+          throw getUserNotSetError(event.type);
         }
 
-        console.info(
-          `FusionAuth user ${emailVerifiedEvent.user.id} ` +
-            `(${emailVerifiedEvent.user.email}) email address is now verified.`
-        );
+        await getOrCreateStripeCustomerByUser$(user, stripeClient);
         break;
     }
   } catch (error) {
@@ -60,5 +55,45 @@ export async function onFusionAuthEvent(
     );
   }
 
-  res.sendStatus(StatusCodes.OK);
+  if (!res.headersSent) {
+    res.sendStatus(StatusCodes.OK);
+  }
+}
+
+/**
+ * Get the "user" property from a FusionAuth event.
+ * @param event FusionAuth event
+ * @returns FusionAuth user
+ */
+function getUserFromEvent(event: BaseEvent | undefined): AppUser | null {
+  if (event === undefined) {
+    return null;
+  }
+
+  const { user } = event as { user?: FusionAuthUser };
+
+  if (
+    user === undefined ||
+    user.id === undefined ||
+    user.email === undefined ||
+    user.firstName === undefined ||
+    user.lastName === undefined ||
+    user.verified === undefined
+  ) {
+    return null;
+  }
+
+  const appUser = user as AppUser;
+  appUser.emailVerified = user.verified;
+  return appUser;
+}
+
+/**
+ * Get exception because the event did not properly set the "user" property.
+ * @param eventType FusionAuth event type
+ */
+function getUserNotSetError(eventType: string): createHttpError.HttpError<400> {
+  return createHttpError.BadRequest(
+    `FusionAuth event "${eventType}" did not properly set the user property.`
+  );
 }

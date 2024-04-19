@@ -10,4 +10,5 @@ export interface AppUser {
 
   mobilePhone?: string;
   organizationId?: string;
+  stripeCustomerId?: string;
 }

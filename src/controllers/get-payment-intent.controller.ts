@@ -4,7 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import { getAppUser } from "../helpers/get-app-user.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
-import { getStripeCustomerByFusionAuthUser$ } from "../helpers/get-stripe-customer-by-fusion-auth-user.helper";
+import { getStripeCustomerByUser$ } from "../helpers/get-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
@@ -32,10 +32,7 @@ export async function getPaymentIntent(
 
   try {
     const user = getAppUser(req);
-    const customer = await getStripeCustomerByFusionAuthUser$(
-      user,
-      stripeClient
-    );
+    const customer = await getStripeCustomerByUser$(user, stripeClient);
     if (customer === null) {
       throw createError.NotFound(
         `Did not find Stripe customer associated with user ${user.id}.`

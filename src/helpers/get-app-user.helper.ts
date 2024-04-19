@@ -27,5 +27,6 @@ export function getAppUser(req: Request): AppUser {
     lastName: authToken.last_name,
     mobilePhone: authToken.mobile_phone,
     organizationId: authToken.organization_id,
+    stripeCustomerId: authToken.stripe_customer_id,
   };
 }

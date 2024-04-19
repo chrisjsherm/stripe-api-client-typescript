@@ -62,7 +62,12 @@ Once connected to pgAdmin, add a server. On the "Connection" tab:
 1. Open a terminal and run: `docker-compose up`
 2. Open a terminal and run: `npm start`
 3. Open another terminal and run: `stripe login`
-4. After logging in, run: `stripe listen --forward-to localhost:4242/webhooks/stripe`
+4. After logging in, run:
+
+```
+stripe listen --forward-to localhost:4242/webhooks/stripe
+```
+
 5. Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
 6. Open another terminal and run: `stripe trigger --help` to see a list of
    Stripe events you can generate.

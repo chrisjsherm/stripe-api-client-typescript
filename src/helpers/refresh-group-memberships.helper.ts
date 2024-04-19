@@ -7,7 +7,7 @@ import Stripe from "stripe";
 import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { getAuthUserById$ } from "./get-auth-user-by-id.helper";
 import { getGroupMemberships$ } from "./get-group-memberships.helper";
-import { getStripeCustomerByFusionAuthUser$ } from "./get-stripe-customer-by-fusion-auth-user.helper";
+import { getStripeCustomerByUser$ } from "./get-stripe-customer-by-fusion-auth-user.helper";
 
 /**
  * Refresh the user's group memberships.
@@ -29,7 +29,7 @@ export async function refreshGroupMembership$(
     return fusionAuthUser;
   }
 
-  const stripeCustomer = await getStripeCustomerByFusionAuthUser$(
+  const stripeCustomer = await getStripeCustomerByUser$(
     fusionAuthUser,
     stripeClient
   );

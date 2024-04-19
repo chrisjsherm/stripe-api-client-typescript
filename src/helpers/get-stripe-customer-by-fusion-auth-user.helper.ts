@@ -2,21 +2,19 @@ import * as createError from "http-errors";
 import Stripe from "stripe";
 import { AppUser } from "../data-models/interfaces/app-user.interface";
 import { StripeQueries } from "./stripe-queries.helper";
-import { synchronizeCustomerEmail } from "./synchronize-customer-email.helper";
 
 /**
- * Get the Stripe customer associated with a FusionAuth user.
- * @param fusionAuthUser FusionAuth user
+ * Get the Stripe customer associated with a user.
+ * @param appUser User
  * @param stripeClient Stripe API client
- * @returns Stripe customer associated with the FusionAuth user or null if not
- * found
+ * @returns Stripe customer associated with the user or null if not found
  * @throws HttpError
  */
-export async function getStripeCustomerByFusionAuthUser$(
-  fusionAuthUser: AppUser,
+export async function getStripeCustomerByUser$(
+  appUser: AppUser,
   stripeClient: Stripe
 ): Promise<Stripe.Customer | null> {
-  const query = StripeQueries.customer_byFusionAuthUserId(fusionAuthUser.id);
+  const query = StripeQueries.customer_byFusionAuthUserId(appUser.id);
   const { data: searchResults } = await stripeClient.customers.search({
     query,
   });
@@ -27,15 +25,9 @@ export async function getStripeCustomerByFusionAuthUser$(
 
   if (searchResults.length > 1) {
     throw createError.InternalServerError(
-      `Multiple Stripe Customers found with FusionAuth user ID ${fusionAuthUser.id}.`
+      `Multiple Stripe Customers found with user ID ${appUser.id}.`
     );
   }
 
-  // Take this opportunity to synchronize email, if necessary.
-  const stripeCustomer = await synchronizeCustomerEmail(
-    fusionAuthUser,
-    searchResults[0],
-    stripeClient
-  );
-  return stripeCustomer;
+  return searchResults[0];
 }

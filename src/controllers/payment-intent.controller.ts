@@ -14,7 +14,7 @@ import { ConstantConfiguration } from "../services/constant-configuration.servic
  * Payment intent endpoints
  */
 export const paymentIntentsRouter = Router();
-paymentIntentsRouter.get("/:id", getPaymentIntent);
+paymentIntentsRouter.post("/:id", getPaymentIntent);
 paymentIntentsRouter.post("/", createPaymentIntent);
 
 const config = getEnvironmentConfiguration();

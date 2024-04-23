@@ -3,14 +3,13 @@ import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { createCustomerContact } from "./controllers/create-contact-message.controller";
-import { createPaymentIntent } from "./controllers/create-payment-intent.controller";
-import { getPaymentIntent } from "./controllers/get-payment-intent.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import {
   createOrganization,
   getUserOrganization,
 } from "./controllers/organization.controller";
+import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
 import { usersRouter } from "./controllers/users.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
 import { createOrganizationJsonSchema } from "./data-models/json-schemas/organization-create.json-schema";
@@ -98,9 +97,8 @@ export async function startServer() {
   );
   app.get("/organization", hasAnyRole([]), getUserOrganization);
 
-  // Stripe API
-  app.post("/payment-intent", hasAnyRole([]), createPaymentIntent);
-  app.post("/payment-intent/:id", hasAnyRole([]), getPaymentIntent);
+  // Payment Intents API
+  app.use("/payment-intent", hasAnyRole([]), paymentIntentsRouter);
 
   // Users API
   app.use("/users", usersRouter);

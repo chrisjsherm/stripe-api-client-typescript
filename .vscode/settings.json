@@ -1,5 +1,12 @@
 {
-  "cSpell.words": ["copyfiles", "fusionauth", "jwks", "luxon", "typeorm"],
+  "cSpell.words": [
+    "copyfiles",
+    "fusionauth",
+    "jwks",
+    "livemode",
+    "luxon",
+    "typeorm"
+  ],
   "workbench.colorCustomizations": {
     "activityBar.activeBackground": "#5ac88b",
     "activityBar.background": "#5ac88b",

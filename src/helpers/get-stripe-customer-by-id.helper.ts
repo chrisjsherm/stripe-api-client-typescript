@@ -12,12 +12,12 @@ export async function getStripeCustomerById$(
   stripeCustomerId: string,
   stripeClient: Stripe
 ): Promise<Stripe.Customer> {
+  console.log(` Retrieving Stripe customer by ID: ${stripeCustomerId}`);
   const result = await stripeClient.customers.retrieve(stripeCustomerId);
   if (result.deleted) {
     throw createError.BadRequest(
-      `Stripe Customer with ID ${stripeCustomerId} has been deleted.`
+      `Stripe Customer with ID ${stripeCustomerId} is marked deleted.`
     );
   }
-
   return result;
 }

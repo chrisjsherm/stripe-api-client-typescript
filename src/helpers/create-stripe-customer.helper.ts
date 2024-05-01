@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { AppUser } from "../data-models/interfaces/app-user.interface";
+import { DecodedAccessToken } from "../data-models/interfaces/decoded-access-token.interface";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 /**
@@ -10,21 +10,19 @@ import { ConstantConfiguration } from "../services/constant-configuration.servic
  * @throws Error
  */
 export async function createStripeCustomer$(
-  appUser: AppUser,
+  appUser: DecodedAccessToken,
   stripeClient: Stripe
 ): Promise<Stripe.Customer> {
-  console.info(
-    `Attempting to create Stipe Customer associated with user ${appUser.id}.`
-  );
+  console.info("Sending create customer request to Stripe.");
   const stripeCustomer = await stripeClient.customers.create({
     email: appUser.email,
     name: `${appUser.firstName} ${appUser.lastName}`,
     phone: appUser.mobilePhone,
     metadata: {
       [ConstantConfiguration.stripe_customer_metadata_fusionAuthUserId]:
-        appUser.id,
+        appUser.userId,
     },
   });
-  console.info(`Created Stripe Customer with id ${stripeCustomer.id}.`);
+  console.info(`Created Stripe customer with ID: ${stripeCustomer.id}`);
   return stripeCustomer;
 }

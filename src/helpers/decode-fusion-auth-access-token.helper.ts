@@ -1,16 +1,16 @@
 import { Request } from "express";
 import * as createError from "http-errors";
 import { JWTPayload, decodeJwt } from "jose";
-import { AppUser } from "../data-models/interfaces/app-user.interface";
+import { DecodedAccessToken } from "../data-models/interfaces/decoded-access-token.interface";
 import { IFusionAuthJwt } from "../data-models/interfaces/fusion-auth-jwt.interface";
 
 /**
- * Get user who initiated the request.
+ * Decode FusionAuth access token in order to read its claims.
  * @param req HTTP request
  * @returns User information
  * @throws Error
  */
-export function getAppUser(req: Request): AppUser {
+export function decodeFusionAuthAccessToken(req: Request): DecodedAccessToken {
   const authToken: JWTPayload & IFusionAuthJwt = decodeJwt(
     (req as Request & { verifiedToken: string }).verifiedToken
   );
@@ -20,7 +20,7 @@ export function getAppUser(req: Request): AppUser {
   }
 
   return {
-    id: authToken.sub,
+    userId: authToken.sub,
     email: authToken.email,
     emailVerified: authToken.email_verified ?? false,
     firstName: authToken.first_name,

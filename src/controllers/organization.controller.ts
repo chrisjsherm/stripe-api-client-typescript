@@ -3,7 +3,7 @@ import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import { Organization } from "../data-models/entities/organization.entity";
 import { AppDataSource } from "../db/data-source";
-import { getAppUser } from "../helpers/get-app-user.helper";
+import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
 import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
@@ -25,8 +25,8 @@ export async function createOrganization(
   const organization: Organization = req.body;
 
   try {
-    const userInfo = getAppUser(req);
-    const authUser = await getAuthUserById$(userInfo.id, authClient);
+    const userInfo = decodeFusionAuthAccessToken(req);
+    const authUser = await getAuthUserById$(userInfo.userId, authClient);
     const organizationId = authUser.data?.[
       ConstantConfiguration.fusionAuth_user_data_organizationId
     ] as string;
@@ -42,7 +42,7 @@ export async function createOrganization(
       .save();
 
     try {
-      await authClient.patchUser(userInfo.id, {
+      await authClient.patchUser(userInfo.userId, {
         user: {
           data: {
             [ConstantConfiguration.fusionAuth_user_data_organizationId]:
@@ -51,7 +51,7 @@ export async function createOrganization(
         },
       });
     } catch (err) {
-      createdOrganization.softRemove();
+      await createdOrganization.softRemove();
       throw err;
     }
 
@@ -65,7 +65,7 @@ export async function createOrganization(
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "❗️ Error assigning organization to user",
+      "Error assigning organization to user",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );
@@ -82,7 +82,7 @@ export async function getUserOrganization(
   res: Response
 ): Promise<void> {
   try {
-    const userInfo = getAppUser(req);
+    const userInfo = decodeFusionAuthAccessToken(req);
     if (userInfo.organizationId === undefined) {
       throw createError.BadRequest(
         "User is not associated with an organization."
@@ -106,7 +106,7 @@ export async function getUserOrganization(
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "❗️ Error finding authenticated user's organization.",
+      "Error finding authenticated user's organization.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

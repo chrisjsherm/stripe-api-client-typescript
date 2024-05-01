@@ -1,30 +1,24 @@
-import FusionAuthClient, {
-  User as FusionAuthUser,
-} from "@fusionauth/typescript-client";
-import Stripe from "stripe";
+import FusionAuthClient from "@fusionauth/typescript-client";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 /**
- * Handle the Stripe "customer.created" event.
- * @param customer Stripe customer
+ * Associate a a FusionAuth user with a Stripe customer.
+ * @param userId FusionAuth user ID
+ * @param customerId Stripe customer ID
  * @param authClient FusionAuth client
  * @returns Updated FusionAuth user
  * @throws Error
  */
-export async function onCustomerCreatedEvent$(
-  customer: Stripe.Customer,
+export async function associateUserWithCustomer$(
+  userId: string,
+  customerId: string,
   authClient: FusionAuthClient
-): Promise<FusionAuthUser | undefined> {
-  const userId =
-    customer.metadata[
-      ConstantConfiguration.stripe_customer_metadata_fusionAuthUserId
-    ];
-
+) {
   const result = await authClient.patchUser(userId, {
     user: {
       data: {
         [ConstantConfiguration.fusionAuth_user_data_stripeCustomerId]:
-          customer.id,
+          customerId,
       },
     },
   });

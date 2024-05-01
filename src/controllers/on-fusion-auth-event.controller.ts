@@ -1,20 +1,15 @@
 import {
   BaseEvent,
   EventRequest,
-  EventType,
   User as FusionAuthUser,
 } from "@fusionauth/typescript-client";
 import { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
-import { AppUser } from "../data-models/interfaces/app-user.interface";
+import { DecodedAccessToken } from "../data-models/interfaces/decoded-access-token.interface";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
-import { getOrCreateStripeCustomerByUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
-import getStripe from "../helpers/get-stripe.helper";
-import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const config = getEnvironmentConfiguration();
-const stripeClient = getStripe(config);
 
 /**
  * Handle FusionAuth events via this webhook.
@@ -29,31 +24,6 @@ export async function onFusionAuthEvent(
 ): Promise<void> {
   const { event } = JSON.parse(req.body.toString()) as EventRequest;
   console.info(`FusionAuth event: ${event?.type ?? "unknown"}`);
-  const user = getUserFromEvent(event);
-
-  try {
-    switch (event?.type) {
-      case EventType.UserCreate:
-        if (user === null) {
-          throw getUserNotSetError(event.type);
-        }
-
-        await getOrCreateStripeCustomerByUser$(user, stripeClient);
-        break;
-    }
-  } catch (error) {
-    let message = "Error processing FusionAuth event.";
-    if (event) {
-      message = `${message} Details: ${event?.id} ${event?.type}`;
-    }
-
-    return onErrorProcessingHttpRequest(
-      error,
-      message,
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      res
-    );
-  }
 
   if (!res.headersSent) {
     res.sendStatus(StatusCodes.OK);
@@ -65,7 +35,9 @@ export async function onFusionAuthEvent(
  * @param event FusionAuth event
  * @returns FusionAuth user
  */
-function getUserFromEvent(event: BaseEvent | undefined): AppUser | null {
+function getUserFromEvent(
+  event: BaseEvent | undefined
+): DecodedAccessToken | null {
   if (event === undefined) {
     return null;
   }
@@ -83,7 +55,7 @@ function getUserFromEvent(event: BaseEvent | undefined): AppUser | null {
     return null;
   }
 
-  const appUser = user as AppUser;
+  const appUser = user as DecodedAccessToken;
   appUser.emailVerified = user.verified;
   return appUser;
 }

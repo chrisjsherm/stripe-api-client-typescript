@@ -4,10 +4,10 @@ import FusionAuthClient, {
 } from "@fusionauth/typescript-client";
 import * as createError from "http-errors";
 import Stripe from "stripe";
-import { AppUser } from "../data-models/interfaces/app-user.interface";
+import { DecodedAccessToken } from "../data-models/interfaces/decoded-access-token.interface";
 import { getAuthUserById$ } from "./get-auth-user-by-id.helper";
 import { getGroupMemberships$ } from "./get-group-memberships.helper";
-import { getStripeCustomerByUser$ } from "./get-stripe-customer-by-fusion-auth-user.helper";
+import { getStripeCustomerById$ } from "./get-stripe-customer-by-id.helper";
 
 /**
  * Refresh the user's group memberships.
@@ -18,24 +18,34 @@ import { getStripeCustomerByUser$ } from "./get-stripe-customer-by-fusion-auth-u
  * @throws Error
  */
 export async function refreshGroupMembership$(
-  fusionAuthUser: AppUser,
+  fusionAuthUser: DecodedAccessToken,
   stripeClient: Stripe,
   authClient: FusionAuthClient
 ): Promise<User> {
   if (!fusionAuthUser.emailVerified) {
     console.info(
-      "Users must be verified to refresh group memberships. Skipping refresh."
+      "Your account must be verified to refresh group memberships. " +
+        "Skipping refresh."
     );
     return fusionAuthUser;
   }
 
-  const stripeCustomer = await getStripeCustomerByUser$(
-    fusionAuthUser,
+  if (!fusionAuthUser.stripeCustomerId) {
+    console.info(
+      "Your account does not have a customer account associated with it. " +
+        "Skipping refresh."
+    );
+    return fusionAuthUser;
+  }
+
+  const stripeCustomer = await getStripeCustomerById$(
+    fusionAuthUser.stripeCustomerId,
     stripeClient
   );
   if (!stripeCustomer) {
     throw createError.NotFound(
-      `Could not find Stripe customer associated with user ${fusionAuthUser.id}.`
+      "We did not find a Stripe customer associated with user: " +
+        fusionAuthUser.userId
     );
   }
 
@@ -44,7 +54,7 @@ export async function refreshGroupMembership$(
     stripeClient
   );
 
-  const user = await getAuthUserById$(fusionAuthUser.id, authClient);
+  const user = await getAuthUserById$(fusionAuthUser.userId, authClient);
   const currentMemberships = user.memberships ?? [];
 
   if (
@@ -75,24 +85,24 @@ export async function refreshGroupMembership$(
 
     // Membership is no longer active according to recent Charges.
     console.info(
-      `Removing user ${fusionAuthUser.id} from group ${membership.groupId}.`
+      `Removing user ${fusionAuthUser.userId} from group ${membership.groupId}.`
     );
     await authClient.deleteGroupMembers({
       members: {
-        [membership.groupId]: [fusionAuthUser.id],
+        [membership.groupId]: [fusionAuthUser.userId],
       },
     });
   }
 
   // Add missing memberships.
   for (const groupId of groupMemberships) {
-    console.info(`Adding user ${fusionAuthUser.id} to group ${groupId}.`);
+    console.info(`Adding user ${fusionAuthUser.userId} to group ${groupId}.`);
     await authClient.createGroupMembers({
       members: {
-        [groupId]: [{ userId: fusionAuthUser.id }],
+        [groupId]: [{ userId: fusionAuthUser.userId }],
       },
     });
   }
 
-  return await getAuthUserById$(fusionAuthUser.id, authClient);
+  return await getAuthUserById$(fusionAuthUser.userId, authClient);
 }

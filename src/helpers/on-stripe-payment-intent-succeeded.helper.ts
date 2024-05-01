@@ -8,61 +8,34 @@ import { Stripe } from "stripe";
 import { IBuildConfiguration } from "../environment/data-models/build-configuration.interface";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 import { backoffRetry } from "./backoff-retry.helper";
-import { getStripeCustomerById$ } from "./get-stripe-customer-by-id.helper";
 
 /**
  * Handle a PaymentIntent success event.
  * @param paymentIntent Payment intent from which the successful charge originated
- * @param config Build configuration
  * @param authClient FusionAuth client
- * @param stripeClient Stripe API client
- * @param res HTTP response
- * @returns Promise
- * @throws Error
+ * @param buildConfig Build configuration
  */
 export async function onPaymentIntentSucceededEvent$(
   paymentIntent: Stripe.PaymentIntent,
-  config: IBuildConfiguration,
   authClient: FusionAuthClient,
-  stripeClient: Stripe
+  buildConfig: IBuildConfiguration
 ): Promise<void> {
-  console.info(
-    `${new Date().toUTCString()}:💰 Payment captured for payment intent ${
-      paymentIntent.id
-    }.`
-  );
+  const customerId = paymentIntent.customer;
+  if (typeof customerId !== "string") {
+    throw createError.BadRequest(
+      `The payment intent with ID ${paymentIntent.id} does not have a ` +
+        "customer associated with it."
+    );
+  }
 
-  const fusionAuthUserId: string | undefined =
+  const userId =
     paymentIntent.metadata[
-      ConstantConfiguration.stripe_paymentIntent_metadata_customerId
+      ConstantConfiguration.stripe_paymentIntent_metadata_userId
     ];
-  if (fusionAuthUserId === undefined) {
+  if (typeof userId !== "string") {
     throw createError.BadRequest(
-      `❗️ Payment intent ${paymentIntent.id} does not have a FusionAuth user ` +
-        "associated with it."
-    );
-  }
-
-  if (typeof paymentIntent.customer !== "string") {
-    throw createError.BadRequest(
-      `❗️ Payment intent ${paymentIntent.id} does not have a Stripe Customer ` +
-        "associated with it."
-    );
-  }
-
-  const stripeCustomer = await getStripeCustomerById$(
-    paymentIntent.customer,
-    stripeClient
-  );
-  if (
-    stripeCustomer.metadata[
-      ConstantConfiguration.stripe_customer_metadata_fusionAuthUserId
-    ] !== fusionAuthUserId
-  ) {
-    throw createError.Conflict(
-      `❗️ Payment intent ${paymentIntent.id} has a mismatch between its Stripe ` +
-        `customer ID (${paymentIntent.customer}) and the FusionAuth user ID ` +
-        `in its metadata (${fusionAuthUserId}).`
+      `The payment intent with ID ${paymentIntent.id} does not have a` +
+        "user associated with it."
     );
   }
 
@@ -74,7 +47,7 @@ export async function onPaymentIntentSucceededEvent$(
   if (groupIds.length !== 0) {
     const groupAssignments = groupIds.reduce(
       (assignments: Record<string, GroupMember[]>, groupId: string) => {
-        assignments[groupId] = [{ userId: fusionAuthUserId }];
+        assignments[groupId] = [{ userId }];
         return assignments;
       },
       {}
@@ -82,19 +55,19 @@ export async function onPaymentIntentSucceededEvent$(
 
     await backoffRetry<ClientResponse<MemberResponse>>(
       3,
-      config.http.retryDelayMs,
+      buildConfig.http.retryDelayMs,
       () => {
         return authClient.createGroupMembers({
           members: groupAssignments,
         });
       },
-      "Assign user to FusionAuth groups on PaymentIntent success event."
+      "Assign user to FusionAuth groups on payment intent success event."
     );
 
     console.info(
-      `🔔 Added FusionAuth user ${fusionAuthUserId} to ${
-        groupIds.length
-      } group${groupIds.length === 1 ? "" : "s"}.`
+      `We added FusionAuth user ${userId} to ${groupIds.length} group${
+        groupIds.length === 1 ? "" : "s"
+      }.`
     );
   }
 }

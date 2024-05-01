@@ -53,7 +53,7 @@ export async function createCustomerContact(
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "❗️ Error processing customer contact.",
+      "Error processing customer contact.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

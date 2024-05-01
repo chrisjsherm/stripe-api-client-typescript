@@ -8,6 +8,6 @@ export const ConstantConfiguration = {
   fusionAuth_user_data_stripeCustomerId: "stripeCustomerId",
 
   stripe_customer_metadata_fusionAuthUserId: "tenant__user_id",
-  stripe_paymentIntent_metadata_customerId: "customer_id",
+  stripe_paymentIntent_metadata_userId: "tenant__user_id",
   stripe_paymentIntent_metadata_groupMembershipsCsv: "group_memberships",
 };

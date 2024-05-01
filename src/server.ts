@@ -34,7 +34,7 @@ export async function startServer() {
   ) {
     res.setTimeout(config.http.requestTimeoutMs, () => {
       console.info(
-        `❗️ Timing out request ${req.method} ${req.url} after ${config.http.requestTimeoutMs} ms.`
+        `Timing out request ${req.method} ${req.url} after ${config.http.requestTimeoutMs} ms.`
       );
       const statusCode = StatusCodes.REQUEST_TIMEOUT;
       res.status(statusCode).json({ message: getReasonPhrase(statusCode) });
@@ -107,7 +107,7 @@ export async function startServer() {
     await app.listen(config.port);
     console.info(`🚀 Server running at http://localhost:${config.port}`);
   } catch (error) {
-    console.error("❗️ Error starting server", error);
+    console.error("Error starting server", error);
     throw error;
   }
 }

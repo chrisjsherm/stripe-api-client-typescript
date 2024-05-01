@@ -4,9 +4,7 @@ import Stripe from "stripe";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
-import { onCustomerCreatedEvent$ } from "../helpers/on-customer-created-event.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
-import { onPaymentIntentFailedEvent } from "../helpers/on-stripe-payment-intent-failed.helper";
 import { onPaymentIntentSucceededEvent$ } from "../helpers/on-stripe-payment-intent-succeeded.helper";
 
 const config = getEnvironmentConfiguration();
@@ -33,7 +31,7 @@ export async function onStripeEvent(
       signingKey
     );
   } catch (err) {
-    const message = `❗️ Stripe webhook signature verification failed.`;
+    const message = `Stripe webhook signature verification failed.`;
     return onErrorProcessingHttpRequest(
       err,
       message,
@@ -54,23 +52,32 @@ export async function onStripeEvent(
   try {
     switch (eventType) {
       case "customer.created":
-        await onCustomerCreatedEvent$(
-          data.object as Stripe.Customer,
-          authClient
+        console.info(
+          `Webhook: Created Stripe customer with ID: ${
+            (data.object as Stripe.Customer).id
+          }`
         );
         break;
 
       case "payment_intent.succeeded":
+        const paymentIntent = data.object as Stripe.PaymentIntent;
+        console.info(
+          `Webhook: Payment captured for payment intent: ${paymentIntent.id}`
+        );
+
         await onPaymentIntentSucceededEvent$(
           data.object as Stripe.PaymentIntent,
-          config,
           authClient,
-          stripeClient
+          config
         );
         break;
 
       case "payment_intent.payment_failed":
-        onPaymentIntentFailedEvent(data.object as Stripe.PaymentIntent);
+        console.info(
+          `Webhook: Payment failed for payment intent ${
+            (data.object as Stripe.PaymentIntent).id
+          }.`
+        );
         break;
     }
   } catch (e) {

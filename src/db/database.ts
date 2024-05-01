@@ -16,7 +16,7 @@ export async function initializeDatabase() {
     );
     console.info("🔌 Database connected");
   } catch (error) {
-    console.error("❗️ Database connection failed\n", error);
+    console.error("Database connection failed\n", error);
     throw error;
   }
 }

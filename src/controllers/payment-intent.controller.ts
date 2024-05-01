@@ -2,10 +2,8 @@ import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
-import { getAppUser } from "../helpers/get-app-user.helper";
+import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
-import { getOrCreateStripeCustomerByUser$ } from "../helpers/get-or-create-stripe-customer-by-fusion-auth-user.helper";
-import { getStripeCustomerByUser$ } from "../helpers/get-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
@@ -30,11 +28,17 @@ export async function createPaymentIntent(
   res: Response
 ): Promise<void> {
   try {
-    const user = getAppUser(req);
-    const { id: stripeCustomerId } = await getOrCreateStripeCustomerByUser$(
-      user,
-      stripeClient
-    );
+    const token = decodeFusionAuthAccessToken(req);
+
+    if (token.emailVerified === false) {
+      throw createError.Forbidden(
+        "You must verify your email address before making a purchase."
+      );
+    } else if (token.stripeCustomerId == null) {
+      throw createError.BadRequest(
+        "You must have a customer account before making a purchase."
+      );
+    }
 
     const params: Stripe.PaymentIntentCreateParams = {
       amount: 1099,
@@ -42,15 +46,15 @@ export async function createPaymentIntent(
         enabled: true,
       },
       currency: "usd",
-      customer: stripeCustomerId,
+      customer: token.stripeCustomerId,
       description: "BTX Now annual subscription",
       metadata: {
-        [ConstantConfiguration.stripe_paymentIntent_metadata_customerId]:
-          user.id,
+        [ConstantConfiguration.stripe_paymentIntent_metadata_userId]:
+          token.userId,
         [ConstantConfiguration.stripe_paymentIntent_metadata_groupMembershipsCsv]:
           config.auth.groupId_subscriptionBasicAnnual,
       },
-      receipt_email: user.email,
+      receipt_email: token.email,
       statement_descriptor: "BTX Now 1 yr subscribe",
       statement_descriptor_suffix: "BTX Now 1 yr subscribe",
     };
@@ -67,7 +71,7 @@ export async function createPaymentIntent(
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "❗️ Error creating payment intent.",
+      "Error creating payment intent.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );
@@ -94,20 +98,18 @@ export async function getPaymentIntent(
   }
 
   try {
-    const user = getAppUser(req);
-    const customer = await getStripeCustomerByUser$(user, stripeClient);
-    if (customer === null) {
-      throw createError.NotFound(
-        `Did not find Stripe customer associated with user ${user.id}.`
-      );
-    }
+    const token = decodeFusionAuthAccessToken(req);
 
     const paymentIntent: Stripe.Response<Stripe.PaymentIntent> =
       await stripeClient.paymentIntents.retrieve(id);
 
-    if (!paymentIntent.customer || paymentIntent.customer !== customer.id) {
-      throw createError.Unauthorized(
-        "Authenticated customer does not match the customer on the PaymentIntent."
+    if (
+      !paymentIntent.customer ||
+      paymentIntent.customer !== token.stripeCustomerId
+    ) {
+      throw createError.Forbidden(
+        "You are not permitted to query payment intents for which you are " +
+          "not the customer."
       );
     }
 

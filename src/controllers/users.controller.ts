@@ -1,14 +1,16 @@
 import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
+import { associateUserWithCustomer$ } from "../helpers/associate-customer-with-user.helper";
 import { createStripeCustomer$ } from "../helpers/create-stripe-customer.helper";
-import { getAppUser } from "../helpers/get-app-user.helper";
+import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
+import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
-import { getStripeCustomerByUser$ } from "../helpers/get-stripe-customer-by-fusion-auth-user.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 import { refreshGroupMembership$ } from "../helpers/refresh-group-memberships.helper";
+import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 /**
  * Endpoints related to the application user.
@@ -29,22 +31,24 @@ const authClient = getFusionAuth(config);
  * @param res HTTP response
  */
 async function createCustomer(req: Request, res: Response): Promise<void> {
-  const alreadyExistsError = createError.Conflict(
-    "User already associated with a Stripe customer."
-  );
+  console.info("Received create customer request.");
 
   try {
-    const user = getAppUser(req);
-    if (user.stripeCustomerId) {
-      throw alreadyExistsError;
+    const token = decodeFusionAuthAccessToken(req);
+    const userQueryResult = await getAuthUserById$(token.userId, authClient);
+
+    if (
+      userQueryResult.data?.[
+        ConstantConfiguration.fusionAuth_user_data_stripeCustomerId
+      ] !== undefined
+    ) {
+      throw createError.Conflict(
+        "This user is already associated with a Stripe customer."
+      );
     }
 
-    const queryResult = await getStripeCustomerByUser$(user, stripeClient);
-    if (queryResult !== null) {
-      throw alreadyExistsError;
-    }
-
-    const customer = await createStripeCustomer$(user, stripeClient);
+    const customer = await createStripeCustomer$(token, stripeClient);
+    await associateUserWithCustomer$(token.userId, customer.id, authClient);
 
     if (!res.headersSent) {
       res.status(StatusCodes.CREATED).send({
@@ -54,7 +58,7 @@ async function createCustomer(req: Request, res: Response): Promise<void> {
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "Error associating a Stripe customer with the user.",
+      "An error occurred creating the Stripe customer.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );
@@ -71,14 +75,14 @@ async function getAuthenticatedUserProfile(
   res: Response
 ): Promise<void> {
   try {
-    const user = getAppUser(req);
+    const token = decodeFusionAuthAccessToken(req);
     res.send({
-      data: user,
+      data: token,
     });
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "❗️ Error getting authenticated user's profile.",
+      "Error getting authenticated user's profile.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );
@@ -95,7 +99,7 @@ async function resendEmailVerificationMessage(
   res: Response
 ): Promise<void> {
   try {
-    const { email: userEmail } = getAppUser(req);
+    const { email: userEmail } = decodeFusionAuthAccessToken(req);
     const result = await authClient.resendEmailVerification(userEmail);
 
     if (result.exception) {
@@ -132,14 +136,14 @@ async function refreshGroupMemberships(
   res: Response
 ): Promise<void> {
   try {
-    const user = getAppUser(req);
-    await refreshGroupMembership$(user, stripeClient, authClient);
+    const token = decodeFusionAuthAccessToken(req);
+    await refreshGroupMembership$(token, stripeClient, authClient);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
     onErrorProcessingHttpRequest(
       error,
-      `❗️ Error refreshing user's group memberships.`,
+      `Error refreshing user's group memberships.`,
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

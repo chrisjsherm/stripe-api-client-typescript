@@ -25,6 +25,7 @@ export function decodeFusionAuthAccessToken(req: Request): DecodedAccessToken {
     emailVerified: authToken.email_verified ?? false,
     firstName: authToken.first_name,
     lastName: authToken.last_name,
+    roles: authToken.roles,
     mobilePhone: authToken.mobile_phone,
     organizationId: authToken.organization_id,
     stripeCustomerId: authToken.stripe_customer_id,

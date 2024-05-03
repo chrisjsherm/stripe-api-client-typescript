@@ -7,6 +7,7 @@ export interface DecodedAccessToken {
   emailVerified: boolean;
   firstName: string;
   lastName: string;
+  roles: Array<string>;
 
   mobilePhone?: string;
   organizationId?: string;

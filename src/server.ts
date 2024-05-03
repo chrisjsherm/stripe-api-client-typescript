@@ -64,7 +64,7 @@ export async function startServer() {
     onFusionAuthEvent
   );
 
-  // Configuration for API endpoints.
+  // Configuration for application API endpoints.
   app.use(
     cors({
       origin: config.cors.allowedOrigins,

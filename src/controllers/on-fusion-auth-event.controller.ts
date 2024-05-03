@@ -7,9 +7,6 @@ import { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import { DecodedAccessToken } from "../data-models/interfaces/decoded-access-token.interface";
-import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
-
-const config = getEnvironmentConfiguration();
 
 /**
  * Handle FusionAuth events via this webhook.

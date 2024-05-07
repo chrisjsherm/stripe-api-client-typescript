@@ -21,24 +21,24 @@ export async function getGroupMemberships$(
   );
 
   const memberships = recentCharges.reduce(
-    (acc: Set<string>, charge: Stripe.Charge): Set<string> => {
+    (accumulated: Set<string>, charge: Stripe.Charge): Set<string> => {
       if (typeof charge.payment_intent === "string") {
         throw new Error(
           `Charge ${charge.id} does not have 'payment_intent' expanded.`
         );
       }
 
-      const membershipsEnabled =
+      const membershipsPaidFor =
         charge.payment_intent?.metadata[
           ConstantConfiguration
             .stripe_paymentIntent_metadata_groupMembershipsCsv
         ].split(",") ?? [];
 
-      for (const membership of membershipsEnabled) {
-        acc.add(membership);
+      for (const membership of membershipsPaidFor) {
+        accumulated.add(membership);
       }
 
-      return acc;
+      return accumulated;
     },
     new Set<string>()
   );

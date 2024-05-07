@@ -5,7 +5,6 @@ export interface IBuildConfiguration {
   auth: {
     apiKey: string;
     appId: string;
-    groupId_subscriptionBasicAnnual: string;
     url: string;
   };
 
@@ -37,6 +36,7 @@ export interface IBuildConfiguration {
     requestTimeoutMs: number;
   };
 
+  insertTestData: boolean;
   isDebug?: boolean;
 
   payments: {

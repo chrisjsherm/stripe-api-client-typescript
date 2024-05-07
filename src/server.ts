@@ -10,6 +10,7 @@ import {
   getUserOrganization,
 } from "./controllers/organization.controller";
 import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
+import { productsRouter } from "./controllers/products.controller";
 import { usersRouter } from "./controllers/users.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
 import { createOrganizationJsonSchema } from "./data-models/json-schemas/organization-create.json-schema";
@@ -84,6 +85,9 @@ export async function startServer() {
     generateRequestBodyValidator(contactFormJsonSchema),
     createCustomerContact
   );
+
+  // Products API.
+  app.use("/products", productsRouter);
 
   // Configuration for API endpoints that require authentication.
   app.use(verifyApiJwt$);

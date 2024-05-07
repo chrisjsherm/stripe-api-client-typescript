@@ -11,7 +11,8 @@ const requiredEnvironmentVariables = new Set<string>([
   "AUTH_API_KEY",
   "AUTH_APP_ID",
   "AUTH_BASE_URL",
-  "AUTH_GROUP_ID__SUBSCRIPTION_BASIC_ANNUAL_REV_0",
+  "AUTH_GROUP_ID__SUBSCRIPTION_STARTUP_ANNUAL_REV_0",
+  "AUTH_GROUP_ID__SUBSCRIPTION_BUSINESS_ANNUAL_REV_0",
   "AWS_ACCESS_KEY_ID",
   "AWS_SECRET_ACCESS_KEY",
   "CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL",
@@ -43,8 +44,6 @@ const sharedConfiguration: Pick<
   auth: {
     apiKey: process.env.AUTH_API_KEY!,
     appId: process.env.AUTH_APP_ID!,
-    groupId_subscriptionBasicAnnual:
-      process.env.AUTH_GROUP_ID__SUBSCRIPTION_BASIC_ANNUAL_REV_0!,
     url: process.env.AUTH_BASE_URL!,
   },
   captcha: {

@@ -2,6 +2,8 @@ import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
+import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
+import { AppDataSource } from "../db/data-source";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import getStripe from "../helpers/get-stripe.helper";
@@ -27,7 +29,26 @@ export async function createPaymentIntent(
   req: Request,
   res: Response
 ): Promise<void> {
+  const subscriptionId: string = req.body.subscriptionId;
+
   try {
+    if (subscriptionId === undefined) {
+      throw createError.BadRequest(
+        "The request body is missing a subscription ID."
+      );
+    }
+
+    const subscriptionRepository =
+      AppDataSource.getRepository(ProductSubscription);
+    const subscription = await subscriptionRepository.findOneBy({
+      id: subscriptionId,
+    });
+    if (subscription === null) {
+      throw createError.BadRequest(
+        `We are unable to locate a subscription with ID ${subscriptionId}.`
+      );
+    }
+
     const token = decodeFusionAuthAccessToken(req);
 
     if (token.emailVerified === false) {
@@ -41,22 +62,21 @@ export async function createPaymentIntent(
     }
 
     const params: Stripe.PaymentIntentCreateParams = {
-      amount: 1099,
+      amount: subscription.priceInBaseUnits,
       automatic_payment_methods: {
         enabled: true,
       },
-      currency: "usd",
+      currency: subscription.currencyCode,
       customer: token.stripeCustomerId,
-      description: "BTX Now annual subscription",
+      description: subscription.subtitle,
       metadata: {
         [ConstantConfiguration.stripe_paymentIntent_metadata_userId]:
           token.userId,
         [ConstantConfiguration.stripe_paymentIntent_metadata_groupMembershipsCsv]:
-          config.auth.groupId_subscriptionBasicAnnual,
+          subscription.groupMembershipsCsv,
       },
       receipt_email: token.email,
-      statement_descriptor: "BTX Now 1 yr subscribe",
-      statement_descriptor_suffix: "BTX Now 1 yr subscribe",
+      statement_descriptor_suffix: subscription.statementDescriptorSuffix,
     };
 
     const paymentIntent: Stripe.PaymentIntent =

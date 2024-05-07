@@ -46,9 +46,9 @@ export async function onPaymentIntentSucceededEvent$(
 
   if (groupIds.length !== 0) {
     const groupAssignments = groupIds.reduce(
-      (assignments: Record<string, GroupMember[]>, groupId: string) => {
-        assignments[groupId] = [{ userId }];
-        return assignments;
+      (accumulated: Record<string, GroupMember[]>, groupId: string) => {
+        accumulated[groupId] = [{ userId }];
+        return accumulated;
       },
       {}
     );

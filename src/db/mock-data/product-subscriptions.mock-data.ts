@@ -9,6 +9,7 @@ export async function insertMockProductSubscriptions(): Promise<void> {
     AppDataSource.getRepository(ProductSubscription);
   await subscriptionRepository.insert([
     {
+      id: "27da8390-6606-4283-b793-6f8eb282476d",
       title: "Startup",
       subtitle: "Train up to five professionals",
       priceInBaseUnits: 3900,
@@ -21,6 +22,7 @@ export async function insertMockProductSubscriptions(): Promise<void> {
       storageGb: 0.5,
     },
     {
+      id: "d135c4c4-d45d-4b74-8419-0cc6f51c27f5",
       title: "Business",
       subtitle: "Train up to 25 professionals",
       priceInBaseUnits: 12900,

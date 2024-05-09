@@ -29,7 +29,7 @@ async function getById(req: Request, res: Response): Promise<void> {
     }
 
     if (!res.headersSent) {
-      res.json({ data: { product } });
+      res.json({ data: { ...product } });
     }
   } catch (err) {
     onErrorProcessingHttpRequest(

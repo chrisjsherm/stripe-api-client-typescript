@@ -84,9 +84,10 @@ export async function getUserOrganization(
   try {
     const userInfo = decodeFusionAuthAccessToken(req);
     if (userInfo.organizationId === undefined) {
-      throw createError.BadRequest(
-        "User is not associated with an organization."
-      );
+      res.json({
+        data: null,
+      });
+      return;
     }
 
     const organizationRepo = AppDataSource.getRepository(Organization);

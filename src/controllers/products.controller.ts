@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
-import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
+import { Product } from "../data-models/entities/product.entity";
 import { AppDataSource } from "../db/data-source";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
@@ -18,7 +18,7 @@ async function getById(req: Request, res: Response): Promise<void> {
   const productId = req.params.productId;
 
   try {
-    const productRepository = AppDataSource.getRepository(ProductSubscription);
+    const productRepository = AppDataSource.getRepository(Product);
     const product = await productRepository.findOneBy({
       id: productId,
     });
@@ -48,7 +48,7 @@ async function getById(req: Request, res: Response): Promise<void> {
  */
 async function getAll(req: Request, res: Response): Promise<void> {
   try {
-    const productRepository = AppDataSource.getRepository(ProductSubscription);
+    const productRepository = AppDataSource.getRepository(Product);
     const products = await productRepository.find();
 
     if (!res.headersSent) {

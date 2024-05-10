@@ -2,7 +2,7 @@ import { Column, Entity } from "typeorm";
 import { CoreEntity } from "./core-entity.model";
 
 @Entity()
-export class ProductSubscription extends CoreEntity {
+export class Product extends CoreEntity {
   @Column({ type: "varchar", nullable: false })
   title: string;
 

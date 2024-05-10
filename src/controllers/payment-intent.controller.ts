@@ -2,10 +2,15 @@ import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
-import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
+import { Product } from "../data-models/entities/product.entity";
+import { IOrganization } from "../data-models/interfaces/organization.interface";
 import { AppDataSource } from "../db/data-source";
+import { associateUserWithCustomer$ } from "../helpers/associate-customer-with-user.helper";
+import { createStripeCustomer$ } from "../helpers/create-stripe-customer.helper";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
+import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
+import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
@@ -19,6 +24,7 @@ paymentIntentsRouter.post("/", createPaymentIntent);
 
 const config = getEnvironmentConfiguration();
 const stripeClient = getStripe(config);
+const authClient = getFusionAuth(config);
 
 /**
  * Create a Stripe PaymentIntent and return the unique identifier to the client.
@@ -29,54 +35,58 @@ export async function createPaymentIntent(
   req: Request,
   res: Response
 ): Promise<void> {
-  const subscriptionId: string = req.body.subscriptionId;
+  // TODO: Validator.
+  const productId: string = req.body.productId;
+  const organization: IOrganization = req.body.organization;
 
   try {
-    if (subscriptionId === undefined) {
-      throw createError.BadRequest(
-        "The request body is missing a subscription ID."
-      );
+    if (productId === undefined) {
+      throw createError.BadRequest("The request body is missing a product ID.");
     }
 
-    const subscriptionRepository =
-      AppDataSource.getRepository(ProductSubscription);
-    const subscription = await subscriptionRepository.findOneBy({
-      id: subscriptionId,
+    const productRepository = AppDataSource.getRepository(Product);
+    const product = await productRepository.findOneBy({
+      id: productId,
     });
-    if (subscription === null) {
+    if (product === null) {
       throw createError.BadRequest(
-        `We are unable to locate a subscription with ID ${subscriptionId}.`
+        `We cannot locate a product with ID ${productId}.`
       );
     }
 
     const token = decodeFusionAuthAccessToken(req);
 
-    if (token.emailVerified === false) {
-      throw createError.Forbidden(
-        "You must verify your email address before making a purchase."
-      );
-    } else if (token.stripeCustomerId == null) {
-      throw createError.BadRequest(
-        "You must have a customer account before making a purchase."
-      );
+    let customerId = token.stripeCustomerId;
+    if (customerId == null) {
+      const userQueryResult = await getAuthUserById$(token.userId, authClient);
+      customerId =
+        userQueryResult.data?.[
+          ConstantConfiguration.fusionAuth_user_data_stripeCustomerId
+        ];
+    }
+
+    if (customerId == null) {
+      const customer = await createStripeCustomer$(token, stripeClient);
+      customerId = customer.id;
+      await associateUserWithCustomer$(token.userId, customer.id, authClient);
     }
 
     const params: Stripe.PaymentIntentCreateParams = {
-      amount: subscription.priceInBaseUnits,
+      amount: product.priceInBaseUnits,
       automatic_payment_methods: {
         enabled: true,
       },
-      currency: subscription.currencyCode,
-      customer: token.stripeCustomerId,
-      description: subscription.subtitle,
+      currency: product.currencyCode,
+      customer: customerId,
+      description: product.subtitle,
       metadata: {
         [ConstantConfiguration.stripe_paymentIntent_metadata_userId]:
           token.userId,
         [ConstantConfiguration.stripe_paymentIntent_metadata_groupMembershipsCsv]:
-          subscription.groupMembershipsCsv,
+          product.groupMembershipsCsv,
       },
       receipt_email: token.email,
-      statement_descriptor_suffix: subscription.statementDescriptorSuffix,
+      statement_descriptor_suffix: product.statementDescriptorSuffix,
     };
 
     const paymentIntent: Stripe.PaymentIntent =

@@ -1,13 +1,12 @@
-import { ProductSubscription } from "../../data-models/entities/product-subscription.entity";
+import { Product } from "../../data-models/entities/product.entity";
 import { AppDataSource } from "../data-source";
 
 /**
- * Insert mock Product Subscription data into the database.
+ * Insert mock product data into the database.
  */
-export async function insertMockProductSubscriptions(): Promise<void> {
-  const subscriptionRepository =
-    AppDataSource.getRepository(ProductSubscription);
-  await subscriptionRepository.insert([
+export async function insertMockProducts(): Promise<void> {
+  const productRepository = AppDataSource.getRepository(Product);
+  await productRepository.insert([
     {
       id: "27da8390-6606-4283-b793-6f8eb282476d",
       title: "Startup",

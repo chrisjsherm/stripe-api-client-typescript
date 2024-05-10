@@ -6,22 +6,22 @@ import { IStreetAddressable } from "../interfaces/street-addressable.interface";
  * Location in street address format.
  */
 export class StreetAddress implements IStreetAddressable {
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   street1: string;
 
-  @Column({ type: "varchar" })
+  @Column({ type: "varchar", nullable: true })
   street2: string | null;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   city: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   state: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   postalCode: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   country: string;
 
   @Column({

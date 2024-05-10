@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
+import { Organization } from "../data-models/entities/organization.entity";
 import { Product } from "../data-models/entities/product.entity";
 import { IOrganization } from "../data-models/interfaces/organization.interface";
 import { AppDataSource } from "../db/data-source";
@@ -36,10 +37,9 @@ export async function createPaymentIntent(
   res: Response
 ): Promise<void> {
   // TODO: Validator.
-  const productId: string = req.body.productId;
-  const organization: IOrganization = req.body.organization;
 
   try {
+    const productId: string = req.body.productId;
     if (productId === undefined) {
       throw createError.BadRequest("The request body is missing a product ID.");
     }
@@ -55,20 +55,45 @@ export async function createPaymentIntent(
     }
 
     const token = decodeFusionAuthAccessToken(req);
+    const userQueryResult = await getAuthUserById$(token.userId, authClient);
 
-    let customerId = token.stripeCustomerId;
-    if (customerId == null) {
-      const userQueryResult = await getAuthUserById$(token.userId, authClient);
-      customerId =
-        userQueryResult.data?.[
-          ConstantConfiguration.fusionAuth_user_data_stripeCustomerId
-        ];
-    }
-
+    let customerId: string | undefined =
+      userQueryResult.data?.[
+        ConstantConfiguration.fusionAuth_user_data_stripeCustomerId
+      ];
     if (customerId == null) {
       const customer = await createStripeCustomer$(token, stripeClient);
       customerId = customer.id;
       await associateUserWithCustomer$(token.userId, customer.id, authClient);
+    }
+
+    const organization: IOrganization = req.body.organization;
+    let savedOrganizationId: string | undefined =
+      userQueryResult.data?.[
+        ConstantConfiguration.fusionAuth_user_data_organizationId
+      ];
+    if (savedOrganizationId && savedOrganizationId !== organization.id) {
+      throw createError.Forbidden(
+        "The organization ID in the request body does not match the " +
+          "organization associated with your account."
+      );
+    }
+    const organizationRepository = AppDataSource.getRepository(Organization);
+    const upsertResult = await organizationRepository.upsert(organization, {
+      conflictPaths: ["id"],
+      skipUpdateIfNoValuesChanged: true,
+    });
+
+    if (savedOrganizationId == null) {
+      savedOrganizationId = upsertResult.identifiers[0].id;
+      await authClient.patchUser(token.userId, {
+        user: {
+          data: {
+            [ConstantConfiguration.fusionAuth_user_data_organizationId]:
+              savedOrganizationId,
+          },
+        },
+      });
     }
 
     const params: Stripe.PaymentIntentCreateParams = {
@@ -86,6 +111,17 @@ export async function createPaymentIntent(
           product.groupMembershipsCsv,
       },
       receipt_email: token.email,
+      shipping: {
+        address: {
+          city: organization.mailingAddress.city,
+          country: organization.mailingAddress.country,
+          line1: organization.mailingAddress.street1,
+          line2: organization.mailingAddress.street2 ?? undefined,
+          postal_code: organization.mailingAddress.postalCode,
+          state: organization.mailingAddress.state,
+        },
+        name: organization.name,
+      },
       statement_descriptor_suffix: product.statementDescriptorSuffix,
     };
 

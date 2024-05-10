@@ -48,7 +48,7 @@ CREATE USER new_user WITH ENCRYPTED PASSWORD 'password'
 ### pgAdmin
 
 To connect to the pgAdmin database management tool, visit
-http://localhost:PG_ADMIN_PORT.
+http://localhost:PG_ADMIN_PORT (default port is 5050).
 The port for the URL and credentials to log in are specified in the `.env` file.
 
 Once connected to pgAdmin, add a server. On the "Connection" tab:

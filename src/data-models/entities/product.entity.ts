@@ -3,19 +3,19 @@ import { CoreEntity } from "./core-entity.model";
 
 @Entity()
 export class Product extends CoreEntity {
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   title: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   subtitle: string;
 
-  @Column({ type: "integer", nullable: false })
+  @Column({ type: "integer" })
   priceInBaseUnits: number;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   currencyCode: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   groupMembershipsCsv: string;
 
   /**
@@ -31,15 +31,15 @@ export class Product extends CoreEntity {
    * (12 characters). The computed statement descriptor is RUNCLUB* 9-22-19 10K
    * or RUNCLUB* OCT MARATHON.
    */
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   statementDescriptorSuffix: string;
 
-  @Column({ type: "smallint" })
+  @Column({ type: "smallint", nullable: true })
   adminCount?: number;
 
-  @Column({ type: "smallint" })
+  @Column({ type: "smallint", nullable: true })
   userCount?: number;
 
-  @Column({ type: "real" })
+  @Column({ type: "real", nullable: true })
   storageGb?: number;
 }

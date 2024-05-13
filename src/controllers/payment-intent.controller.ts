@@ -4,6 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import Stripe from "stripe";
 import { Organization } from "../data-models/entities/organization.entity";
 import { Product } from "../data-models/entities/product.entity";
+import { createPaymentIntentRequestBodyJsonSchema } from "../data-models/interfaces/create-payment-intent-request-body.json-schema";
 import { IOrganization } from "../data-models/interfaces/organization.interface";
 import { AppDataSource } from "../db/data-source";
 import { associateUserWithCustomer$ } from "../helpers/associate-customer-with-user.helper";
@@ -14,6 +15,7 @@ import { getEnvironmentConfiguration } from "../helpers/get-environment-configur
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
+import { generateRequestBodyValidator } from "../helpers/validate-request-body.middleware";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 /**
@@ -21,7 +23,11 @@ import { ConstantConfiguration } from "../services/constant-configuration.servic
  */
 export const paymentIntentsRouter = Router();
 paymentIntentsRouter.post("/:id", getPaymentIntent);
-paymentIntentsRouter.post("/", createPaymentIntent);
+paymentIntentsRouter.post(
+  "/",
+  generateRequestBodyValidator(createPaymentIntentRequestBodyJsonSchema),
+  createPaymentIntent
+);
 
 const config = getEnvironmentConfiguration();
 const stripeClient = getStripe(config);

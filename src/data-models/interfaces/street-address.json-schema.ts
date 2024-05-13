@@ -1,6 +1,6 @@
 import { JSONSchemaType } from "ajv";
 import { StreetAddressType } from "../enums/street-address-type.enum";
-import { IStreetAddressable } from "../interfaces/street-addressable.interface";
+import { IStreetAddressable } from "./street-addressable.interface";
 
 /**
  * Validation schema for street address.

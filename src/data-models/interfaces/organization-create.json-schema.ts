@@ -1,6 +1,6 @@
 import { JSONSchemaType } from "ajv";
+import { streetAddressJsonSchema } from "../classes/street-address.json-schema";
 import { IOrganization } from "../interfaces/organization.interface";
-import { streetAddressJsonSchema } from "./street-address.json-schema";
 
 /**
  * Validation schema for creating an organization.

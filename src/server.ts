@@ -13,7 +13,7 @@ import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
 import { productsRouter } from "./controllers/products.controller";
 import { usersRouter } from "./controllers/users.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
-import { createOrganizationJsonSchema } from "./data-models/json-schemas/organization-create.json-schema";
+import { createOrganizationJsonSchema } from "./data-models/interfaces/organization-create.json-schema";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasAnyRole } from "./helpers/has-any-role.helper";
 import { generateRequestBodyValidator } from "./helpers/validate-request-body.middleware";

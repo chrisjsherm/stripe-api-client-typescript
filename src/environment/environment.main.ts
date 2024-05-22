@@ -23,6 +23,7 @@ const requiredEnvironmentVariables = new Set<string>([
   "DB_USERNAME",
   "STRIPE_API_KEY",
   "STRIPE_WEBHOOK_SIGNING_KEY",
+  "UI_ORIGIN",
 ]);
 for (const key of requiredEnvironmentVariables) {
   if (process.env[key] === undefined || process.env[key] === "") {
@@ -34,12 +35,12 @@ const sharedConfiguration: Pick<
   IBuildConfiguration,
   | "auth"
   | "captcha"
-  | "cors"
   | "customerContact"
   | "db"
   | "http"
   | "payments"
   | "port"
+  | "uiOrigin"
 > = {
   auth: {
     apiKey: process.env.AUTH_API_KEY!,
@@ -65,9 +66,6 @@ const sharedConfiguration: Pick<
       process.env.CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH
     ),
   },
-  cors: {
-    allowedOrigins: process.env.CORS_ALLOWED_ORIGINS?.split(",") ?? [],
-  },
   customerContact: {
     subjectSuffix: process.env.CUSTOMER_CONTACT_SUBJECT_SUFFIX ?? "",
     toEmail: process.env.CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL!,
@@ -92,6 +90,7 @@ const sharedConfiguration: Pick<
     webhookSigningKey: process.env.STRIPE_WEBHOOK_SIGNING_KEY!,
   },
   port: Number.parseInt(process.env.SERVER_PORT ?? "4242", 10),
+  uiOrigin: process.env.UI_ORIGIN ?? "",
 };
 
 // Write the environment files when Node runs this file.

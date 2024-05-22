@@ -6,7 +6,7 @@ import { getEnvironmentConfiguration } from "./get-environment-configuration.hel
 import { getJwksClient } from "./get-jwks-client.helper";
 
 const config = getEnvironmentConfiguration();
-const accessTokenCookie = ConstantConfiguration.fusionAuth_accessTokenCookie;
+const accessTokenCookie = ConstantConfiguration.fusionAuth_cookie_accessToken;
 const jwksClient = getJwksClient();
 
 /**

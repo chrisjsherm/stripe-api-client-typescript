@@ -13,10 +13,6 @@ export interface IBuildConfiguration {
     secretKeyPath: string;
   };
 
-  cors: {
-    allowedOrigins: string[];
-  };
-
   customerContact: {
     toEmail: string;
     subjectSuffix: string;
@@ -45,4 +41,6 @@ export interface IBuildConfiguration {
   };
 
   port: number;
+
+  uiOrigin: string;
 }

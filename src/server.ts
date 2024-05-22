@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 import { createCustomerContact } from "./controllers/create-contact-message.controller";
+import { handleLogout } from "./controllers/logout.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import {
@@ -68,7 +69,7 @@ export async function startServer() {
   // Configuration for application API endpoints.
   app.use(
     cors({
-      origin: config.cors.allowedOrigins,
+      origin: [config.uiOrigin],
       credentials: true,
     })
   );
@@ -85,6 +86,9 @@ export async function startServer() {
     generateRequestBodyValidator(contactFormJsonSchema),
     createCustomerContact
   );
+
+  // Logout API.
+  app.get("/logout-succeeded", handleLogout);
 
   // Products API.
   app.use("/products", productsRouter);

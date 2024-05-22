@@ -2,7 +2,8 @@
  * Constant configuration values that are not intended to be configurable.
  */
 export const ConstantConfiguration = {
-  fusionAuth_accessTokenCookie: "app.at",
+  fusionAuth_cookie_accessToken: "app.at",
+  fusionAuth_cookiePrefix_knownDevice: "fusionauth.known-device.",
   fusionAuth_jwksRoute: "/.well-known/jwks.json",
   fusionAuth_user_data_organizationId: "organizationId",
   fusionAuth_user_data_stripeCustomerId: "stripeCustomerId",

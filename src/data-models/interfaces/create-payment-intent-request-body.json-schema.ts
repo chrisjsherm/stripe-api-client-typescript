@@ -1,4 +1,5 @@
 import { JSONSchemaType } from "ajv";
+import { btxPatternConfigurationJsonSchema } from "./btx-pattern-configuration.interface";
 import { ICreatePaymentIntentRequestBody } from "./create-payment-intent-request-body.interface";
 import { streetAddressJsonSchema } from "./street-address.json-schema";
 
@@ -16,6 +17,9 @@ export const createPaymentIntentRequestBodyJsonSchema: JSONSchemaType<ICreatePay
           id: { type: "string", nullable: true },
           name: { type: "string" },
           mailingAddress: { $ref: "#/definitions/streetAddress" },
+          btxPatternConfiguration: {
+            $ref: "#/definitions/btxPatternConfiguration",
+          },
         },
         required: ["name", "mailingAddress"],
       },
@@ -23,6 +27,7 @@ export const createPaymentIntentRequestBodyJsonSchema: JSONSchemaType<ICreatePay
     required: ["productId", "organization"],
     definitions: {
       streetAddress: streetAddressJsonSchema,
+      btxPatternConfiguration: btxPatternConfigurationJsonSchema,
     },
     additionalProperties: false,
   };

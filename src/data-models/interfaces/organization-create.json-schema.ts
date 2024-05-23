@@ -6,7 +6,7 @@ import { streetAddressJsonSchema } from "./street-address.json-schema";
  * Validation schema for creating an organization.
  */
 export const createOrganizationJsonSchema: JSONSchemaType<
-  Omit<IOrganization, "id">
+  Omit<IOrganization, "id" | "btxPatternConfiguration">
 > = {
   type: "object",
   properties: {

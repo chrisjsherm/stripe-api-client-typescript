@@ -113,3 +113,39 @@ export async function getUserOrganization(
     );
   }
 }
+
+export async function updateBtxPatternConfiguration(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const configuration = req.body;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const organizationRepo = AppDataSource.getRepository(Organization);
+    const organization = await organizationRepo.findOne({
+      where: { id: organizationId },
+    });
+    if (!organization) {
+      throw createError.BadRequest(
+        "The organization associated with your account no longer exists."
+      );
+    }
+    organization.btxPatternConfiguration = configuration;
+    await organization.save();
+    res.sendStatus(StatusCodes.OK);
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "Error updating the organization's botulinum toxin pattern configuration.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}

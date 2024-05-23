@@ -9,10 +9,12 @@ import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import {
   createOrganization,
   getUserOrganization,
+  updateBtxPatternConfiguration,
 } from "./controllers/organization.controller";
 import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
 import { productsRouter } from "./controllers/products.controller";
 import { usersRouter } from "./controllers/users.controller";
+import { btxPatternConfigurationJsonSchema } from "./data-models/interfaces/btx-pattern-configuration.interface";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
 import { createOrganizationJsonSchema } from "./data-models/interfaces/organization-create.json-schema";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
@@ -104,6 +106,12 @@ export async function startServer() {
     createOrganization
   );
   app.get("/organization", hasAnyRole([]), getUserOrganization);
+  app.put(
+    "/organization/btx-pattern-configuration",
+    hasAnyRole([]),
+    generateRequestBodyValidator(btxPatternConfigurationJsonSchema),
+    updateBtxPatternConfiguration
+  );
 
   // Payment Intents API
   app.use("/payment-intent", hasAnyRole([]), paymentIntentsRouter);

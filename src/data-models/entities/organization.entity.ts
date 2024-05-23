@@ -1,7 +1,7 @@
-import { Column, Entity, OneToOne } from "typeorm";
+import { Column, Entity } from "typeorm";
 import { StreetAddress } from "../classes/street-address.class";
+import { IBtxPatternConfiguration } from "../interfaces/btx-pattern-configuration.interface";
 import { IOrganization } from "../interfaces/organization.interface";
-import { BotoxPatternConfiguration } from "./botox-pattern-configuration.entity";
 import { CoreEntity } from "./core-entity.model";
 
 /**
@@ -9,12 +9,12 @@ import { CoreEntity } from "./core-entity.model";
  */
 @Entity()
 export class Organization extends CoreEntity implements IOrganization {
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar" })
   name: string;
 
   @Column(() => StreetAddress)
   mailingAddress: StreetAddress;
 
-  @OneToOne(() => BotoxPatternConfiguration, (pattern) => pattern.organization)
-  botoxPatternConfiguration: BotoxPatternConfiguration;
+  @Column("jsonb", { nullable: true })
+  btxPatternConfiguration: IBtxPatternConfiguration | null;
 }

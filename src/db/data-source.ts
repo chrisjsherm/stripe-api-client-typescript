@@ -1,5 +1,4 @@
 import { DataSource } from "typeorm";
-import { BotoxPatternConfiguration } from "../data-models/entities/botox-pattern-configuration.entity";
 import { Organization } from "../data-models/entities/organization.entity";
 import { Product } from "../data-models/entities/product.entity";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
@@ -20,7 +19,7 @@ export const AppDataSource = new DataSource({
   dropSchema: true, // TODO: Use migrations before prod
   synchronize: true, // TODO: Remove before prod
   logging: true,
-  entities: [BotoxPatternConfiguration, Organization, Product],
+  entities: [Organization, Product],
   subscribers: [],
   migrations: [],
 });

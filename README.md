@@ -61,7 +61,7 @@ Once connected to pgAdmin, add a server. On the "Connection" tab:
 
 1. Open a terminal and run: `docker-compose up`
 2. Open a terminal and run: `npm start`
-3. Open another terminal and run: `stripe login`
+3. Open another terminal and run (skip if done recently): `stripe login`
 4. After logging in, run:
 
 ```

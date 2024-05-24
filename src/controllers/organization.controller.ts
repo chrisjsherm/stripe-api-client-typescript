@@ -139,7 +139,7 @@ export async function updateBtxPatternConfiguration(
     }
     organization.btxPatternConfiguration = configuration;
     await organization.save();
-    res.sendStatus(StatusCodes.OK);
+    res.send();
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,

@@ -91,14 +91,27 @@ export async function getUserOrganization(
     }
 
     const organizationRepo = AppDataSource.getRepository(Organization);
-    const organization = await organizationRepo.findOne({
-      where: { id: userInfo.organizationId },
-    });
+    const organization = await organizationRepo
+      .createQueryBuilder("organization")
+      .where("organization.id = :id", { id: userInfo.organizationId })
+      .getOne();
 
     if (organization === null) {
       throw createError.NotFound(
         `Organization with id "${userInfo.organizationId}" was not found.`
       );
+    }
+
+    const unsortedPatternConfig = organization.btxPatternConfiguration;
+    if (unsortedPatternConfig) {
+      const sortedKeys = Object.keys(unsortedPatternConfig).sort();
+
+      const sortedPatternConfig = sortedKeys.reduce((acc, key) => {
+        acc[key] = unsortedPatternConfig[key];
+        return acc;
+      }, {} as Record<string, number[]>);
+
+      organization.btxPatternConfiguration = sortedPatternConfig;
     }
 
     res.json({

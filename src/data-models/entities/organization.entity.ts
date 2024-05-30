@@ -1,7 +1,7 @@
 import { Column, Entity } from "typeorm";
 import { StreetAddress } from "../classes/street-address.class";
-import { IBtxPatternConfiguration } from "../interfaces/btx-pattern-configuration.interface";
 import { IOrganization } from "../interfaces/organization.interface";
+import { BtxPatternConfiguration } from "../types/btx-pattern-configuration.type";
 import { CoreEntity } from "./core-entity.model";
 
 /**
@@ -16,5 +16,5 @@ export class Organization extends CoreEntity implements IOrganization {
   mailingAddress: StreetAddress;
 
   @Column("jsonb", { nullable: true })
-  btxPatternConfiguration: IBtxPatternConfiguration | null;
+  btxPatternConfiguration: BtxPatternConfiguration | null;
 }

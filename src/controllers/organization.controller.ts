@@ -102,18 +102,6 @@ export async function getUserOrganization(
       );
     }
 
-    const unsortedPatternConfig = organization.btxPatternConfiguration;
-    if (unsortedPatternConfig) {
-      const sortedKeys = Object.keys(unsortedPatternConfig).sort();
-
-      const sortedPatternConfig = sortedKeys.reduce((acc, key) => {
-        acc[key] = unsortedPatternConfig[key];
-        return acc;
-      }, {} as Record<string, number[]>);
-
-      organization.btxPatternConfiguration = sortedPatternConfig;
-    }
-
     res.json({
       data: organization,
     });

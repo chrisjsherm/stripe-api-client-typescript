@@ -1,5 +1,5 @@
 import { JSONSchemaType } from "ajv";
-import { btxPatternConfigurationJsonSchema } from "./btx-pattern-configuration.interface";
+import { btxPatternConfigurationJsonSchema } from "../types/btx-pattern-configuration.type";
 import { ICreatePaymentIntentRequestBody } from "./create-payment-intent-request-body.interface";
 import { streetAddressJsonSchema } from "./street-address.json-schema";
 

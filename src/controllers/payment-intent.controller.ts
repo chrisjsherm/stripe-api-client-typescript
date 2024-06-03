@@ -100,6 +100,16 @@ export async function createPaymentIntent(
           },
         },
       });
+
+      await authClient.createGroupMembers({
+        members: {
+          [process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS as string]: [
+            {
+              userId: token.userId,
+            },
+          ],
+        },
+      });
     }
 
     const params: Stripe.PaymentIntentCreateParams = {
@@ -113,8 +123,10 @@ export async function createPaymentIntent(
       metadata: {
         [ConstantConfiguration.stripe_paymentIntent_metadata_userId]:
           token.userId,
-        [ConstantConfiguration.stripe_paymentIntent_metadata_groupMembershipsCsv]:
-          product.groupMembershipsCsv,
+        [ConstantConfiguration.stripe_paymentIntent_metadata_organizationId]:
+          savedOrganizationId!,
+        [ConstantConfiguration.stripe_paymentIntent_metadata_productIdsCsv]:
+          product.id,
       },
       receipt_email: token.email,
       shipping: {

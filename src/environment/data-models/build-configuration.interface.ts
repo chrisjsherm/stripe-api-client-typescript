@@ -6,6 +6,8 @@ export interface IBuildConfiguration {
     apiKey: string;
     appId: string;
     url: string;
+    role_btxAssistant_readWrite: string;
+    role_organizationAdministrator: string;
   };
 
   captcha: {

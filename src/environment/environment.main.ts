@@ -11,8 +11,11 @@ const requiredEnvironmentVariables = new Set<string>([
   "AUTH_API_KEY",
   "AUTH_APP_ID",
   "AUTH_BASE_URL",
+  "AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS",
   "AUTH_GROUP_ID__SUBSCRIPTION_STARTUP_ANNUAL_REV_0",
   "AUTH_GROUP_ID__SUBSCRIPTION_BUSINESS_ANNUAL_REV_0",
+  "AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME",
+  "AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME",
   "AWS_ACCESS_KEY_ID",
   "AWS_SECRET_ACCESS_KEY",
   "CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL",
@@ -46,6 +49,10 @@ const sharedConfiguration: Pick<
     apiKey: process.env.AUTH_API_KEY!,
     appId: process.env.AUTH_APP_ID!,
     url: process.env.AUTH_BASE_URL!,
+    role_btxAssistant_readWrite:
+      process.env.AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME!,
+    role_organizationAdministrator:
+      process.env.AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME!,
   },
   captcha: {
     enabled: process.env.CAPTCHA_ENABLED === "true",

@@ -4,7 +4,12 @@ import FusionAuthClient, {
 } from "@fusionauth/typescript-client";
 import ClientResponse from "@fusionauth/typescript-client/build/src/ClientResponse";
 import * as createError from "http-errors";
+import { DateTime } from "luxon";
 import { Stripe } from "stripe";
+import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
+import { Product } from "../data-models/entities/product.entity";
+import { PaymentProcessor } from "../data-models/enums/payment-processor.enum";
+import { AppDataSource } from "../db/data-source";
 import { IBuildConfiguration } from "../environment/data-models/build-configuration.interface";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 import { backoffRetry } from "./backoff-retry.helper";
@@ -39,10 +44,52 @@ export async function onPaymentIntentSucceededEvent$(
     );
   }
 
-  const groupIds =
+  const organizationId =
     paymentIntent.metadata[
-      ConstantConfiguration.stripe_paymentIntent_metadata_groupMembershipsCsv
+      ConstantConfiguration.stripe_paymentIntent_metadata_organizationId
+    ];
+  if (typeof organizationId !== "string") {
+    throw createError.BadRequest(
+      `The payment intent with ID ${paymentIntent.id} does not have an ` +
+        "organization associated with it."
+    );
+  }
+
+  const productIds =
+    paymentIntent.metadata[
+      ConstantConfiguration.stripe_paymentIntent_metadata_productIdsCsv
     ].split(",");
+  if (productIds.length === 0) {
+    throw createError.BadRequest(
+      `The payment intent with ID ${paymentIntent.id} does not have any ` +
+        "products associated with it."
+    );
+  }
+
+  const productRepository = AppDataSource.getRepository(Product);
+  const products = await productRepository
+    .createQueryBuilder("product")
+    .where("product.id IN (:...ids)", { ids: productIds })
+    .getMany();
+
+  let groupIds = new Array<string>();
+  const subscriptionRepository =
+    AppDataSource.getRepository(ProductSubscription);
+  for (const product of products) {
+    await subscriptionRepository.save({
+      expirationDateTime: DateTime.now().plus({ year: 1 }).toString(),
+      paymentId: paymentIntent.id,
+      paymentProcessor: PaymentProcessor.Stripe,
+      organization: {
+        id: organizationId,
+      },
+      product,
+    });
+
+    if (product.groupMembershipsCsv) {
+      groupIds.push(...product.groupMembershipsCsv.split(","));
+    }
+  }
 
   if (groupIds.length !== 0) {
     const groupAssignments = groupIds.reduce(

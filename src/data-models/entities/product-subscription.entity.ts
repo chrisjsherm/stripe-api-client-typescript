@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToMany, ManyToOne } from "typeorm";
+import { Column, Entity, ManyToOne } from "typeorm";
 import { PaymentProcessor } from "../enums/payment-processor.enum";
 import { CoreEntity } from "./core-entity.model";
 import { Organization } from "./organization.entity";
@@ -18,8 +18,8 @@ export class ProductSubscription extends CoreEntity {
   @Column({ type: "enum", enum: PaymentProcessor })
   paymentProcessor: PaymentProcessor;
 
-  @ManyToMany(() => Product)
-  products: Array<Product>;
+  @ManyToOne(() => Product)
+  product: Product;
 
   @ManyToOne(() => Organization)
   organization: Organization;

@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
 import { Organization } from "../data-models/entities/organization.entity";
+import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
 import { Product } from "../data-models/entities/product.entity";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 
@@ -19,7 +20,7 @@ export const AppDataSource = new DataSource({
   dropSchema: true, // TODO: Use migrations before prod
   synchronize: true, // TODO: Remove before prod
   logging: true,
-  entities: [Organization, Product],
+  entities: [Organization, Product, ProductSubscription],
   subscribers: [],
   migrations: [],
 });

@@ -4,12 +4,12 @@ import { ProductSubscription } from "../data-models/entities/product-subscriptio
 import { AppDataSource } from "../db/data-source";
 
 /**
- * Get FusionAuth group memberships associated with an organization. These
- * memberships are associated with subscriptions to products.
+ * Get FusionAuth group memberships by organization that apply to all members
+ * of an organization.
  * @param organizationId ID of the organization associated with this customer
  * @returns Array of FusionAuth group IDs
  */
-export async function getProductGroupMembershipsByOrganization$$(
+export async function getDefaultMembershipsByOrganization$(
   organizationId: string
 ): Promise<Set<string>> {
   const subscriptions = await AppDataSource.getRepository(
@@ -22,7 +22,7 @@ export async function getProductGroupMembershipsByOrganization$$(
       organization: {
         id: organizationId,
       },
-      expirationDateTime: MoreThan(DateTime.now().toISODate()),
+      expirationDateTime: MoreThan(DateTime.now().toJSDate()),
     },
   });
 

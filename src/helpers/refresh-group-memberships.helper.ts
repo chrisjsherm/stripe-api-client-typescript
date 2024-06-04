@@ -1,25 +1,17 @@
-import FusionAuthClient, {
-  GroupMember,
-  User,
-} from "@fusionauth/typescript-client";
-import * as createError from "http-errors";
-import Stripe from "stripe";
+import FusionAuthClient, { User } from "@fusionauth/typescript-client";
 import { DecodedAccessToken } from "../data-models/interfaces/decoded-access-token.interface";
 import { getAuthUserById$ } from "./get-auth-user-by-id.helper";
-import { getGroupMemberships$ } from "./get-group-memberships.helper";
-import { getStripeCustomerById$ } from "./get-stripe-customer-by-id.helper";
+import { getDefaultMembershipsByOrganization$ } from "./get-group-memberships.helper";
 
 /**
- * Refresh the user's group memberships.
+ * Apply default FusionAuth group memberships to the user.
  * @param accessToken FusionAuth user
- * @param stripeClient Stripe API client
  * @param authClient FusionAuth API client
  * @returns FusionAuth user with refreshed memberships
  * @throws Error
  */
-export async function refreshGroupMembership$(
+export async function applyDefaultMemberships$(
   accessToken: DecodedAccessToken,
-  stripeClient: Stripe,
   authClient: FusionAuthClient
 ): Promise<User> {
   if (!accessToken.emailVerified) {
@@ -30,46 +22,17 @@ export async function refreshGroupMembership$(
     return accessToken;
   }
 
-  if (!accessToken.stripeCustomerId) {
-    console.info(
-      "Your account does not have a customer account associated with it. " +
-        "Skipping refresh."
-    );
+  if (!accessToken.organizationId) {
+    console.info("Your account is not associated with an organization.");
     return accessToken;
   }
 
-  const stripeCustomer = await getStripeCustomerById$(
-    accessToken.stripeCustomerId,
-    stripeClient
-  );
-  if (!stripeCustomer) {
-    throw createError.NotFound(
-      "We did not find a Stripe customer associated with user: " +
-        accessToken.userId
-    );
-  }
-
-  const groupMemberships = await getGroupMemberships$(
-    stripeCustomer.id,
-    stripeClient
+  const groupMemberships = await getDefaultMembershipsByOrganization$(
+    accessToken.organizationId
   );
 
   const user = await getAuthUserById$(accessToken.userId, authClient);
   const currentMemberships = user.memberships ?? [];
-
-  if (
-    currentMemberships.length === groupMemberships.size &&
-    currentMemberships.every((groupMembership: GroupMember): boolean => {
-      if (groupMembership.groupId === undefined) {
-        return false;
-      }
-
-      return groupMemberships.has(groupMembership.groupId);
-    })
-  ) {
-    // Memberships are up to date.
-    return user;
-  }
 
   for (const membership of currentMemberships) {
     if (membership.groupId === undefined) {
@@ -82,16 +45,6 @@ export async function refreshGroupMembership$(
       groupMemberships.delete(membership.groupId);
       continue;
     }
-
-    // Membership is no longer active according to recent Charges.
-    console.info(
-      `Removing user ${accessToken.userId} from group ${membership.groupId}.`
-    );
-    await authClient.deleteGroupMembers({
-      members: {
-        [membership.groupId]: [accessToken.userId],
-      },
-    });
   }
 
   // Add missing memberships.

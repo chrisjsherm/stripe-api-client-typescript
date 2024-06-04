@@ -9,8 +9,8 @@ import { Product } from "./product.entity";
  */
 @Entity()
 export class ProductSubscription extends CoreEntity {
-  @Column({ type: "date" })
-  expirationDateTime: string;
+  @Column({ type: "timestamp with time zone" })
+  expirationDateTime: Date;
 
   @Column({ type: "varchar" })
   paymentId: string;

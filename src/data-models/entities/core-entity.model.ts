@@ -11,14 +11,14 @@ export abstract class CoreEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @CreateDateColumn()
-  createdDateTime: string;
+  @CreateDateColumn({ type: "timestamp with time zone" })
+  createdDateTime: Date;
 
-  @UpdateDateColumn()
-  updatedDateTime: string;
+  @UpdateDateColumn({ type: "timestamp with time zone" })
+  updatedDateTime: Date;
 
-  @DeleteDateColumn()
-  deletedDateTime?: string;
+  @DeleteDateColumn({ type: "timestamp with time zone" })
+  deletedDateTime?: Date;
 
   @VersionColumn()
   version: number;

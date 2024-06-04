@@ -84,6 +84,8 @@ export async function createPaymentIntent(
           "organization associated with your account."
       );
     }
+
+    // Create the organization or make updates to an existing one, if necessary.
     const organizationRepository = AppDataSource.getRepository(Organization);
     const upsertResult = await organizationRepository.upsert(organization, {
       conflictPaths: ["id"],
@@ -91,6 +93,7 @@ export async function createPaymentIntent(
     });
 
     if (savedOrganizationId == null) {
+      // Associate newly created organization with the user.
       savedOrganizationId = upsertResult.identifiers[0].id;
       await authClient.patchUser(token.userId, {
         user: {
@@ -101,6 +104,7 @@ export async function createPaymentIntent(
         },
       });
 
+      // User who created the organization is its administrator.
       await authClient.createGroupMembers({
         members: {
           [process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS as string]: [

@@ -27,6 +27,11 @@ usersRouter.post(
   invite
 );
 usersRouter.get("/me", getAuthenticatedUserProfile);
+usersRouter.get(
+  "/",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  getUsers
+);
 usersRouter.post("/me/customer", createCustomer);
 usersRouter.post("/verify-email", resendEmailVerificationMessage);
 usersRouter.post("/refresh-group-memberships", refreshGroupMemberships);
@@ -100,6 +105,56 @@ async function getAuthenticatedUserProfile(
 }
 
 /**
+ * Get users associated with the requesting user's organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function getUsers(req: Request, res: Response): Promise<void> {
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your account is not associated with an organization."
+      );
+    }
+
+    const searchResult = await authClient.searchUsersByQuery({
+      search: {
+        query: JSON.stringify({
+          match: {
+            "data.organizationId": {
+              query: organizationId,
+            },
+          },
+        }),
+        accurateTotal: true,
+      },
+    });
+
+    if (searchResult.exception) {
+      throw createError.InternalServerError(searchResult.exception.message);
+    }
+
+    if (searchResult.response.total !== searchResult.response.users?.length) {
+      throw createError.InternalServerError(
+        "The number of users in your organization has exceeded the limit. Pagination must be implemented to proceed."
+      );
+    }
+
+    res.json({
+      data: searchResult.response.users ?? [],
+    });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      `An error occurred retrieving users.`,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
  * Resend a message asking the customer to verify his email.
  * @param req HTTP request
  * @param res HTTP response
@@ -110,7 +165,7 @@ async function invite(req: Request, res: Response): Promise<void> {
   try {
     const { organizationId } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
-      throw createError.Forbidden(
+      throw createError.BadRequest(
         "You cannot invite users until you configure an organization."
       );
     }

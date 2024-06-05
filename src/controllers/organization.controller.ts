@@ -26,7 +26,7 @@ export async function createOrganization(
 
   try {
     const userInfo = decodeFusionAuthAccessToken(req);
-    const authUser = await getAuthUserById$(userInfo.userId, authClient);
+    const authUser = await getAuthUserById$(userInfo.id, authClient);
     const organizationId = authUser.data?.[
       ConstantConfiguration.fusionAuth_user_data_organizationId
     ] as string;
@@ -42,7 +42,7 @@ export async function createOrganization(
       .save();
 
     try {
-      await authClient.patchUser(userInfo.userId, {
+      await authClient.patchUser(userInfo.id, {
         user: {
           data: {
             [ConstantConfiguration.fusionAuth_user_data_organizationId]:

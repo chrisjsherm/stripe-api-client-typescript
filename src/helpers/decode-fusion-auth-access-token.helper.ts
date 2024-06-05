@@ -20,7 +20,7 @@ export function decodeFusionAuthAccessToken(req: Request): DecodedAccessToken {
   }
 
   return {
-    userId: authToken.sub,
+    id: authToken.sub,
     email: authToken.email,
     emailVerified: authToken.email_verified ?? false,
     firstName: authToken.first_name,

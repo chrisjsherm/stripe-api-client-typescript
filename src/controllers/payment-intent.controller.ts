@@ -61,7 +61,7 @@ export async function createPaymentIntent(
     }
 
     const token = decodeFusionAuthAccessToken(req);
-    const userQueryResult = await getAuthUserById$(token.userId, authClient);
+    const userQueryResult = await getAuthUserById$(token.id, authClient);
 
     let customerId: string | undefined =
       userQueryResult.data?.[
@@ -70,7 +70,7 @@ export async function createPaymentIntent(
     if (customerId == null) {
       const customer = await createStripeCustomer$(token, stripeClient);
       customerId = customer.id;
-      await associateUserWithCustomer$(token.userId, customer.id, authClient);
+      await associateUserWithCustomer$(token.id, customer.id, authClient);
     }
 
     const organization: IOrganization = req.body.organization;
@@ -95,7 +95,7 @@ export async function createPaymentIntent(
     if (savedOrganizationId == null) {
       // Associate newly created organization with the user.
       savedOrganizationId = upsertResult.identifiers[0].id;
-      await authClient.patchUser(token.userId, {
+      await authClient.patchUser(token.id, {
         user: {
           data: {
             [ConstantConfiguration.fusionAuth_user_data_organizationId]:
@@ -109,7 +109,7 @@ export async function createPaymentIntent(
         members: {
           [process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS as string]: [
             {
-              userId: token.userId,
+              userId: token.id,
             },
           ],
         },
@@ -125,8 +125,7 @@ export async function createPaymentIntent(
       customer: customerId,
       description: product.subtitle,
       metadata: {
-        [ConstantConfiguration.stripe_paymentIntent_metadata_userId]:
-          token.userId,
+        [ConstantConfiguration.stripe_paymentIntent_metadata_userId]: token.id,
         [ConstantConfiguration.stripe_paymentIntent_metadata_organizationId]:
           savedOrganizationId!,
         [ConstantConfiguration.stripe_paymentIntent_metadata_productIdsCsv]:

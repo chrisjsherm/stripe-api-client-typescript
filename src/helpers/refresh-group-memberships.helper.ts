@@ -31,7 +31,7 @@ export async function applyDefaultMemberships$(
     accessToken.organizationId
   );
 
-  const user = await getAuthUserById$(accessToken.userId, authClient);
+  const user = await getAuthUserById$(accessToken.id, authClient);
   const currentMemberships = user.memberships ?? [];
 
   for (const membership of currentMemberships) {
@@ -49,13 +49,13 @@ export async function applyDefaultMemberships$(
 
   // Add missing memberships.
   for (const groupId of groupMemberships) {
-    console.info(`Adding user ${accessToken.userId} to group ${groupId}.`);
+    console.info(`Adding user ${accessToken.id} to group ${groupId}.`);
     await authClient.createGroupMembers({
       members: {
-        [groupId]: [{ userId: accessToken.userId }],
+        [groupId]: [{ userId: accessToken.id }],
       },
     });
   }
 
-  return await getAuthUserById$(accessToken.userId, authClient);
+  return await getAuthUserById$(accessToken.id, authClient);
 }

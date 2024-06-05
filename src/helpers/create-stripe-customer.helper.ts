@@ -20,7 +20,7 @@ export async function createStripeCustomer$(
     phone: appUser.mobilePhone,
     metadata: {
       [ConstantConfiguration.stripe_customer_metadata_fusionAuthUserId]:
-        appUser.userId,
+        appUser.id,
     },
   });
   console.info(`Created Stripe customer with ID: ${stripeCustomer.id}`);

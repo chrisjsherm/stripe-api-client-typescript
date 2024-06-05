@@ -50,7 +50,7 @@ async function createCustomer(req: Request, res: Response): Promise<void> {
 
   try {
     const token = decodeFusionAuthAccessToken(req);
-    const userQueryResult = await getAuthUserById$(token.userId, authClient);
+    const userQueryResult = await getAuthUserById$(token.id, authClient);
 
     if (
       userQueryResult.data?.[
@@ -63,7 +63,7 @@ async function createCustomer(req: Request, res: Response): Promise<void> {
     }
 
     const customer = await createStripeCustomer$(token, stripeClient);
-    await associateUserWithCustomer$(token.userId, customer.id, authClient);
+    await associateUserWithCustomer$(token.id, customer.id, authClient);
 
     if (!res.headersSent) {
       res.status(StatusCodes.CREATED).send({

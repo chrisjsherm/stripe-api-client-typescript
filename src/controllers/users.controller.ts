@@ -1,4 +1,4 @@
-import { User } from "@fusionauth/typescript-client";
+import { Sort, User } from "@fusionauth/typescript-client";
 import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
@@ -21,6 +21,11 @@ import { ConstantConfiguration } from "../services/constant-configuration.servic
  * Endpoints related to the application user.
  */
 export const usersRouter = Router();
+usersRouter.delete(
+  "/:userId",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  deleteUser
+);
 usersRouter.post(
   "/invite",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
@@ -81,6 +86,46 @@ async function createCustomer(req: Request, res: Response): Promise<void> {
 }
 
 /**
+ * Delete a user.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function deleteUser(req: Request, res: Response): Promise<void> {
+  const userId = req.params.userId;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your account is not associated with an organization."
+      );
+    }
+
+    const user = (await authClient.retrieveUser(userId)).response.user;
+    if (
+      user?.data?.[
+        ConstantConfiguration.fusionAuth_user_data_organizationId
+      ] !== organizationId
+    ) {
+      throw createError.NotFound(
+        `A user with ID ${userId} does not exist in your organization.`
+      );
+    }
+
+    await authClient.deleteUser(userId);
+
+    res.json({ data: undefined });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      `An error occurred deleting user ${userId}.`,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
  * Get the user profile for the user who initiated this request.
  * @param req HTTP request
  * @param res HTTP response
@@ -128,6 +173,20 @@ async function getUsers(req: Request, res: Response): Promise<void> {
           },
         }),
         accurateTotal: true,
+        sortFields: [
+          {
+            name: "fullName",
+            order: Sort.asc,
+          },
+          {
+            name: "email",
+            order: Sort.asc,
+          },
+          {
+            name: "insertInstant",
+            order: Sort.asc,
+          },
+        ],
       },
     });
 

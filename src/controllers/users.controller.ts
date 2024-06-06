@@ -31,6 +31,11 @@ usersRouter.post(
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   invite
 );
+usersRouter.put(
+  "/:userId/is-organization-administrator",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  modifyOrganizationAdministratorStatus
+);
 usersRouter.get("/me", getAuthenticatedUserProfile);
 usersRouter.get(
   "/",
@@ -299,6 +304,67 @@ async function invite(req: Request, res: Response): Promise<void> {
     onErrorProcessingHttpRequest(
       err,
       `An error occurred sending the invitation.`,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Adjust the administrator status of a user.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function modifyOrganizationAdministratorStatus(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const userId = req.params.userId;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your account is not associated with an organization."
+      );
+    }
+
+    const user = (await authClient.retrieveUser(userId)).response.user;
+    if (
+      user?.data?.[
+        ConstantConfiguration.fusionAuth_user_data_organizationId
+      ] !== organizationId
+    ) {
+      throw createError.NotFound(
+        `A user with ID ${userId} does not exist in your organization.`
+      );
+    }
+
+    if (req.body.isOrganizationAdministrator) {
+      await authClient.createGroupMembers({
+        members: {
+          [process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS as string]: [
+            {
+              userId: userId,
+            },
+          ],
+        },
+      });
+    } else {
+      await authClient.deleteGroupMembers({
+        members: {
+          [process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS as string]: [
+            userId,
+          ],
+        },
+      });
+    }
+
+    res.json({ data: undefined });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      `An error occurred updating user ${userId}.`,
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

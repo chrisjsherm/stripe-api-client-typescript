@@ -57,12 +57,35 @@ Once connected to pgAdmin, add a server. On the "Connection" tab:
 2. Change the "Username" and "Password" fields to match your `DB_USERNAME` and
    `DB_PASSWORD` environment variables.
 
+### Database Changes & Migrations
+
+1. Generate a migration:
+
+```
+npx typeorm-ts-node-esm migration:generate ./src/db/migrations/<name> -d ./src/db/data-source.ts --pretty
+```
+
+2. Import the migration to `./src/db/data-source.ts` and add it to the end of the
+   `migrations` array.
+
+3. Run the migration:
+
+```
+npx typeorm-ts-node-esm migration:run -d ./src/db/data-source.ts
+```
+
 ## Development
 
 1. Open a terminal and run: `docker-compose up`
-2. Open a terminal and run: `npm start`
-3. Open another terminal and run (skip if done recently): `stripe login`
-4. After logging in, run:
+2. Open a terminal and run database migrations:
+
+```
+npx typeorm-ts-node-esm migration:run -d ./src/db/data-source.ts
+```
+
+3. Open a terminal and run: `npm start`
+4. Open a terminal and run (skip if done recently): `stripe login`
+5. After logging in, run:
 
 ```
 stripe listen --forward-to localhost:4242/webhooks/stripe

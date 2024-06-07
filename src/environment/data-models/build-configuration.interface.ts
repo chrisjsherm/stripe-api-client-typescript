@@ -34,7 +34,7 @@ export interface IBuildConfiguration {
     requestTimeoutMs: number;
   };
 
-  insertTestData: boolean;
+  upsertSeedData: boolean;
   isDebug?: boolean;
 
   payments: {

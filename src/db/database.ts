@@ -1,7 +1,7 @@
 import { backoffRetry } from "../helpers/backoff-retry.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { AppDataSource } from "./data-source";
-import { insertMockProducts } from "./mock-data/product.mock-data";
+import { insertSeedProducts } from "./seed-data/product.seed-data";
 
 const config = getEnvironmentConfiguration();
 
@@ -19,8 +19,8 @@ export async function initializeDatabase() {
       "Database connection"
     );
 
-    if (config.isDebug && config.insertTestData) {
-      await insertMockProducts();
+    if (config.isDebug && config.upsertSeedData) {
+      await insertSeedProducts();
     }
 
     console.info("🔌 Database connected");

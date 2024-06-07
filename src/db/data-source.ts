@@ -1,8 +1,10 @@
+import {} from "module";
 import { DataSource } from "typeorm";
 import { Organization } from "../data-models/entities/organization.entity";
 import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
 import { Product } from "../data-models/entities/product.entity";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
+import { Initial1717769515809 } from "./migrations/1717769515809-initial";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -17,10 +19,10 @@ export const AppDataSource = new DataSource({
   username: config.username,
   password: config.password,
   database: config.name,
-  dropSchema: true, // TODO: Use migrations before prod
-  synchronize: true, // TODO: Remove before prod
+  dropSchema: false,
+  synchronize: false,
   logging: true,
   entities: [Organization, Product, ProductSubscription],
   subscribers: [],
-  migrations: [],
+  migrations: [Initial1717769515809],
 });

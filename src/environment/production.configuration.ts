@@ -5,8 +5,8 @@ import { IBuildConfiguration } from "./data-models/build-configuration.interface
  */
 export const productionConfiguration: Pick<
   IBuildConfiguration,
-  "isDebug" | "insertTestData"
+  "isDebug" | "upsertSeedData"
 > = {
   isDebug: false,
-  insertTestData: false,
+  upsertSeedData: false,
 };

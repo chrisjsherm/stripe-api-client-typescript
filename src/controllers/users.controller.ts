@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
 import { AppDataSource } from "../db/data-source";
 import { environment } from "../environment/environment";
+import { applyDefaultMemberships$ } from "../helpers/apply-default-group-memberships.helper";
 import { associateUserWithCustomer$ } from "../helpers/associate-customer-with-user.helper";
 import { createStripeCustomer$ } from "../helpers/create-stripe-customer.helper";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
@@ -14,7 +15,6 @@ import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
 import { hasAnyRole } from "../helpers/has-any-role.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
-import { applyDefaultMemberships$ } from "../helpers/refresh-group-memberships.helper";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 /**

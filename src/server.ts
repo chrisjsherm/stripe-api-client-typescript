@@ -6,17 +6,11 @@ import { createCustomerContact } from "./controllers/create-contact-message.cont
 import { handleLogout } from "./controllers/logout.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
-import {
-  createOrganization,
-  getUserOrganization,
-  updateBtxPatternConfiguration,
-} from "./controllers/organization.controller";
+import { organizationsRouter } from "./controllers/organization.controller";
 import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
 import { productsRouter } from "./controllers/products.controller";
 import { usersRouter } from "./controllers/users.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
-import { createOrganizationJsonSchema } from "./data-models/interfaces/organization-create.json-schema";
-import { btxPatternConfigurationJsonSchema } from "./data-models/types/btx-pattern-configuration.type";
 import { getEnvironmentConfiguration } from "./helpers/get-environment-configuration.helper";
 import { hasAnyRole } from "./helpers/has-any-role.helper";
 import { generateRequestBodyValidator } from "./helpers/validate-request-body.middleware";
@@ -99,19 +93,7 @@ export async function startServer() {
   app.use(verifyApiJwt$);
 
   // Organization API
-  app.post(
-    "/organization",
-    hasAnyRole([]),
-    generateRequestBodyValidator(createOrganizationJsonSchema),
-    createOrganization
-  );
-  app.get("/organization", hasAnyRole([]), getUserOrganization);
-  app.put(
-    "/organization/btx-pattern-configuration",
-    hasAnyRole([]),
-    generateRequestBodyValidator(btxPatternConfigurationJsonSchema),
-    updateBtxPatternConfiguration
-  );
+  app.use("/organizations", organizationsRouter);
 
   // Payment Intents API
   app.use("/payment-intent", hasAnyRole([]), paymentIntentsRouter);

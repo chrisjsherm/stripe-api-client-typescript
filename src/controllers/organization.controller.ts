@@ -1,14 +1,34 @@
-import { Request, Response } from "express";
+import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import { Organization } from "../data-models/entities/organization.entity";
+import { createOrganizationJsonSchema } from "../data-models/interfaces/organization-create.json-schema";
+import { btxPatternConfigurationJsonSchema } from "../data-models/types/btx-pattern-configuration.type";
 import { AppDataSource } from "../db/data-source";
+import { environment } from "../environment/environment";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
 import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
+import { hasAnyRole } from "../helpers/has-any-role.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
+import { generateRequestBodyValidator } from "../helpers/validate-request-body.middleware";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
+
+export const organizationsRouter = Router();
+organizationsRouter.post(
+  "/",
+  hasAnyRole([]),
+  generateRequestBodyValidator(createOrganizationJsonSchema),
+  createOrganization
+);
+organizationsRouter.get("/me", hasAnyRole([]), getUserOrganization);
+organizationsRouter.put(
+  "/me/btx-pattern-configuration",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  generateRequestBodyValidator(btxPatternConfigurationJsonSchema),
+  updateBtxPatternConfiguration
+);
 
 const config = getEnvironmentConfiguration();
 const authClient = getFusionAuth(config);
@@ -18,10 +38,7 @@ const authClient = getFusionAuth(config);
  * @param req HTTP request
  * @param res HTTP response
  */
-export async function createOrganization(
-  req: Request,
-  res: Response
-): Promise<void> {
+async function createOrganization(req: Request, res: Response): Promise<void> {
   const organization: Organization = req.body;
 
   try {
@@ -77,10 +94,7 @@ export async function createOrganization(
  * @param req HTTP request
  * @param res HTTP response
  */
-export async function getUserOrganization(
-  req: Request,
-  res: Response
-): Promise<void> {
+async function getUserOrganization(req: Request, res: Response): Promise<void> {
   try {
     const userInfo = decodeFusionAuthAccessToken(req);
     if (userInfo.organizationId === undefined) {
@@ -120,7 +134,7 @@ export async function getUserOrganization(
  * @param req HTTP request
  * @param res HTTP response
  */
-export async function updateBtxPatternConfiguration(
+async function updateBtxPatternConfiguration(
   req: Request,
   res: Response
 ): Promise<void> {

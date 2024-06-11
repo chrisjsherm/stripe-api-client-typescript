@@ -34,7 +34,7 @@ async function getById(req: Request, res: Response): Promise<void> {
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "An error ocurred retrieving the product.",
+      "An error occurred retrieving the product.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );
@@ -57,7 +57,7 @@ async function getAll(req: Request, res: Response): Promise<void> {
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "An error ocurred retrieving products.",
+      "An error occurred retrieving products.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

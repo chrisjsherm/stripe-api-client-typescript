@@ -8,6 +8,7 @@ import { getEnvironmentConfiguration } from "../helpers/get-environment-configur
 import { Initial1717769515809 } from "./migrations/1717769515809-initial";
 import { OrganizationToxins1718112213745 } from "./migrations/1718112213745-organization_toxins";
 import { BotulinumToxinEntity1718130790731 } from "./migrations/1718130790731-botulinum-toxin-entity";
+import { BotulinumToxinRequireOrg1718131345277 } from "./migrations/1718131345277-BotulinumToxin_requireOrg";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -31,5 +32,6 @@ export const AppDataSource = new DataSource({
     Initial1717769515809,
     OrganizationToxins1718112213745,
     BotulinumToxinEntity1718130790731,
+    BotulinumToxinRequireOrg1718131345277,
   ],
 });

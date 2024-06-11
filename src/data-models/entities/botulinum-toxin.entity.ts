@@ -27,8 +27,11 @@ export class BotulinumToxin extends CoreEntity implements IBotulinumToxin {
   @Column({ type: "int" })
   pricePerUnitInBaseCurrencyUnits: number;
 
-  @ManyToOne(() => Organization)
+  @ManyToOne(() => Organization, { nullable: false })
   organization: Relation<Organization>;
+
+  @Column({ type: "uuid" })
+  organizationId: string;
 }
 
 /**

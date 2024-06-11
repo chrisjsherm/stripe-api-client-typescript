@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
+import { BotulinumToxin } from "../data-models/entities/botulinum-toxin.entity";
 import { Organization } from "../data-models/entities/organization.entity";
 import { createOrganizationJsonSchema } from "../data-models/interfaces/organization-create.json-schema";
 import { btxPatternConfigurationJsonSchema } from "../data-models/types/btx-pattern-configuration.type";
@@ -23,6 +24,11 @@ organizationsRouter.post(
   createOrganization
 );
 organizationsRouter.get("/me", hasAnyRole([]), getUserOrganization);
+organizationsRouter.post(
+  "/me/botulinum-toxins",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  createToxin
+);
 organizationsRouter.put(
   "/me/btx-pattern-configuration",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
@@ -83,6 +89,42 @@ async function createOrganization(req: Request, res: Response): Promise<void> {
     onErrorProcessingHttpRequest(
       err,
       "Error assigning organization to user",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Create a botulinum toxin.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function createToxin(req: Request, res: Response): Promise<void> {
+  const toxin = req.body;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const createdToxin = await AppDataSource.createQueryBuilder()
+      .insert()
+      .into(BotulinumToxin)
+      .values({
+        ...toxin,
+        organizationId,
+      })
+      .execute();
+
+    res.json({ data: createdToxin });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "Error updating the organization's botulinum toxin pattern configuration.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

@@ -1,11 +1,13 @@
 import {} from "module";
 import { DataSource } from "typeorm";
+import { BotulinumToxin } from "../data-models/entities/botulinum-toxin.entity";
 import { Organization } from "../data-models/entities/organization.entity";
 import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
 import { Product } from "../data-models/entities/product.entity";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { Initial1717769515809 } from "./migrations/1717769515809-initial";
 import { OrganizationToxins1718112213745 } from "./migrations/1718112213745-organization_toxins";
+import { BotulinumToxinEntity1718130790731 } from "./migrations/1718130790731-botulinum-toxin-entity";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -23,7 +25,11 @@ export const AppDataSource = new DataSource({
   dropSchema: false,
   synchronize: false,
   logging: true,
-  entities: [Organization, Product, ProductSubscription],
+  entities: [BotulinumToxin, Organization, Product, ProductSubscription],
   subscribers: [],
-  migrations: [Initial1717769515809, OrganizationToxins1718112213745],
+  migrations: [
+    Initial1717769515809,
+    OrganizationToxins1718112213745,
+    BotulinumToxinEntity1718130790731,
+  ],
 });

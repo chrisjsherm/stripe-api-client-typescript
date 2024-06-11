@@ -115,6 +115,11 @@ export async function getUserOrganization(
   }
 }
 
+/**
+ * Modify an organization's botulinum toxin pattern configuration.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
 export async function updateBtxPatternConfiguration(
   req: Request,
   res: Response

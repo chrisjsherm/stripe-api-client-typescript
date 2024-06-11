@@ -5,6 +5,7 @@ import { ProductSubscription } from "../data-models/entities/product-subscriptio
 import { Product } from "../data-models/entities/product.entity";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { Initial1717769515809 } from "./migrations/1717769515809-initial";
+import { OrganizationToxins1718112213745 } from "./migrations/1718112213745-organization_toxins";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -24,5 +25,5 @@ export const AppDataSource = new DataSource({
   logging: true,
   entities: [Organization, Product, ProductSubscription],
   subscribers: [],
-  migrations: [Initial1717769515809],
+  migrations: [Initial1717769515809, OrganizationToxins1718112213745],
 });

@@ -1,5 +1,6 @@
 import { Column, Entity } from "typeorm";
 import { StreetAddress } from "../classes/street-address.class";
+import { IBotulinumToxin } from "../interfaces/botulinum-toxin.interface";
 import { IOrganization } from "../interfaces/organization.interface";
 import { BtxPatternConfiguration } from "../types/btx-pattern-configuration.type";
 import { CoreEntity } from "./core-entity.model";
@@ -17,4 +18,7 @@ export class Organization extends CoreEntity implements IOrganization {
 
   @Column("jsonb", { nullable: true })
   btxPatternConfiguration: BtxPatternConfiguration | null;
+
+  @Column("jsonb", { nullable: true })
+  botulinumToxins: IBotulinumToxin[] | null;
 }

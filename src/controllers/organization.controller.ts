@@ -17,18 +17,23 @@ import { generateRequestBodyValidator } from "../helpers/validate-request-body.m
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 export const organizationsRouter = Router();
+/** Routes */
 organizationsRouter.post(
   "/",
   hasAnyRole([]),
   generateRequestBodyValidator(createOrganizationJsonSchema),
   createOrganization
 );
+
 organizationsRouter.get("/me", hasAnyRole([]), getUserOrganization);
+
+organizationsRouter.get("/me/botulinum-toxins", hasAnyRole([]), getToxins);
 organizationsRouter.post(
   "/me/botulinum-toxins",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   createToxin
 );
+
 organizationsRouter.put(
   "/me/btx-pattern-configuration",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
@@ -130,6 +135,37 @@ async function createToxin(req: Request, res: Response): Promise<void> {
     onErrorProcessingHttpRequest(
       err,
       "Error updating the organization's botulinum toxin pattern configuration.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Get botulinum toxins associated with the organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function getToxins(req: Request, res: Response): Promise<void> {
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const toxins = await AppDataSource.getRepository(BotulinumToxin)
+      .createQueryBuilder("toxin")
+      .select()
+      .where("toxin.organizationId = :organizationId", { organizationId })
+      .getMany();
+
+    res.json({ data: toxins });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred retrieving the organization's botulinum toxins.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

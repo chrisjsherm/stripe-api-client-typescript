@@ -159,6 +159,7 @@ async function getToxins(req: Request, res: Response): Promise<void> {
       .createQueryBuilder("toxin")
       .select()
       .where("toxin.organizationId = :organizationId", { organizationId })
+      .orderBy("toxin.name")
       .getMany();
 
     res.json({ data: toxins });

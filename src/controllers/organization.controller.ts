@@ -111,7 +111,7 @@ async function createToxin(req: Request, res: Response): Promise<void> {
       );
     }
 
-    const createdToxin = await AppDataSource.createQueryBuilder()
+    const insertResult = await AppDataSource.createQueryBuilder()
       .insert()
       .into(BotulinumToxin)
       .values({
@@ -119,6 +119,11 @@ async function createToxin(req: Request, res: Response): Promise<void> {
         organizationId,
       })
       .execute();
+
+    const createdToxin = await AppDataSource.getRepository(BotulinumToxin)
+      .createQueryBuilder("toxin")
+      .where("toxin.id = :id", { id: insertResult.identifiers[0].id })
+      .getOne();
 
     res.json({ data: createdToxin });
   } catch (err) {

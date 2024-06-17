@@ -33,6 +33,11 @@ organizationsRouter.post(
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   createToxin
 );
+organizationsRouter.delete(
+  "/me/botulinum-toxins/:toxinId",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  deleteToxin
+);
 
 organizationsRouter.put(
   "/me/btx-pattern-configuration",
@@ -135,6 +140,35 @@ async function createToxin(req: Request, res: Response): Promise<void> {
     onErrorProcessingHttpRequest(
       err,
       "Error updating the organization's botulinum toxin pattern configuration.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+async function deleteToxin(req: Request, res: Response): Promise<void> {
+  const toxinId = req.params.toxinId;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const toxin = await AppDataSource.getRepository(BotulinumToxin)
+      .createQueryBuilder("toxin")
+      .where("toxin.id = :toxinId", { toxinId })
+      .andWhere("toxin.organizationId = :organizationId", { organizationId })
+      .getOneOrFail();
+    await toxin.softRemove();
+
+    res.json({ data: null });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      `An error occurred deleting toxin with ID ${toxinId}.`,
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

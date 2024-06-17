@@ -146,6 +146,11 @@ async function createToxin(req: Request, res: Response): Promise<void> {
   }
 }
 
+/**
+ * Delete a toxin associated with an organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
 async function deleteToxin(req: Request, res: Response): Promise<void> {
   const toxinId = req.params.toxinId;
 

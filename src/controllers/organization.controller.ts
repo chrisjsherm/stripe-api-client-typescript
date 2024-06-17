@@ -1,7 +1,11 @@
 import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
-import { BotulinumToxin } from "../data-models/entities/botulinum-toxin.entity";
+import {
+  BotulinumToxin,
+  IBotulinumToxin,
+  botulinumToxinJsonSchema,
+} from "../data-models/entities/botulinum-toxin.entity";
 import { Organization } from "../data-models/entities/organization.entity";
 import { createOrganizationJsonSchema } from "../data-models/interfaces/organization-create.json-schema";
 import { btxPatternConfigurationJsonSchema } from "../data-models/types/btx-pattern-configuration.type";
@@ -31,11 +35,19 @@ organizationsRouter.get("/me/botulinum-toxins", hasAnyRole([]), getToxins);
 organizationsRouter.post(
   "/me/botulinum-toxins",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
+  generateRequestBodyValidator(botulinumToxinJsonSchema),
   createToxin
+);
+organizationsRouter.put(
+  "/me/botulinum-toxins/:toxinId",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  generateRequestBodyValidator(botulinumToxinJsonSchema),
+  updateToxin
 );
 organizationsRouter.delete(
   "/me/botulinum-toxins/:toxinId",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
+  generateRequestBodyValidator(botulinumToxinJsonSchema),
   deleteToxin
 );
 
@@ -287,6 +299,45 @@ async function updateBtxPatternConfiguration(
     onErrorProcessingHttpRequest(
       err,
       "Error updating the organization's botulinum toxin pattern configuration.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Modify a toxin associated with an organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function updateToxin(req: Request, res: Response): Promise<void> {
+  const toxinId = req.params.toxinId;
+  const modifiedToxin: IBotulinumToxin = req.body;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const repo = await AppDataSource.getRepository(BotulinumToxin);
+    await repo.update(
+      { id: toxinId, organizationId },
+      {
+        name: modifiedToxin.name,
+        vialSizeInUnits: modifiedToxin.vialSizeInUnits,
+        pricePerUnitInBaseCurrencyUnits:
+          modifiedToxin.pricePerUnitInBaseCurrencyUnits,
+      }
+    );
+
+    res.json({ data: modifiedToxin });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      `An error occurred deleting toxin with ID ${toxinId}.`,
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

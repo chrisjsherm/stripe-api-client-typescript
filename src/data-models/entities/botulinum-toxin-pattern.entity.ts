@@ -51,7 +51,7 @@ export const botulinumToxinPatternViewModelJsonSchema: JSONSchemaType<IBotulinum
     type: "object",
     properties: {
       id: { type: "string" },
-      name: { type: "string" },
+      name: { type: "string", minLength: 1, maxLength: 15 },
       locations: {
         type: "array",
         items: {

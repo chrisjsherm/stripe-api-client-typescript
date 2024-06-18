@@ -57,12 +57,16 @@ export const botulinumToxinPatternViewModelJsonSchema: JSONSchemaType<IBotulinum
         items: {
           type: "number",
         },
+        minItems: 1,
+        maxItems: 100,
       },
       toxinIds: {
         type: "array",
         items: {
           type: "string",
         },
+        minItems: 1,
+        maxItems: 100,
       },
     },
     required: ["name", "locations", "toxinIds"],

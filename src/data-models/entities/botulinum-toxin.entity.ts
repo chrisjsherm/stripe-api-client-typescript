@@ -14,7 +14,7 @@ export interface IBotulinumToxin {
 }
 
 /**
- * Botulinum toxin entity.
+ * Botulinum toxin database entity.
  */
 @Entity()
 export class BotulinumToxin extends CoreEntity implements IBotulinumToxin {

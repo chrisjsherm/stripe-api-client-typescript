@@ -257,7 +257,12 @@ async function getToxins(req: Request, res: Response): Promise<void> {
 
     const toxins = await AppDataSource.getRepository(BotulinumToxin)
       .createQueryBuilder("toxin")
-      .select()
+      .select([
+        "toxin.id",
+        "toxin.name",
+        "toxin.vialSizeInUnits",
+        "toxin.pricePerUnitInBaseCurrencyUnits",
+      ])
       .where("toxin.organizationId = :organizationId", { organizationId })
       .orderBy("toxin.name")
       .getMany();

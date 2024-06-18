@@ -1,7 +1,15 @@
 import { JSONSchemaType } from "ajv";
-import { Column, Entity, JoinTable, ManyToMany, Relation } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  Relation,
+} from "typeorm";
 import { BotulinumToxin } from "./botulinum-toxin.entity";
 import { CoreEntity } from "./core-entity.model";
+import { Organization } from "./organization.entity";
 
 /**
  * Botulinum toxin pattern database entity
@@ -17,6 +25,12 @@ export class BotulinumToxinPattern extends CoreEntity {
   @ManyToMany(() => BotulinumToxin)
   @JoinTable()
   toxins: Relation<BotulinumToxin[]>;
+
+  @ManyToOne(() => Organization, { nullable: false })
+  organization: Relation<Organization>;
+
+  @Column({ type: "uuid" })
+  organizationId: string;
 }
 
 /**

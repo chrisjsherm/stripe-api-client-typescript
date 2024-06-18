@@ -2,6 +2,10 @@ import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
 import {
+  BotulinumToxinPattern,
+  IBotulinumToxinPatternViewModel,
+} from "../data-models/entities/botulinum-toxin-pattern.entity";
+import {
   BotulinumToxin,
   IBotulinumToxin,
   botulinumToxinJsonSchema,
@@ -51,11 +55,11 @@ organizationsRouter.delete(
   deleteToxin
 );
 
-organizationsRouter.put(
-  "/me/btx-pattern-configuration",
+organizationsRouter.post(
+  "/me/botulinum-toxin-pattern",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   generateRequestBodyValidator(btxPatternConfigurationJsonSchema),
-  updateBtxPatternConfiguration
+  upsertToxinPattern
 );
 
 const config = getEnvironmentConfiguration();
@@ -265,15 +269,12 @@ async function getUserOrganization(req: Request, res: Response): Promise<void> {
 }
 
 /**
- * Modify an organization's botulinum toxin pattern configuration.
+ * Upsert a toxin pattern and associate it with the organization.
  * @param req HTTP request
  * @param res HTTP response
  */
-async function updateBtxPatternConfiguration(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const configuration = req.body;
+async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
+  const pattern = req.body as IBotulinumToxinPatternViewModel;
 
   try {
     const { organizationId } = decodeFusionAuthAccessToken(req);
@@ -283,18 +284,35 @@ async function updateBtxPatternConfiguration(
       );
     }
 
-    const organizationRepo = AppDataSource.getRepository(Organization);
-    const organization = await organizationRepo.findOne({
-      where: { id: organizationId },
-    });
-    if (!organization) {
-      throw createError.BadRequest(
-        "The organization associated with your account no longer exists."
-      );
+    const count = await AppDataSource.getRepository(BotulinumToxin)
+      .createQueryBuilder("toxin")
+      .where("toxin.organizationId = :organizationId", { organizationId })
+      .andWhere("toxin.id IN (:...toxinIds", { toxinIds: pattern.toxinIds })
+      .getCount();
+    if (count !== pattern.toxinIds.length) {
+      throw createError.BadRequest("Some of the toxin IDs do not exist.");
     }
-    organization.btxPatternConfiguration = configuration;
-    await organization.save();
-    res.json({ data: null });
+
+    const repo = await AppDataSource.getRepository(BotulinumToxinPattern);
+    const queryResult = await repo.upsert(
+      {
+        ...pattern,
+        organizationId,
+      },
+      {
+        conflictPaths: ["id"],
+        skipUpdateIfNoValuesChanged: true,
+      }
+    );
+    const patternId = queryResult.identifiers[0];
+    const savedPattern = await repo
+      .createQueryBuilder("pattern")
+      .leftJoinAndSelect("pattern.toxins", "toxin")
+      .select(["pattern.id", "pattern.name", "pattern.locations", "toxin.id"])
+      .where("pattern pattern.id = :patternId", { patternId })
+      .getOneOrFail();
+
+    res.json({ data: savedPattern });
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,

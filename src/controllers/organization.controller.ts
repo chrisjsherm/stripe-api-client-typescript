@@ -56,12 +56,12 @@ organizationsRouter.delete(
 );
 
 organizationsRouter.get(
-  "/me/botulinum-toxin-pattern",
+  "/me/botulinum-toxin-patterns",
   hasAnyRole([]),
   getToxinPatterns
 );
 organizationsRouter.post(
-  "/me/botulinum-toxin-pattern",
+  "/me/botulinum-toxin-patterns",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   generateRequestBodyValidator(botulinumToxinPatternViewModelJsonSchema),
   upsertToxinPattern

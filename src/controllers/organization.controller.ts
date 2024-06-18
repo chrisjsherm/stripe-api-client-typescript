@@ -4,6 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import {
   BotulinumToxinPattern,
   IBotulinumToxinPatternViewModel,
+  botulinumToxinPatternViewModelJsonSchema,
 } from "../data-models/entities/botulinum-toxin-pattern.entity";
 import {
   BotulinumToxin,
@@ -12,7 +13,6 @@ import {
 } from "../data-models/entities/botulinum-toxin.entity";
 import { Organization } from "../data-models/entities/organization.entity";
 import { createOrganizationJsonSchema } from "../data-models/interfaces/organization-create.json-schema";
-import { btxPatternConfigurationJsonSchema } from "../data-models/types/btx-pattern-configuration.type";
 import { AppDataSource } from "../db/data-source";
 import { environment } from "../environment/environment";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
@@ -55,10 +55,15 @@ organizationsRouter.delete(
   deleteToxin
 );
 
+organizationsRouter.get(
+  "/me/botulinum-toxin-pattern",
+  hasAnyRole([]),
+  getToxinPatterns
+);
 organizationsRouter.post(
   "/me/botulinum-toxin-pattern",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
-  generateRequestBodyValidator(btxPatternConfigurationJsonSchema),
+  generateRequestBodyValidator(botulinumToxinPatternViewModelJsonSchema),
   upsertToxinPattern
 );
 
@@ -197,6 +202,46 @@ async function deleteToxin(req: Request, res: Response): Promise<void> {
 }
 
 /**
+ * Get botulinum toxin patterns associated with the organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function getToxinPatterns(req: Request, res: Response): Promise<void> {
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const patterns = await AppDataSource.getRepository(BotulinumToxinPattern)
+      .createQueryBuilder("pattern")
+      .leftJoinAndSelect("pattern.toxins", "toxin")
+      .select(["pattern.id", "pattern.name", "pattern.locations", "toxin.id"])
+      .where("pattern.organizationId = :organizationId", { organizationId })
+      .orderBy("pattern.name")
+      .getMany();
+
+    res.json({
+      data: patterns.map((pattern) => ({
+        id: pattern.id,
+        name: pattern.name,
+        locations: pattern.locations,
+        toxinIds: pattern.toxins.map((toxin) => toxin.id),
+      })),
+    });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred retrieving the organization's botulinum toxin patterns.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
  * Get botulinum toxins associated with the organization.
  * @param req HTTP request
  * @param res HTTP response
@@ -312,7 +357,14 @@ async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
       .where("pattern pattern.id = :patternId", { patternId })
       .getOneOrFail();
 
-    res.json({ data: savedPattern });
+    res.json({
+      data: {
+        id: savedPattern.id,
+        name: savedPattern.name,
+        locations: savedPattern.locations,
+        toxinIds: savedPattern.toxins.map((toxin) => toxin.id),
+      },
+    });
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,

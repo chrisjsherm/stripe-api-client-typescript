@@ -324,7 +324,7 @@ async function getUserOrganization(req: Request, res: Response): Promise<void> {
  * @param res HTTP response
  */
 async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
-  const pattern = req.body as IBotulinumToxinPatternViewModel;
+  const patternViewModel = req.body as IBotulinumToxinPatternViewModel;
 
   try {
     const { organizationId } = decodeFusionAuthAccessToken(req);
@@ -334,33 +334,52 @@ async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
       );
     }
 
-    const count = await AppDataSource.getRepository(BotulinumToxin)
+    const toxins = await AppDataSource.getRepository(BotulinumToxin)
       .createQueryBuilder("toxin")
       .where("toxin.organizationId = :organizationId", { organizationId })
-      .andWhere("toxin.id IN (:...toxinIds", { toxinIds: pattern.toxinIds })
-      .getCount();
-    if (count !== pattern.toxinIds.length) {
-      throw createError.BadRequest("Some of the toxin IDs do not exist.");
+      .andWhere("toxin.id IN (:...toxinIds)", {
+        toxinIds: patternViewModel.toxinIds,
+      })
+      .getMany();
+    if (toxins.length !== patternViewModel.toxinIds.length) {
+      throw createError.BadRequest(
+        "Some of the toxin IDs associated with this pattern do not exist."
+      );
     }
 
-    const repo = await AppDataSource.getRepository(BotulinumToxinPattern);
-    const queryResult = await repo.upsert(
-      {
-        ...pattern,
-        organizationId,
-      },
-      {
-        conflictPaths: ["id"],
-        skipUpdateIfNoValuesChanged: true,
-      }
-    );
-    const patternId = queryResult.identifiers[0];
-    const savedPattern = await repo
-      .createQueryBuilder("pattern")
-      .leftJoinAndSelect("pattern.toxins", "toxin")
-      .select(["pattern.id", "pattern.name", "pattern.locations", "toxin.id"])
-      .where("pattern pattern.id = :patternId", { patternId })
-      .getOneOrFail();
+    let savedPattern: BotulinumToxinPattern | undefined;
+    await AppDataSource.transaction(async (transactionalEntityManager) => {
+      const patternRepository = transactionalEntityManager.getRepository(
+        BotulinumToxinPattern
+      );
+
+      // Use upsert to create or update the pattern
+      const queryResult = await patternRepository.upsert(
+        {
+          id: patternViewModel.id,
+          name: patternViewModel.name,
+          locations: patternViewModel.locations,
+          organizationId: organizationId,
+        },
+        {
+          conflictPaths: ["id"],
+          skipUpdateIfNoValuesChanged: true,
+        }
+      );
+
+      // Get the pattern entity
+      savedPattern = await patternRepository.findOneOrFail({
+        where: { id: queryResult.identifiers[0].id },
+      });
+
+      // Update the toxins relationship
+      savedPattern.toxins = toxins;
+      await patternRepository.save(savedPattern);
+    });
+
+    if (!savedPattern) {
+      throw createError.InternalServerError();
+    }
 
     res.json({
       data: {
@@ -373,7 +392,7 @@ async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      "Error updating the organization's botulinum toxin pattern configuration.",
+      "An error occurred saving the toxin pattern.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

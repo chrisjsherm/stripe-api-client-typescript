@@ -219,7 +219,7 @@ async function getUsers(req: Request, res: Response): Promise<void> {
 }
 
 /**
- * Resend a message asking the customer to verify his email.
+ * Send an email invitation to join the organization.
  * @param req HTTP request
  * @param res HTTP response
  */
@@ -247,9 +247,11 @@ async function invite(req: Request, res: Response): Promise<void> {
       },
     });
 
-    const groupIds = new Array<string>();
+    const groupIds = new Set<string>();
     for (const subscription of subscriptions) {
-      groupIds.push(...subscription.product.groupMembershipsCsv.split(","));
+      subscription.product.groupMembershipsCsv
+        .split(",")
+        .forEach((id: string) => groupIds.add(id));
     }
 
     const result = await authClient.createUser("", {
@@ -259,7 +261,7 @@ async function invite(req: Request, res: Response): Promise<void> {
         firstName: recipient.firstName,
         lastName: recipient.lastName,
         email: recipient.email,
-        memberships: groupIds.map((id) => {
+        memberships: Array.from(groupIds).map((id) => {
           return {
             groupId: id,
           };

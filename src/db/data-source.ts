@@ -12,6 +12,7 @@ import { BotulinumToxinEntity1718130790731 } from "./migrations/1718130790731-bo
 import { BotulinumToxinRequireOrg1718131345277 } from "./migrations/1718131345277-BotulinumToxin_requireOrg";
 import { AddPatternEntity1718716800243 } from "./migrations/1718716800243-add-pattern-entity";
 import { RemovePatternFromOrg1718718846765 } from "./migrations/1718718846765-remove-pattern-from-org";
+import { SubscriptionExplicitColumns1718820192140 } from "./migrations/1718820192140-subscription_explicit-columns";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -44,5 +45,6 @@ export const AppDataSource = new DataSource({
     BotulinumToxinRequireOrg1718131345277,
     AddPatternEntity1718716800243,
     RemovePatternFromOrg1718718846765,
+    SubscriptionExplicitColumns1718820192140,
   ],
 });

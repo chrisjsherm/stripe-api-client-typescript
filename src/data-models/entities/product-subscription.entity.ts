@@ -21,6 +21,12 @@ export class ProductSubscription extends CoreEntity {
   @ManyToOne(() => Product)
   product: Relation<Product>;
 
+  @Column({ type: "uuid" })
+  productId: string;
+
   @ManyToOne(() => Organization)
   organization: Relation<Organization>;
+
+  @Column({ type: "uuid" })
+  organizationId: string;
 }

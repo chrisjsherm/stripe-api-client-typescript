@@ -2,6 +2,7 @@ import {} from "module";
 import { DataSource } from "typeorm";
 import { BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin-pattern.entity";
 import { BotulinumToxin } from "../data-models/entities/botulinum-toxin.entity";
+import { BotulinumToxin_JOIN_BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin_JOIN_botulinum-toxin-pattern.entity";
 import { Organization } from "../data-models/entities/organization.entity";
 import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
 import { Product } from "../data-models/entities/product.entity";
@@ -13,6 +14,7 @@ import { BotulinumToxinRequireOrg1718131345277 } from "./migrations/171813134527
 import { AddPatternEntity1718716800243 } from "./migrations/1718716800243-add-pattern-entity";
 import { RemovePatternFromOrg1718718846765 } from "./migrations/1718718846765-remove-pattern-from-org";
 import { SubscriptionExplicitColumns1718820192140 } from "./migrations/1718820192140-subscription_explicit-columns";
+import { CreateToxinPatternEntity1718997422718 } from "./migrations/1718997422718-create-toxin-pattern-entity";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -33,6 +35,7 @@ export const AppDataSource = new DataSource({
   entities: [
     BotulinumToxin,
     BotulinumToxinPattern,
+    BotulinumToxin_JOIN_BotulinumToxinPattern,
     Organization,
     Product,
     ProductSubscription,
@@ -46,5 +49,6 @@ export const AppDataSource = new DataSource({
     AddPatternEntity1718716800243,
     RemovePatternFromOrg1718718846765,
     SubscriptionExplicitColumns1718820192140,
+    CreateToxinPatternEntity1718997422718,
   ],
 });

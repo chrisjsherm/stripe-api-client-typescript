@@ -1,13 +1,6 @@
 import { JSONSchemaType } from "ajv";
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  Relation,
-} from "typeorm";
-import { BotulinumToxin } from "./botulinum-toxin.entity";
+import { Column, Entity, ManyToOne, OneToMany, Relation } from "typeorm";
+import { BotulinumToxin_JOIN_BotulinumToxinPattern } from "./botulinum-toxin_JOIN_botulinum-toxin-pattern.entity";
 import { CoreEntity } from "./core-entity.model";
 import { Organization } from "./organization.entity";
 
@@ -22,15 +15,17 @@ export class BotulinumToxinPattern extends CoreEntity {
   @Column({ type: "jsonb" })
   locations: number[];
 
-  @ManyToMany(() => BotulinumToxin)
-  @JoinTable()
-  toxins: Relation<BotulinumToxin[]>;
-
   @ManyToOne(() => Organization, { nullable: false })
   organization: Relation<Organization>;
 
   @Column({ type: "uuid" })
   organizationId: string;
+
+  @OneToMany(
+    () => BotulinumToxin_JOIN_BotulinumToxinPattern,
+    (toxinAssociation) => toxinAssociation.pattern
+  )
+  toxinAssociations: Relation<BotulinumToxin_JOIN_BotulinumToxinPattern[]>;
 }
 
 /**
@@ -40,7 +35,7 @@ export interface IBotulinumToxinPatternViewModel {
   id: string;
   name: string;
   locations: number[];
-  toxinIds: string[];
+  referenceDoseByToxinId: { [id: string]: number };
 }
 
 /**
@@ -60,15 +55,16 @@ export const botulinumToxinPatternViewModelJsonSchema: JSONSchemaType<IBotulinum
         minItems: 1,
         maxItems: 100,
       },
-      toxinIds: {
-        type: "array",
-        items: {
-          type: "string",
+      referenceDoseByToxinId: {
+        type: "object",
+        additionalProperties: {
+          type: "number",
+          minimum: 1,
+          maximum: 10000,
         },
-        minItems: 1,
-        maxItems: 100,
+        required: [],
       },
     },
-    required: ["name", "locations", "toxinIds"],
+    required: ["name", "locations", "referenceDoseByToxinId"],
     additionalProperties: false,
   };

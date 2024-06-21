@@ -11,6 +11,7 @@ import {
   IBotulinumToxin,
   botulinumToxinJsonSchema,
 } from "../data-models/entities/botulinum-toxin.entity";
+import { BotulinumToxin_JOIN_BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin_JOIN_botulinum-toxin-pattern.entity";
 import { Organization } from "../data-models/entities/organization.entity";
 import { createOrganizationJsonSchema } from "../data-models/interfaces/organization-create.json-schema";
 import { AppDataSource } from "../db/data-source";
@@ -215,20 +216,33 @@ async function getToxinPatterns(req: Request, res: Response): Promise<void> {
       );
     }
 
-    const patterns = await AppDataSource.getRepository(BotulinumToxinPattern)
-      .createQueryBuilder("pattern")
-      .leftJoinAndSelect("pattern.toxins", "toxin")
-      .select(["pattern.id", "pattern.name", "pattern.locations", "toxin.id"])
-      .where("pattern.organizationId = :organizationId", { organizationId })
-      .orderBy("pattern.name")
-      .getMany();
+    const patterns = await AppDataSource.getRepository(
+      BotulinumToxinPattern
+    ).find({
+      where: {
+        organizationId,
+      },
+      relations: {
+        toxinAssociations: true,
+      },
+    });
 
     res.json({
       data: patterns.map((pattern) => ({
         id: pattern.id,
         name: pattern.name,
         locations: pattern.locations,
-        toxinIds: pattern.toxins.map((toxin) => toxin.id),
+        referenceDoseByToxinId: pattern.toxinAssociations.reduce(
+          (
+            acc: { [id: string]: number },
+            toxinAssociation: BotulinumToxin_JOIN_BotulinumToxinPattern
+          ): { [id: string]: number } => {
+            acc[toxinAssociation.toxinId] =
+              toxinAssociation.referenceDoseInToxinUnits;
+            return acc;
+          },
+          {}
+        ),
       })),
     });
   } catch (err) {
@@ -334,26 +348,26 @@ async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
       );
     }
 
+    const toxinIds = Object.keys(patternViewModel.referenceDoseByToxinId);
     const toxins = await AppDataSource.getRepository(BotulinumToxin)
       .createQueryBuilder("toxin")
       .where("toxin.organizationId = :organizationId", { organizationId })
       .andWhere("toxin.id IN (:...toxinIds)", {
-        toxinIds: patternViewModel.toxinIds,
+        toxinIds,
       })
       .getMany();
-    if (toxins.length !== patternViewModel.toxinIds.length) {
+    if (toxins.length !== toxinIds.length) {
       throw createError.BadRequest(
         "Some of the toxin IDs associated with this pattern do not exist."
       );
     }
 
-    let savedPattern: BotulinumToxinPattern | undefined;
     await AppDataSource.transaction(async (transactionalEntityManager) => {
       const patternRepository = transactionalEntityManager.getRepository(
         BotulinumToxinPattern
       );
 
-      // Use upsert to create or update the pattern
+      // Use upsertFn to create or update the pattern
       const queryResult = await patternRepository.upsert(
         {
           id: patternViewModel.id,
@@ -368,26 +382,31 @@ async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
       );
 
       // Get the pattern entity
-      savedPattern = await patternRepository.findOneOrFail({
+      const savedPattern = await patternRepository.findOneOrFail({
         where: { id: queryResult.identifiers[0].id },
       });
 
       // Update the toxins relationship
-      savedPattern.toxins = toxins;
-      await patternRepository.save(savedPattern);
-    });
+      const relationRepo = transactionalEntityManager.getRepository(
+        BotulinumToxin_JOIN_BotulinumToxinPattern
+      );
+      const toxinRelations = toxins.map((toxin) => {
+        const relation = new BotulinumToxin_JOIN_BotulinumToxinPattern();
+        relation.toxin = toxin;
+        relation.pattern = savedPattern;
+        relation.referenceDoseInToxinUnits =
+          patternViewModel.referenceDoseByToxinId[toxin.id];
+        return relation;
+      });
 
-    if (!savedPattern) {
-      throw createError.InternalServerError();
-    }
+      relationRepo.save(toxinRelations);
 
-    res.json({
-      data: {
-        id: savedPattern.id,
-        name: savedPattern.name,
-        locations: savedPattern.locations,
-        toxinIds: savedPattern.toxins.map((toxin) => toxin.id),
-      },
+      res.json({
+        data: {
+          ...patternViewModel,
+          id: savedPattern.id,
+        },
+      });
     });
   } catch (err) {
     onErrorProcessingHttpRequest(

@@ -362,6 +362,7 @@ async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
       );
     }
 
+    let savedPatternId = "";
     await AppDataSource.transaction(async (transactionalEntityManager) => {
       const patternRepository = transactionalEntityManager.getRepository(
         BotulinumToxinPattern
@@ -399,14 +400,15 @@ async function upsertToxinPattern(req: Request, res: Response): Promise<void> {
         return relation;
       });
 
-      relationRepo.save(toxinRelations);
+      await relationRepo.save(toxinRelations);
+      savedPatternId = savedPattern.id;
+    });
 
-      res.json({
-        data: {
-          ...patternViewModel,
-          id: savedPattern.id,
-        },
-      });
+    res.json({
+      data: {
+        ...patternViewModel,
+        id: savedPatternId,
+      },
     });
   } catch (err) {
     onErrorProcessingHttpRequest(

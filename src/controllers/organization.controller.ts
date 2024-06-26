@@ -52,7 +52,6 @@ organizationsRouter.put(
 organizationsRouter.delete(
   "/me/botulinum-toxins/:toxinId",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
-  generateRequestBodyValidator(botulinumToxinJsonSchema),
   deleteToxin
 );
 
@@ -66,6 +65,11 @@ organizationsRouter.post(
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   generateRequestBodyValidator(botulinumToxinPatternViewModelJsonSchema),
   upsertToxinPattern
+);
+organizationsRouter.delete(
+  "/me/botulinum-toxin-patterns/:patternId",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  deleteToxinPattern
 );
 
 const config = getEnvironmentConfiguration();
@@ -195,7 +199,41 @@ async function deleteToxin(req: Request, res: Response): Promise<void> {
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,
-      `An error occurred deleting toxin with ID ${toxinId}.`,
+      `An error occurred deleting the toxin with ID ${toxinId}.`,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Delete a toxin pattern associated with an organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function deleteToxinPattern(req: Request, res: Response): Promise<void> {
+  const patternId = req.params.patternId;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const toxin = await AppDataSource.getRepository(BotulinumToxinPattern)
+      .createQueryBuilder("pattern")
+      .where("pattern.id = :patternId", { patternId })
+      .andWhere("toxin.organizationId = :organizationId", { organizationId })
+      .getOneOrFail();
+    await toxin.softRemove();
+
+    res.json({ data: null });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      `An error occurred deleting the toxin pattern with ID ${patternId}.`,
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

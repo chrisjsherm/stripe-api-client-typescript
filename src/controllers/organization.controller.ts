@@ -225,7 +225,7 @@ async function deleteToxinPattern(req: Request, res: Response): Promise<void> {
     const toxin = await AppDataSource.getRepository(BotulinumToxinPattern)
       .createQueryBuilder("pattern")
       .where("pattern.id = :patternId", { patternId })
-      .andWhere("toxin.organizationId = :organizationId", { organizationId })
+      .andWhere("pattern.organizationId = :organizationId", { organizationId })
       .getOneOrFail();
     await toxin.softRemove();
 

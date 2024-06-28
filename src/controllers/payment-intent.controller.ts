@@ -42,8 +42,6 @@ export async function createPaymentIntent(
   req: Request,
   res: Response
 ): Promise<void> {
-  // TODO: Validator.
-
   try {
     const productId: string = req.body.productId;
     if (productId === undefined) {

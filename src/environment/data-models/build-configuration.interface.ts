@@ -5,6 +5,7 @@ export interface IBuildConfiguration {
   auth: {
     apiKey: string;
     appId: string;
+    groupId_organizationAdministrators: string;
     url: string;
     role_btxAssistant_readWrite: string;
     role_organizationAdministrator: string;

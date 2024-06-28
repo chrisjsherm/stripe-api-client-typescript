@@ -48,6 +48,8 @@ const sharedConfiguration: Pick<
   auth: {
     apiKey: process.env.AUTH_API_KEY!,
     appId: process.env.AUTH_APP_ID!,
+    groupId_organizationAdministrators:
+      process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS!,
     url: process.env.AUTH_BASE_URL!,
     role_btxAssistant_readWrite:
       process.env.AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME!,

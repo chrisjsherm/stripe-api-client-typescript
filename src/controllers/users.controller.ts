@@ -346,7 +346,7 @@ async function modifyOrganizationAdministratorStatus(
     if (req.body.isOrganizationAdministrator) {
       await authClient.createGroupMembers({
         members: {
-          [process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS as string]: [
+          [environment.auth.groupId_organizationAdministrators]: [
             {
               userId: userId,
             },
@@ -356,9 +356,7 @@ async function modifyOrganizationAdministratorStatus(
     } else {
       await authClient.deleteGroupMembers({
         members: {
-          [process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS as string]: [
-            userId,
-          ],
+          [environment.auth.groupId_organizationAdministrators]: [userId],
         },
       });
     }

@@ -230,7 +230,8 @@ async function invite(req: Request, res: Response): Promise<void> {
     const { organizationId } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
       throw createError.BadRequest(
-        "You cannot invite users until you configure an organization."
+        "You cannot invite users because your account is not associated " +
+          "with an organization."
       );
     }
 

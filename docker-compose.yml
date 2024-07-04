@@ -1,15 +1,23 @@
 services:
   db:
     image: postgres:16.0-bookworm
-    restart: always
+    restart: unless-stopped
     environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    networks:
+      - db_net
     ports:
       - ${DB_PORT}:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - db_data:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4:8.8
@@ -17,6 +25,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PG_ADMIN_DEFAULT_USER_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PG_ADMIN_DEFAULT_USER_PASSWORD}
+    networks:
+      - db_net
     ports:
       - ${PG_ADMIN_PORT}:80
     volumes:
@@ -24,6 +34,105 @@ services:
     depends_on:
       - db
 
+  smtp:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - 1025:1025
+      - 8025:8025
+    networks:
+      - smtp_net
+
+  search:
+    image: opensearchproject/opensearch:2.11.0
+    environment:
+      cluster.name: fusionauth
+      discovery.type: single-node
+      node.name: search
+      plugins.security.disabled: true
+      bootstrap.memory_lock: true
+      OPENSEARCH_JAVA_OPTS: ${AUTH_OPENSEARCH_JAVA_OPTS}
+    healthcheck:
+      interval: 10s
+      retries: 80
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9200/
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - 9200:9200 # REST API
+      - 9600:9600 # Performance Analyzer
+    volumes:
+      - search_data:/usr/share/opensearch/data
+    networks:
+      - search_net
+
+  fusionauth:
+    image: fusionauth/fusionauth-app:1.49.2
+    depends_on:
+      db:
+        condition: service_healthy
+      search:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/fusionauth
+      DATABASE_ROOT_USERNAME: ${DB_USERNAME}
+      DATABASE_ROOT_PASSWORD: ${DB_PASSWORD}
+      DATABASE_USERNAME: ${AUTH_DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${AUTH_DATABASE_PASSWORD}
+      FUSIONAUTH_APP_MEMORY: ${AUTH_FUSIONAUTH_APP_MEMORY}
+      FUSIONAUTH_APP_RUNTIME_MODE: ${AUTH_FUSIONAUTH_APP_RUNTIME_MODE}
+      FUSIONAUTH_APP_URL: http://fusionauth:9011
+      SEARCH_SERVERS: http://search:9200
+      SEARCH_TYPE: elasticsearch
+      FUSIONAUTH_APP_KICKSTART_FILE: ${AUTH_FUSIONAUTH_APP_KICKSTART_FILE}
+      ADMIN_EMAIL: ${AUTH_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${AUTH_ADMIN_PASSWORD}
+      ALLOWED_ORIGIN: ${AUTH_ALLOWED_ORIGIN}
+      API_KEY__SUPER_ADMIN: ${AUTH_API_KEY__SUPER_ADMIN}
+      API_KEY__APP_SERVER: ${AUTH_API_KEY__APP_SERVER}
+      APPLICATION_ID: ${AUTH_APPLICATION_ID}
+      APPLICATION_NAME: ${AUTH_APPLICATION_NAME}
+      ASYMMETRIC_KEY_ID: ${AUTH_ASYMMETRIC_KEY_ID}
+      AUTHORIZED_ORIGIN_URL: ${AUTH_AUTHORIZED_ORIGIN_URL}
+      AUTHORIZED_REDIRECT_URL: ${AUTH_AUTHORIZED_REDIRECT_URL}
+      DEFAULT_TENANT_ID: ${AUTH_DEFAULT_TENANT_ID}
+      EMAIL_TEMPLATE_FROM_NAME: ${AUTH_EMAIL_TEMPLATE_FROM_NAME}
+      EMAIL_TEMPLATE_FROM_ADDRESS: ${AUTH_EMAIL_TEMPLATE_FROM_ADDRESS}
+      GROUP__ORGANIZATION_ADMINISTRATORS_ID: ${AUTH_GROUP__ORGANIZATION_ADMINISTRATORS_ID}
+      GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID: ${AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID}
+      GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID: ${AUTH_GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID}
+      LOGOUT_URL: ${AUTH_LOGOUT_URL}
+      ROLE__BTX_ASSISTANT_READ_WRITE_ID: ${AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_ID}
+      ROLE__BTX_ASSISTANT_READ_WRITE_NAME: ${AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME}
+      ROLE__ORGANIZATION_ADMINISTRATOR_ID: ${AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_ID}
+      ROLE__ORGANIZATION_ADMINISTRATOR_NAME: ${AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME}
+      WEBHOOK_URL: ${AUTH_WEBHOOK_URL}
+    networks:
+      - db_net
+      - search_net
+      - smtp_net
+    restart: unless-stopped
+    ports:
+      - 9011:9011
+    volumes:
+      - fusionauth_config:/usr/local/fusionauth/config
+      - ./.fusion-auth:/usr/local/fusionauth/kickstart
+
+networks:
+  db_net:
+    driver: bridge
+  search_net:
+    driver: bridge
+  smtp_net:
+    driver: bridge
+
 volumes:
-  postgres_data:
+  db_data:
   pgadmin_data:
+  fusionauth_config:
+  search_data:

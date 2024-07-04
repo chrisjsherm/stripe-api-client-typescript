@@ -5,7 +5,9 @@
     "jwks",
     "livemode",
     "luxon",
+    "OPENSEARCH",
     "RUNCLUB",
+    "Spaah",
     "typeorm"
   ],
   "workbench.colorCustomizations": {

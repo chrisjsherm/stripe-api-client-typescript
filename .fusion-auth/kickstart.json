@@ -1,0 +1,452 @@
+{
+  "variables": {
+    "adminEmail": "#{ENV.ADMIN_EMAIL}",
+    "adminPassword": "#{ENV.ADMIN_PASSWORD}",
+    "allowedOrigin": "#{ENV.ALLOWED_ORIGIN}",
+    "apiKey_superAdmin": "#{ENV.API_KEY__SUPER_ADMIN}",
+    "apiKey_appServer": "#{ENV.API_KEY__APP_SERVER}",
+    "applicationId": "#{ENV.APPLICATION_ID}",
+    "applicationName": "#{ENV.APPLICATION_NAME}",
+    "asymmetricKeyId": "#{ENV.ASYMMETRIC_KEY_ID}",
+    "authorizedOriginURL": "#{ENV.AUTHORIZED_ORIGIN_URL}",
+    "authorizedRedirectURL": "#{ENV.AUTHORIZED_REDIRECT_URL}",
+    "defaultTenantId": "#{ENV.DEFAULT_TENANT_ID}",
+    "emailTemplateFromName": "#{ENV.EMAIL_TEMPLATE_FROM_NAME}",
+    "emailTemplateFromAddress": "#{ENV.EMAIL_TEMPLATE_FROM_ADDRESS}",
+    "group_organizationAdministrators_id": "#{ENV.GROUP__ORGANIZATION_ADMINISTRATORS_ID}",
+    "group_subscription_startup_annual_id": "#{ENV.GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID}",
+    "group_subscription_business_annual_id": "#{ENV.GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID}",
+    "logoutURL": "#{ENV.LOGOUT_URL}",
+    "role_btxAssistant_readWrite_id": "#{ENV.ROLE__BTX_ASSISTANT_READ_WRITE_ID}",
+    "role_btxAssistant_readWrite_name": "#{ENV.ROLE__BTX_ASSISTANT_READ_WRITE_NAME}",
+    "role_organizationAdministrator_id": "#{ENV.ROLE__ORGANIZATION_ADMINISTRATOR_ID}",
+    "role_organizationAdministrator_name": "#{ENV.ROLE__ORGANIZATION_ADMINISTRATOR_NAME}",
+    "webhookUrl": "#{ENV.WEBHOOK_URL}"
+  },
+  "apiKeys": [
+    {
+      "key": "#{apiKey_superAdmin}",
+      "description": "Unrestricted API key with access to everything (required by kickstart.json for initial configuration)"
+    },
+    {
+      "key": "#{apiKey_appServer}",
+      "description": "For the application's API server",
+      "permissions": {
+        "endpoints": {
+          "/api/group/member": ["POST", "DELETE"],
+          "/api/user": ["GET", "POST", "PATCH", "DELETE"],
+          "/api/user/search": ["POST"],
+          "/api/user/verify-email": ["PUT"]
+        }
+      }
+    }
+  ],
+  "requests": [
+    {
+      "method": "POST",
+      "url": "/api/key/generate/#{asymmetricKeyId}",
+      "tenantId": "#{defaultTenantId}",
+      "body": {
+        "key": {
+          "algorithm": "RS256",
+          "name": "For #{applicationName}",
+          "length": 2048
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "url": "api/system-configuration",
+      "body": {
+        "systemConfiguration": {
+          "corsConfiguration": {
+            "allowCredentials": true,
+            "allowedMethods": ["GET", "POST", "OPTIONS"],
+            "allowedOrigins": ["#{allowedOrigin}"],
+            "debug": false,
+            "enabled": true,
+            "preflightMaxAgeInSeconds": 0
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/user/registration",
+      "body": {
+        "user": {
+          "email": "#{adminEmail}",
+          "password": "#{adminPassword}"
+        },
+        "registration": {
+          "applicationId": "#{FUSIONAUTH_APPLICATION_ID}",
+          "roles": ["admin"]
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/tenant/#{defaultTenantId}",
+      "body": {
+        "tenant": {
+          "issuer": "http://localhost:9011",
+          "eventConfiguration": {
+            "events": {
+              "user.create.complete": {
+                "enabled": true
+              },
+              "user.email.verified": {
+                "enabled": true,
+                "transactionType": "None"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/0502df1e-4010-4b43-b571-d423fce978b2",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Reset your password",
+          "defaultHtmlTemplate": "@{email_templates/forgot-password.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/forgot-password.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Forgot Password"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/e160cc59-a73e-4d95-8287-f82e5c541a5c",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Setup your password",
+          "defaultHtmlTemplate": "@{email_templates/setup-password.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/setup-password.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Setup Password"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/7fa81426-42a9-4eb2-ac09-73c044d410b1",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Verify your FusionAuth email address",
+          "defaultHtmlTemplate": "@{email_templates/email-verification.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/email-verification.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Email Verification"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/c16b65a5-e6e9-4499-a7ac-ae228f8d9864",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Verify your Registration",
+          "defaultHtmlTemplate": "@{email_templates/registration-verification.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/registration-verification.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Registration Verification"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/8e1d6af1-dcda-41d9-85fb-48a1376d4e29",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Create your parental account",
+          "defaultHtmlTemplate": "@{email_templates/parent-registration.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/parent-registration.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Parent Registration"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/fa6668cb-8569-44df-b0a2-8fcd996df915",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Log into FusionAuth",
+          "defaultHtmlTemplate": "@{email_templates/passwordless-login.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/passwordless-login.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Passwordless Login"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/e3da3003-972f-4a02-8c7e-dae6455a6478",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Confirm your child's account",
+          "defaultHtmlTemplate": "@{email_templates/confirm-child-account.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/confirm-child-account.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Confirm Child Account"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/162b3719-3d71-4638-b9bf-f3e2093f7fe1",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Notice of your consent",
+          "defaultHtmlTemplate": "@{email_templates/coppa-notice.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/coppa-notice.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "COPPA Notice"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/f0e9d738-c98d-45ee-b869-8636342c5158",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Reminder: Notice of your consent",
+          "defaultHtmlTemplate": "@{email_templates/coppa-notice-reminder.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/coppa-notice-reminder.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "COPPA Notice Reminder"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/e6c74b53-d43d-471e-ae7e-906456d0f341",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Your password is not secure",
+          "defaultHtmlTemplate": "@{email_templates/breached-password-notification.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/breached-password-notification.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Breached Password Notification"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/68349684-10b7-453d-805b-6b81d8ef6f6f",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Threat Detected",
+          "defaultHtmlTemplate": "@{email_templates/threat-detected.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/threat-detected.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Threat Detected"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/481ea459-6aa8-4ada-badd-605c6dcda709",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "Your second factor code",
+          "defaultHtmlTemplate": "@{email_templates/two-factor-authentication.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/two-factor-authentication.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Two Factor Authentication"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/0c4aa5f1-565e-4113-8b8e-8b58e7ef403b",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "A second factor was added",
+          "defaultHtmlTemplate": "@{email_templates/two-factor-authentication-method-added.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/two-factor-authentication-method-added.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Two Factor Authentication Method Added"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template/01e21c7b-e293-4e45-9de5-96dec4a92a0b",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "#{emailTemplateFromName}",
+          "defaultSubject": "A second factor was removed",
+          "defaultHtmlTemplate": "@{email_templates/two-factor-authentication-method-removed.html.ftl}",
+          "defaultTextTemplate": "@{email_templates/two-factor-authentication-method-removed.txt.ftl}",
+          "fromEmail": "#{emailTemplateFromAddress}",
+          "name": "Two Factor Authentication Method Removed"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/lambda/9dbaf6c9-f399-4e9a-b4e3-707e54116c56",
+      "body": {
+        "lambda": {
+          "body": "function populate(jwt, user, registration) {jwt.first_name = user.firstName;jwt.last_name = user.lastName;jwt.mobile_phone = user.mobilePhone;jwt.organization_id = user.data.organizationId;jwt.stripe_customer_id = user.data.stripeCustomerId;}",
+          "debug": true,
+          "engineType": "GraalJS",
+          "name": "JWT populate user data",
+          "type": "JWTPopulate"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/application/#{applicationId}",
+      "tenantId": "#{defaultTenantId}",
+      "body": {
+        "application": {
+          "jwtConfiguration": {
+            "enabled": true,
+            "accessTokenKeyId": "#{asymmetricKeyId}",
+            "idTokenKeyId": "#{asymmetricKeyId}"
+          },
+          "name": "#{applicationName}",
+          "lambdaConfiguration": {
+            "accessTokenPopulateId": "9dbaf6c9-f399-4e9a-b4e3-707e54116c56"
+          },
+          "oauthConfiguration": {
+            "authorizedRedirectURLs": ["#{authorizedRedirectURL}"],
+            "authorizedOriginURLs": ["#{authorizedOriginURL}"],
+            "clientSecret": "super-secret-secret-that-should-be-regenerated-for-production",
+            "logoutURL": "#{logoutURL}",
+            "enabledGrants": ["authorization_code", "refresh_token"],
+            "debug": true,
+            "generateRefreshTokens": true,
+            "requireRegistration": true
+          },
+          "registrationConfiguration": {
+            "enabled": true,
+            "confirmPassword": true,
+            "firstName": {
+              "enabled": true,
+              "required": true
+            },
+            "lastName": {
+              "enabled": true,
+              "required": true
+            },
+            "loginIdType": "email",
+            "mobilePhone": {
+              "enabled": true,
+              "required": false
+            },
+            "type": "basic",
+            "unverified": {
+              "enabled": true,
+              "numberOfDaysToRetain": 180
+            }
+          },
+          "roles": [
+            {
+              "description": "read and write permission to the BTX Assistant service",
+              "id": "#{role_btxAssistant_readWrite_id}",
+              "name": "#{role_btxAssistant_readWrite_name}"
+            },
+            {
+              "description": "manage the organization associated with your user account",
+              "id": "#{role_organizationAdministrator_id}",
+              "name": "#{role_organizationAdministrator_name}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/tenant/#{defaultTenantId}",
+      "body": {
+        "tenant": {
+          "emailConfiguration": {
+            "forgotPasswordEmailTemplateId": "0502df1e-4010-4b43-b571-d423fce978b2",
+            "passwordlessEmailTemplateId": "fa6668cb-8569-44df-b0a2-8fcd996df915",
+            "setPasswordEmailTemplateId": "e160cc59-a73e-4d95-8287-f82e5c541a5c",
+            "verificationEmailTemplateId": "7fa81426-42a9-4eb2-ac09-73c044d410b1",
+            "host": "smtp",
+            "port": "1025",
+            "verifyEmail": true,
+            "implicitEmailVerificationAllowed": true,
+            "verifyEmailWhenChanged": true,
+            "verificationStrategy": "ClickableLink",
+            "defaultFromEmail": "#{emailTemplateFromAddress}",
+            "defaultFromName": "#{emailTemplateFromName}"
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/webhook/d492c78e-9e0f-42f8-93d7-27f98f279b8f",
+      "body": {
+        "webhook": {
+          "connectTimeout": 1000,
+          "description": "App event handler for auth events",
+          "eventsEnabled": {
+            "user.create.complete": true,
+            "user.email.verified": true
+          },
+          "global": true,
+          "readTimeout": 5000,
+          "signatureConfiguration": {
+            "enabled": true,
+            "signingKeyId": "#{asymmetricKeyId}"
+          },
+          "url": "#{webhookUrl}"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/group/#{group_organizationAdministrators_id}",
+      "body": {
+        "group": {
+          "name": "Organization Administrators"
+        },
+        "roleIds": ["#{role_organizationAdministrator_id}"]
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/group/#{group_subscription_startup_annual_id}",
+      "body": {
+        "group": {
+          "name": "Subscription: Startup Annual"
+        },
+        "roleIds": ["#{role_btxAssistant_readWrite_id}"]
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/group/#{group_subscription_business_annual_id}",
+      "body": {
+        "group": {
+          "name": "Subscription: Business Annual"
+        },
+        "roleIds": ["#{role_btxAssistant_readWrite_id}"]
+      }
+    }
+  ]
+}

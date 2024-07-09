@@ -263,6 +263,9 @@ async function getToxinPatterns(req: Request, res: Response): Promise<void> {
       relations: {
         toxinAssociations: true,
       },
+      order: {
+        name: "ASC",
+      },
     });
 
     res.json({

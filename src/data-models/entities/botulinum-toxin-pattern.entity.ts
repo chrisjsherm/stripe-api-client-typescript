@@ -1,5 +1,6 @@
 import { JSONSchemaType } from "ajv";
 import { Column, Entity, ManyToOne, OneToMany, Relation } from "typeorm";
+import { ICenteredCoordinate } from "../interfaces/centered-coordinate.interface";
 import { BotulinumToxin_JOIN_BotulinumToxinPattern } from "./botulinum-toxin_JOIN_botulinum-toxin-pattern.entity";
 import { CoreEntity } from "./core-entity.model";
 import { Organization } from "./organization.entity";
@@ -13,7 +14,7 @@ export class BotulinumToxinPattern extends CoreEntity {
   name: string;
 
   @Column({ type: "jsonb" })
-  locations: number[];
+  locations: ICenteredCoordinate[];
 
   @ManyToOne(() => Organization, { nullable: false })
   organization: Relation<Organization>;
@@ -34,7 +35,7 @@ export class BotulinumToxinPattern extends CoreEntity {
 export interface IBotulinumToxinPatternViewModel {
   id: string;
   name: string;
-  locations: number[];
+  locations: { cx: number; cy: number }[];
   referenceDoseByToxinId: { [id: string]: number };
 }
 
@@ -50,7 +51,13 @@ export const botulinumToxinPatternViewModelJsonSchema: JSONSchemaType<IBotulinum
       locations: {
         type: "array",
         items: {
-          type: "number",
+          type: "object",
+          properties: {
+            cx: { type: "number" },
+            cy: { type: "number" },
+          },
+          required: ["cx", "cy"],
+          additionalProperties: false,
         },
         minItems: 1,
         maxItems: 100,

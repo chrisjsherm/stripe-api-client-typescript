@@ -25,7 +25,7 @@ Payments are facilitated via the Stripe API.
 The Postgres server runs one database for application data and another for
 FusionAuth data.
 
-The first time you run `docker-compose up` via `npm start`, the `postgres`
+The first time you run `docker compose up` via `npm start`, the `postgres`
 container will create a database and user with the environment parameters
 specified in `.env`. The container will not automatically create these resources
 on subsequent starts without deleting the volume attached to the container.
@@ -92,7 +92,7 @@ npx typeorm-ts-node-esm migration:run -d ./src/db/data-source.ts
 ## Development
 
 1. Open a terminal and run `npm run env`
-2. Open a terminal and run: `docker-compose up`
+2. Open a terminal and run: `docker compose up`
 3. Open a terminal and run database migrations:
 
 ```
@@ -111,6 +111,6 @@ stripe listen --forward-to localhost:4242/webhooks/stripe
 8. Open another terminal and run: `stripe trigger --help` to see a list of
    Stripe events you can generate.
 
-To stop and remove the Docker containers: `docker-compose down`
-To also remove the Docker volumes: `docker-compose down -v`
-To stop the container without removing: `docker-compose stop`
+To stop and remove the Docker containers: `docker compose down`
+To also remove the Docker volumes: `docker compose down -v`
+To stop the container without removing: `docker compose stop`

@@ -10,9 +10,9 @@ To complete your email verification enter this code into the email verification 
 
 ${verificationOneTimeCode}
 [#else]
-To complete your email verification click on the following link.
+Welcome to the MedSpaah platform!
+
+Visit the address below to complete your email verification. After verifying, return to the app to get started.
 
 http://localhost:9011/email/verify/${verificationId}?client_id=${(application.oauthConfiguration.clientId)!''}&postMethod=true&tenantId=${user.tenantId}
 [/#if]
-
-- FusionAuth Admin

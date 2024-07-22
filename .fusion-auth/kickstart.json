@@ -138,7 +138,7 @@
       "body": {
         "emailTemplate": {
           "defaultFromName": "#{emailTemplateFromName}",
-          "defaultSubject": "Verify your FusionAuth email address",
+          "defaultSubject": "Verify your email address",
           "defaultHtmlTemplate": "@{email_templates/email-verification.html.ftl}",
           "defaultTextTemplate": "@{email_templates/email-verification.txt.ftl}",
           "fromEmail": "#{emailTemplateFromAddress}",

@@ -9,12 +9,13 @@ Pro tip, your email has already been verified, but feel free to complete the ver
 <p>To complete your email verification enter this code into the email verification form.</p>
 <p> ${verificationOneTimeCode} </p>
 [#else]
-To complete your email verification click on the following link.
+<h2>Welcome to the MedSpaah platform!</h2>
+
+<p>Visit the address below to complete your email verification. After verifying, return to the app to get started.</p>
+
 <p>
   <a href="http://localhost:9011/email/verify/${verificationId}?client_id=${(application.oauthConfiguration.clientId)!''}&postMethod=true&tenantId=${user.tenantId}">
     http://localhost:9011/email/verify/${verificationId}?client_id=${(application.oauthConfiguration.clientId)!''}&postMethod=true&tenantId=${user.tenantId}
   </a>
 </p>
 [/#if]
-
-- FusionAuth Admin

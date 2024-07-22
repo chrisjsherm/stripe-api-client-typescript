@@ -201,7 +201,8 @@ async function getUsers(req: Request, res: Response): Promise<void> {
 
     if (searchResult.response.total !== searchResult.response.users?.length) {
       throw createError.InternalServerError(
-        "The number of users in your organization has exceeded the limit. Pagination must be implemented to proceed."
+        "System error: The number of users in your organization has exceeded " +
+          "the limit. Pagination must be implemented to proceed."
       );
     }
 

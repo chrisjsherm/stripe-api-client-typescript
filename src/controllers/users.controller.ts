@@ -205,6 +205,23 @@ async function invite(req: Request, res: Response): Promise<void> {
       );
     }
 
+    const emailMatchesQuery = await authClient.searchUsersByQuery({
+      search: {
+        query: JSON.stringify({
+          match: {
+            email: {
+              query: recipient.email,
+            },
+          },
+        }),
+      },
+    });
+    if (emailMatchesQuery.response.total ?? 0 > 0) {
+      throw createError.BadRequest(
+        `Email address ${recipient.email} is not available.`
+      );
+    }
+
     const subscriptions = await AppDataSource.getRepository(
       ProductSubscription
     ).find({
@@ -218,11 +235,19 @@ async function invite(req: Request, res: Response): Promise<void> {
       },
     });
 
+    let maxUsers = 0;
     const groupIds = new Set<string>();
     for (const subscription of subscriptions) {
+      maxUsers = Math.max(maxUsers, subscription.product.userCount ?? 0);
       subscription.product.groupMembershipsCsv
         .split(",")
         .forEach((id: string) => groupIds.add(id));
+    }
+    const users = await getUsersByOrganization$(organizationId);
+    if (users.length >= maxUsers) {
+      throw createError.BadRequest(
+        `Your organization is using ${users.length} of ${maxUsers} user accounts.`
+      );
     }
 
     const result = await authClient.createUser("", {

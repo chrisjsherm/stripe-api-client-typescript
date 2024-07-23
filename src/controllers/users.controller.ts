@@ -1,7 +1,9 @@
-import { Sort, User } from "@fusionauth/typescript-client";
+import { Sort, User, UserRegistration } from "@fusionauth/typescript-client";
 import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
+import { DateTime } from "luxon";
+import { MoreThan } from "typeorm";
 import { ProductSubscription } from "../data-models/entities/product-subscription.entity";
 import { AppDataSource } from "../db/data-source";
 import { environment } from "../environment/environment";
@@ -99,7 +101,7 @@ async function deleteUser(req: Request, res: Response): Promise<void> {
   const userId = req.params.userId;
 
   try {
-    const { organizationId } = decodeFusionAuthAccessToken(req);
+    const { organizationId, id } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
       throw createError.BadRequest(
         "Your account is not associated with an organization."
@@ -115,6 +117,10 @@ async function deleteUser(req: Request, res: Response): Promise<void> {
       throw createError.NotFound(
         `A user with ID ${userId} does not exist in your organization.`
       );
+    }
+
+    if (user.id === id) {
+      throw createError.BadRequest("You cannot delete your own account.");
     }
 
     await authClient.deleteUser(userId);
@@ -168,46 +174,9 @@ async function getUsers(req: Request, res: Response): Promise<void> {
       );
     }
 
-    const searchResult = await authClient.searchUsersByQuery({
-      search: {
-        query: JSON.stringify({
-          match: {
-            "data.organizationId": {
-              query: organizationId,
-            },
-          },
-        }),
-        accurateTotal: true,
-        sortFields: [
-          {
-            name: "fullName",
-            order: Sort.asc,
-          },
-          {
-            name: "email",
-            order: Sort.asc,
-          },
-          {
-            name: "insertInstant",
-            order: Sort.asc,
-          },
-        ],
-      },
-    });
-
-    if (searchResult.exception) {
-      throw createError.InternalServerError(searchResult.exception.message);
-    }
-
-    if (searchResult.response.total !== searchResult.response.users?.length) {
-      throw createError.InternalServerError(
-        "System error: The number of users in your organization has exceeded " +
-          "the limit. Pagination must be implemented to proceed."
-      );
-    }
-
+    const users = await getUsersByOrganization$(organizationId);
     res.json({
-      data: searchResult.response.users ?? [],
+      data: users,
     });
   } catch (err) {
     onErrorProcessingHttpRequest(
@@ -326,7 +295,7 @@ async function modifyOrganizationAdministratorStatus(
   const userId = req.params.userId;
 
   try {
-    const { organizationId } = decodeFusionAuthAccessToken(req);
+    const { organizationId, id } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
       throw createError.BadRequest(
         "Your account is not associated with an organization."
@@ -344,7 +313,48 @@ async function modifyOrganizationAdministratorStatus(
       );
     }
 
+    if (user.id === id) {
+      throw createError.BadRequest(
+        "You cannot modify your own administrator status."
+      );
+    }
+
+    const users = await getUsersByOrganization$(organizationId);
+    const adminCount = users.reduce((acc: number, user: User): number => {
+      const isAdmin = user.registrations
+        ?.find((registration: UserRegistration): boolean => {
+          return registration.applicationId === environment.auth.appId;
+        })
+        ?.roles?.includes(environment.auth.role_organizationAdministrator);
+
+      if (isAdmin) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+
     if (req.body.isOrganizationAdministrator) {
+      const subscriptionsRepo =
+        AppDataSource.getRepository(ProductSubscription);
+      const subscriptions = await subscriptionsRepo.find({
+        where: {
+          organizationId,
+          expirationDateTime: MoreThan(DateTime.now().toJSDate()),
+        },
+        relations: { product: true },
+      });
+      const maxAdmins = subscriptions.reduce(
+        (acc: number, subscription: ProductSubscription): number => {
+          return Math.max(acc, subscription.product.adminCount ?? 0);
+        },
+        0
+      );
+      if (adminCount >= maxAdmins) {
+        throw createError.BadRequest(
+          `Your organization is using ${adminCount} of ${maxAdmins} admin roles.`
+        );
+      }
+
       await authClient.createGroupMembers({
         members: {
           [environment.auth.groupId_organizationAdministrators]: [
@@ -355,6 +365,12 @@ async function modifyOrganizationAdministratorStatus(
         },
       });
     } else {
+      if (adminCount === 1) {
+        throw createError.BadRequest(
+          "You cannot remove the last administrator."
+        );
+      }
+
       await authClient.deleteGroupMembers({
         members: {
           [environment.auth.groupId_organizationAdministrators]: [userId],
@@ -432,4 +448,53 @@ async function refreshGroupMemberships(
       res
     );
   }
+}
+
+/**
+ * Retrieve users in an organization.
+ * @param organizationId Organization for which to retrieve users
+ * @returns Array of users
+ */
+async function getUsersByOrganization$(
+  organizationId: string
+): Promise<User[]> {
+  const searchResult = await authClient.searchUsersByQuery({
+    search: {
+      query: JSON.stringify({
+        match: {
+          "data.organizationId": {
+            query: organizationId,
+          },
+        },
+      }),
+      accurateTotal: true,
+      sortFields: [
+        {
+          name: "fullName",
+          order: Sort.asc,
+        },
+        {
+          name: "email",
+          order: Sort.asc,
+        },
+        {
+          name: "insertInstant",
+          order: Sort.asc,
+        },
+      ],
+    },
+  });
+
+  if (searchResult.exception) {
+    throw createError.InternalServerError(searchResult.exception.message);
+  }
+
+  if (searchResult.response.total !== searchResult.response.users?.length) {
+    throw createError.InternalServerError(
+      "System error: The number of users in your organization has exceeded " +
+        "the limit. Pagination must be implemented to proceed."
+    );
+  }
+
+  return searchResult.response.users ?? [];
 }

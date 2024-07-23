@@ -8,6 +8,7 @@ import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import { organizationsRouter } from "./controllers/organization.controller";
 import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
+import { productSubscriptionsRouter } from "./controllers/product-subscriptions.controller";
 import { productsRouter } from "./controllers/products.controller";
 import { usersRouter } from "./controllers/users.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
@@ -24,7 +25,9 @@ export async function startServer() {
   const config = getEnvironmentConfiguration();
   const app = express();
 
-  // Configuration for all endpoints.
+  /**
+   * Configuration for all endpoints.
+   */
   app.use(function configureTimeout(
     req: Request,
     res: Response,
@@ -62,7 +65,9 @@ export async function startServer() {
     onFusionAuthEvent
   );
 
-  // Configuration for application API endpoints.
+  /**
+   * Configuration for application API endpoints.
+   */
   app.use(
     cors({
       origin: [config.uiOrigin],
@@ -89,7 +94,9 @@ export async function startServer() {
   // Products API.
   app.use("/products", productsRouter);
 
-  // Configuration for API endpoints that require authentication.
+  /**
+   * Configuration for API endpoints that require authentication.
+   */
   app.use(verifyApiJwt$);
 
   // Organization API
@@ -97,6 +104,9 @@ export async function startServer() {
 
   // Payment Intents API
   app.use("/payment-intent", hasAnyRole([]), paymentIntentsRouter);
+
+  // Product Subscriptions API.
+  app.use("/product-subscriptions", productSubscriptionsRouter);
 
   // Users API
   app.use("/users", usersRouter);

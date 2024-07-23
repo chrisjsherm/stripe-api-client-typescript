@@ -48,7 +48,18 @@ async function getActiveSubscriptions(
         data: subscriptions.map((subscription: ProductSubscription) => {
           return {
             expirationDateTime: subscription.expirationDateTime,
-            product: subscription.product,
+            product: {
+              id: subscription.product.id,
+              title: subscription.product.title,
+              subtitle: subscription.product.subtitle,
+              priceInBaseUnits: subscription.product.priceInBaseUnits,
+              currencyCode: subscription.product.currencyCode,
+              statementDescriptorSuffix:
+                subscription.product.statementDescriptorSuffix,
+              adminCount: subscription.product.adminCount,
+              userCount: subscription.product.userCount,
+              storageGb: subscription.product.storageGb,
+            },
           };
         }),
       });

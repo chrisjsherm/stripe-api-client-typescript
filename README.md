@@ -74,7 +74,7 @@ Mail Hog SMTP server. You can access Mail Hog by visiting http://localhost:8025.
 
 ### Database Changes & Migrations
 
-1. Generate a migration:
+1. Generate a migration (replace \<name\> with a description):
 
 ```
 npx typeorm-ts-node-esm migration:generate ./src/db/migrations/<name> -d ./src/db/data-source.ts --pretty

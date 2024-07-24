@@ -24,7 +24,8 @@ export class BotulinumToxinPattern extends CoreEntity {
 
   @OneToMany(
     () => BotulinumToxin_JOIN_BotulinumToxinPattern,
-    (toxinAssociation) => toxinAssociation.pattern
+    (toxinAssociation) => toxinAssociation.pattern,
+    { cascade: true }
   )
   toxinAssociations: Relation<BotulinumToxin_JOIN_BotulinumToxinPattern[]>;
 }

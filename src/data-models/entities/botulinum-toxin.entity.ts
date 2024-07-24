@@ -1,5 +1,6 @@
 import { JSONSchemaType } from "ajv";
-import { Column, Entity, ManyToOne, Relation } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, Relation } from "typeorm";
+import { BotulinumToxin_JOIN_BotulinumToxinPattern } from "./botulinum-toxin_JOIN_botulinum-toxin-pattern.entity";
 import { CoreEntity } from "./core-entity.model";
 import { Organization } from "./organization.entity";
 
@@ -32,6 +33,13 @@ export class BotulinumToxin extends CoreEntity implements IBotulinumToxin {
 
   @Column({ type: "uuid" })
   organizationId: string;
+
+  @OneToMany(
+    () => BotulinumToxin_JOIN_BotulinumToxinPattern,
+    (patternAssociation) => patternAssociation.toxin,
+    { cascade: true }
+  )
+  patternAssociations: Relation<BotulinumToxin_JOIN_BotulinumToxinPattern[]>;
 }
 
 /**

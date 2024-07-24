@@ -188,11 +188,17 @@ async function deleteToxin(req: Request, res: Response): Promise<void> {
       );
     }
 
-    const toxin = await AppDataSource.getRepository(BotulinumToxin)
-      .createQueryBuilder("toxin")
-      .where("toxin.id = :toxinId", { toxinId })
-      .andWhere("toxin.organizationId = :organizationId", { organizationId })
-      .getOneOrFail();
+    const toxin = await AppDataSource.getRepository(
+      BotulinumToxin
+    ).findOneOrFail({
+      where: {
+        organizationId,
+        id: toxinId,
+      },
+      relations: {
+        patternAssociations: true,
+      },
+    });
     await toxin.softRemove();
 
     res.json({ data: null });
@@ -222,11 +228,17 @@ async function deleteToxinPattern(req: Request, res: Response): Promise<void> {
       );
     }
 
-    const toxin = await AppDataSource.getRepository(BotulinumToxinPattern)
-      .createQueryBuilder("pattern")
-      .where("pattern.id = :patternId", { patternId })
-      .andWhere("pattern.organizationId = :organizationId", { organizationId })
-      .getOneOrFail();
+    const toxin = await AppDataSource.getRepository(
+      BotulinumToxinPattern
+    ).findOneOrFail({
+      where: {
+        organizationId,
+        id: patternId,
+      },
+      relations: {
+        toxinAssociations: true,
+      },
+    });
     await toxin.softRemove();
 
     res.json({ data: null });

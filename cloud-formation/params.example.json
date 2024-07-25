@@ -1,0 +1,26 @@
+[
+  {
+    "ParameterKey": "ImageId",
+    "ParameterValue": "ami-0427090fd1714168b"
+  },
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t2.nano"
+  },
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "your-keypair-name"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "your-vpc-id"
+  },
+  {
+    "ParameterKey": "SubnetId",
+    "ParameterValue": "your-subnet-id"
+  },
+  {
+    "ParameterKey": "VolumeSize",
+    "ParameterValue": "8"
+  }
+]

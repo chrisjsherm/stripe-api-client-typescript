@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Launch an EC2 instance with custom storage
+
+Parameters:
+  ImageId:
+    Description: EC2 Image ID
+    Type: String
+    ConstraintDescription: must be a valid ID in the target region
+
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    ConstraintDescription: must be a valid EC2 instance type.
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  VpcId:
+    Description: The VPC ID to launch the instance in
+    Type: AWS::EC2::VPC::Id
+
+  SubnetId:
+    Description: The subnet ID to launch the instance in
+    Type: AWS::EC2::Subnet::Id
+
+  VolumeSize:
+    Description: The size of the EBS volume in GB
+    Type: Number
+    Default: 20
+    MinValue: 8
+    MaxValue: 1024
+
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties: 
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds: 
+        - !Ref InstanceSecurityGroup
+      ImageId: !Ref ImageId
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: !Ref VolumeSize
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: Enable SSH access and open ports for services
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1025
+          ToPort: 1025
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8025
+          ToPort: 8025
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9200
+          ToPort: 9200
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9600
+          ToPort: 9600
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9011
+          ToPort: 9011
+          CidrIp: 0.0.0.0/0
+
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if CPU usage exceeds 80%"
+      Namespace: "AWS/EC2"
+      MetricName: "CPUUtilization"
+      Dimensions:
+        - Name: "InstanceId"
+          Value: !Ref EC2Instance
+      Statistic: "Average"
+      Period: "300"
+      EvaluationPeriods: "1"
+      Threshold: "80"
+      ComparisonOperator: "GreaterThanThreshold"
+      AlarmActions:
+        - "arn:aws:sns:us-east-1:123456789012:MySNSTopic"
+
+Outputs:
+  InstanceId:
+    Description: Instance ID of the newly created EC2 instance
+    Value: !Ref EC2Instance
+  PublicIP:
+    Description: Public IP address of the EC2 instance
+    Value: !GetAtt EC2Instance.PublicIp

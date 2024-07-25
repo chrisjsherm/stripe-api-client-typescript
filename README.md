@@ -114,3 +114,42 @@ stripe listen --forward-to localhost:4242/webhooks/stripe
 To stop and remove the Docker containers: `docker compose down`
 To also remove the Docker volumes: `docker compose down -v`
 To stop the container without removing: `docker compose stop`
+
+## Deployment
+
+### CloudFormation
+
+To create the stack, run from the root directory:
+
+```bash
+aws cloudformation create-stack --stack-name MedSpaahEC2
+   --template-body file://cloud-formation/template.yml
+   --parameters file://cloud-formation/params.json
+```
+
+In the AWS console, navigate to the stack and select the outputs tab to find
+the EC2 instance's public IP address.
+
+From your local terminal, run:
+
+```bash
+ssh -i ~/.ssh/my-keypair ec2-user@your-ec2-instance-public-ip
+```
+
+Having SSH'd into the instance, run:
+
+```bash
+sudo yum update -y
+sudo yum install -y docker
+sudo systemctl start docker
+docker --version
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose --version
+```
+
+Copy the `docker-compose.yml` file from the root of this repo to your instance:
+
+```bash
+scp -i ~/.ssh/aws-east-ec2.pem docker-compose.yml ec2-user@your-ec2-instance-public-ip:/home/ec2-user/
+```

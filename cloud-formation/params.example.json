@@ -5,15 +5,15 @@
   },
   {
     "ParameterKey": "InstanceType",
-    "ParameterValue": "t2.nano"
+    "ParameterValue": "t2.micro"
   },
   {
     "ParameterKey": "KeyName",
     "ParameterValue": "your-keypair-name"
   },
   {
-    "ParameterKey": "VpcId",
-    "ParameterValue": "your-vpc-id"
+    "ParameterKey": "SecurityGroupCidrIp",
+    "ParameterValue": "0.0.0.0/0"
   },
   {
     "ParameterKey": "SubnetId",
@@ -22,5 +22,9 @@
   {
     "ParameterKey": "VolumeSize",
     "ParameterValue": "8"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "your-vpc-id"
   }
 ]

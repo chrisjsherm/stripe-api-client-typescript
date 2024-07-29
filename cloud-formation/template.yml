@@ -17,9 +17,9 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
-  VpcId:
-    Description: The VPC ID to launch the instance in
-    Type: AWS::EC2::VPC::Id
+  SecurityGroupCidrIp:
+    Type: String
+    Description: "The IP address range that can access the instance (e.g., x.x.x.x/32)"
 
   SubnetId:
     Description: The subnet ID to launch the instance in
@@ -32,7 +32,48 @@ Parameters:
     MinValue: 8
     MaxValue: 1024
 
+  VpcId:
+    Description: The VPC ID to launch the instance in
+    Type: AWS::EC2::VPC::Id
+
 Resources:
+  RoleAccessSESAndParameterStore:
+    Type: "AWS::IAM::Role"
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Principal: 
+              Service: "ec2.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies: 
+        - PolicyName: "SSMParameterStorePolicy"
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "ssm:GetParameter"
+                  - "ssm:GetParameters"
+                  - "ssm:GetParametersByPath"
+                Resource: "arn:aws:ssm:*:*:parameter/*"
+        - PolicyName: "SESPolicy"
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "ses:SendEmail"
+                  - "ses:SendRawEmail"
+                Resource: "*"
+
+  EC2Profile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Roles: 
+        - Ref: "RoleAccessSESAndParameterStore"
+
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties: 
@@ -42,6 +83,8 @@ Resources:
       SecurityGroupIds: 
         - !Ref InstanceSecurityGroup
       ImageId: !Ref ImageId
+      IamInstanceProfile:
+        Ref: "EC2Profile"
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
@@ -56,35 +99,28 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref SecurityGroupCidrIp
+          Description: "SSH"
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref SecurityGroupCidrIp
+          Description: "HTTP"
         - IpProtocol: tcp
           FromPort: 1025
           ToPort: 1025
-          CidrIp: 0.0.0.0/0
+          Description: "Mail Hog"
+          CidrIp: !Ref SecurityGroupCidrIp
         - IpProtocol: tcp
           FromPort: 8025
           ToPort: 8025
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 9200
-          ToPort: 9200
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 9600
-          ToPort: 9600
-          CidrIp: 0.0.0.0/0
+          Description: "PG Admin"
+          CidrIp: !Ref SecurityGroupCidrIp
         - IpProtocol: tcp
           FromPort: 9011
           ToPort: 9011
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref SecurityGroupCidrIp
+          Description: "FusionAuth"
 
   CPUAlarmHigh:
     Type: AWS::CloudWatch::Alarm

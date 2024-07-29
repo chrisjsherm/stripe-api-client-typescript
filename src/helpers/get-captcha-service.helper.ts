@@ -3,7 +3,8 @@ import { getEnvironmentConfiguration } from "./get-environment-configuration.hel
 import { getParameterService } from "./get-parameter-service.helper";
 
 let service: CaptchaService;
-const parameterService = getParameterService();
+const config = getEnvironmentConfiguration();
+const parameterService = getParameterService(config.aws.region);
 const { captcha } = getEnvironmentConfiguration();
 
 /**

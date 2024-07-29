@@ -5,11 +5,12 @@ let service: EmailService;
 
 /**
  * Get email service as a singleton.
+ * @param awsRegion Region in which the SES service operates
  * @returns Email service
  */
-export function getEmailService(): EmailService {
+export function getEmailService(awsRegion: string): EmailService {
   if (!service) {
-    service = new EmailService(getSesClient());
+    service = new EmailService(getSesClient(awsRegion));
   }
 
   return service;

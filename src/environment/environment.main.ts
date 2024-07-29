@@ -46,6 +46,7 @@ throwIfEnvNotSet(
   "AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME",
   "AUTH_WEBHOOK_URL",
   "AWS_ACCESS_KEY_ID",
+  "AWS_REGION",
   "AWS_SECRET_ACCESS_KEY",
   "CAPTCHA_ENABLED",
   "CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH",
@@ -72,6 +73,7 @@ throwIfEnvNotSet(
 const sharedConfiguration: Pick<
   IBuildConfiguration,
   | "auth"
+  | "aws"
   | "captcha"
   | "customerContact"
   | "db"
@@ -90,6 +92,9 @@ const sharedConfiguration: Pick<
       process.env.AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME!,
     role_organizationAdministrator:
       process.env.AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME!,
+  },
+  aws: {
+    region: process.env.AWS_REGION!,
   },
   captcha: {
     enabled: process.env.CAPTCHA_ENABLED === "true",

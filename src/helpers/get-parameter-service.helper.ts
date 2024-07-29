@@ -2,15 +2,15 @@ import { ParameterService } from "../services/parameter-store/parameter-store.se
 import { getSsmClient } from "./get-ssm-client.helper";
 
 let service: ParameterService;
-const ssmClient = getSsmClient();
 
 /**
  * Get parameter store service as a singleton.
+ * @param awsRegion Region in which the SSM service operates
  * @returns Parameter store service
  */
-export function getParameterService(): ParameterService {
+export function getParameterService(awsRegion: string): ParameterService {
   if (!service) {
-    service = new ParameterService(ssmClient);
+    service = new ParameterService(getSsmClient(awsRegion));
   }
 
   return service;

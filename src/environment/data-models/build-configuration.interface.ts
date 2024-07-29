@@ -11,6 +11,10 @@ export interface IBuildConfiguration {
     role_organizationAdministrator: string;
   };
 
+  aws: {
+    region: string;
+  };
+
   captcha: {
     enabled: boolean;
     secretKeyPath: string;

@@ -10,8 +10,8 @@ import { getEnvironmentConfiguration } from "../helpers/get-environment-configur
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 const captchaService = getCaptchaService();
-const emailService = getEmailService();
 const config = getEnvironmentConfiguration();
+const emailService = getEmailService(config.aws.region);
 
 /**
  * Handle a customer contacting the business.

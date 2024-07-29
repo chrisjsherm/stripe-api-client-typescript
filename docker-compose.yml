@@ -58,8 +58,8 @@ services:
     restart: unless-stopped
     ulimits:
       memlock:
-        soft: -1
-        hard: -1
+        soft: 1024
+        hard: 2048
       nofile:
         soft: 65536
         hard: 65536

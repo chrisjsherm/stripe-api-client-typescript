@@ -37,7 +37,7 @@ Parameters:
     Type: AWS::EC2::VPC::Id
 
 Resources:
-  RoleAccessSESAndParameterStore:
+  RoleEC2InstanceAccess:
     Type: "AWS::IAM::Role"
     Properties: 
       AssumeRolePolicyDocument: 
@@ -72,7 +72,7 @@ Resources:
     Type: "AWS::IAM::InstanceProfile"
     Properties: 
       Roles: 
-        - Ref: "RoleAccessSESAndParameterStore"
+        - Ref: "RoleEC2InstanceAccess"
 
   EC2Instance:
     Type: AWS::EC2::Instance
@@ -89,6 +89,15 @@ Resources:
         - DeviceName: /dev/xvda
           Ebs:
             VolumeSize: !Ref VolumeSize
+
+  ElasticIP:
+    Type: AWS::EC2::EIP
+
+  EIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref EC2Instance
+      EIP: !Ref ElasticIP
 
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -138,7 +147,7 @@ Resources:
       ComparisonOperator: "GreaterThanThreshold"
       AlarmActions:
         - "arn:aws:sns:us-east-1:123456789012:MySNSTopic"
-
+  
 Outputs:
   InstanceId:
     Description: Instance ID of the newly created EC2 instance

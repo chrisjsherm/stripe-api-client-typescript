@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import { DataSource } from "typeorm";
 import { createCustomerContact } from "./controllers/create-contact-message.controller";
 import { handleLogout } from "./controllers/logout.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
@@ -20,8 +21,9 @@ import { verifyFusionAuthWebhookJwt$ } from "./helpers/verify-fusion-auth-webhoo
 
 /**
  * Start the Express web server.
+ * @param dataSource Database connection
  */
-export async function startServer() {
+export async function startServer(dataSource: DataSource): Promise<void> {
   const config = getEnvironmentConfiguration();
   const app = express();
 
@@ -35,7 +37,7 @@ export async function startServer() {
   ) {
     res.setTimeout(config.http.requestTimeoutMs, () => {
       console.info(
-        `Timing out request ${req.method} ${req.url} after ${config.http.requestTimeoutMs} ms.`
+        `❗️ Timing out request ${req.method} ${req.url} after ${config.http.requestTimeoutMs} ms.`
       );
       const statusCode = StatusCodes.REQUEST_TIMEOUT;
       res.status(statusCode).json({ message: getReasonPhrase(statusCode) });
@@ -112,8 +114,20 @@ export async function startServer() {
   app.use("/users", usersRouter);
 
   try {
-    await app.listen(config.port);
+    const server = await app.listen(config.port);
     console.info(`🚀 Server running at http://localhost:${config.port}`);
+
+    // Handle termination signal.
+    process.on("SIGTERM", async () => {
+      console.info("🚦 SIGTERM received. Stopping HTTP server.");
+      await server.close(async () => {
+        console.info("🛑 HTTP server stopped.");
+        console.info("🔌 Closing database connection.");
+        await dataSource.destroy();
+        console.info("🛑 Database connection closed.");
+        process.exit(0);
+      });
+    });
   } catch (error) {
     console.error("Error starting server", error);
     throw error;

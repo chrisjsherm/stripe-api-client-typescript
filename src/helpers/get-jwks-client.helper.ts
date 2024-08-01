@@ -18,7 +18,9 @@ let client: JwksClient;
 export function getJwksClient(): JwksClient {
   if (!client) {
     client = createRemoteJWKSet(
-      new URL(`${config.auth.url}${ConstantConfiguration.fusionAuth_jwksRoute}`)
+      new URL(
+        `${config.auth.containerUrl}${ConstantConfiguration.fusionAuth_jwksRoute}`
+      )
     );
   }
 

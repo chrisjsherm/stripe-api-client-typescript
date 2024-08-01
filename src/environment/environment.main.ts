@@ -9,36 +9,32 @@ import { writeEnvironmentFiles } from "./helpers/write-environment-files.helper"
 import { productionConfiguration } from "./production.configuration";
 
 throwIfEnvNotSet(
-  "AUTH_API_KEY",
-  "AUTH_APP_ID",
-  "AUTH_BASE_URL",
-  "AUTH_DATABASE_USERNAME",
-  "AUTH_DATABASE_PASSWORD",
-  "AUTH_FUSIONAUTH_APP_MEMORY",
-  "AUTH_FUSIONAUTH_APP_KICKSTART_FILE",
-  "AUTH_FUSIONAUTH_APP_RUNTIME_MODE",
-  "AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS",
-  "AUTH_GROUP_ID__SUBSCRIPTION_STARTUP_ANNUAL_REV_0",
-  "AUTH_GROUP_ID__SUBSCRIPTION_BUSINESS_ANNUAL_REV_0",
-  "AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME",
-  "AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME",
-  "AUTH_OPENSEARCH_JAVA_OPTS",
   "AUTH_ADMIN_EMAIL",
   "AUTH_ADMIN_PASSWORD",
   "AUTH_ALLOWED_ORIGIN",
-  "AUTH_API_KEY__SUPER_ADMIN",
   "AUTH_API_KEY__APP_SERVER",
+  "AUTH_API_KEY__SUPER_ADMIN",
   "AUTH_APPLICATION_ID",
   "AUTH_APPLICATION_NAME",
   "AUTH_ASYMMETRIC_KEY_ID",
   "AUTH_AUTHORIZED_ORIGIN_URL",
   "AUTH_AUTHORIZED_REDIRECT_URL",
+  "AUTH_CONTAINER_URL",
+  "AUTH_DATABASE_PASSWORD",
+  "AUTH_DATABASE_USERNAME",
   "AUTH_DEFAULT_TENANT_ID",
-  "AUTH_EMAIL_TEMPLATE_FROM_NAME",
   "AUTH_EMAIL_TEMPLATE_FROM_ADDRESS",
+  "AUTH_EMAIL_TEMPLATE_FROM_NAME",
+  "AUTH_EXTERNAL_URL",
+  "AUTH_FUSIONAUTH_APP_KICKSTART_FILE",
+  "AUTH_FUSIONAUTH_APP_MEMORY",
+  "AUTH_FUSIONAUTH_APP_RUNTIME_MODE",
   "AUTH_GROUP__ORGANIZATION_ADMINISTRATORS_ID",
-  "AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID",
   "AUTH_GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID",
+  "AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID",
+  "AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS",
+  "AUTH_GROUP_ID__SUBSCRIPTION_BUSINESS_ANNUAL_REV_0",
+  "AUTH_GROUP_ID__SUBSCRIPTION_STARTUP_ANNUAL_REV_0",
   "AUTH_LOGOUT_URL",
   "AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_ID",
   "AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME",
@@ -57,17 +53,19 @@ throwIfEnvNotSet(
   "DB_PASSWORD",
   "DB_PORT",
   "DB_USERNAME",
-  "HTTP_PAYLOAD_LIMIT",
-  "HTTP_REQUEST_TIMEOUT_MS",
-  "HTTP_RETRY_DELAY_MS",
-  "UPSERT_SEED_DATA",
+  "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
+  "OPENSEARCH_JAVA_OPTS",
   "PG_ADMIN_DEFAULT_USER_EMAIL",
   "PG_ADMIN_DEFAULT_USER_PASSWORD",
   "PG_ADMIN_PORT",
-  "SERVER_PORT",
   "STRIPE_API_KEY",
   "STRIPE_WEBHOOK_SIGNING_KEY",
-  "UI_ORIGIN"
+  "UI_ORIGIN",
+  "WEB_API_PAYLOAD_LIMIT",
+  "WEB_API_REQUEST_TIMEOUT_MS",
+  "WEB_API_RETRY_DELAY_MS",
+  "WEB_API_SERVER_PORT",
+  "WEB_API_UPSERT_SEED_DATA"
 );
 
 const sharedConfiguration: Pick<
@@ -83,11 +81,16 @@ const sharedConfiguration: Pick<
   | "uiOrigin"
 > = {
   auth: {
-    apiKey: process.env.AUTH_API_KEY!,
-    appId: process.env.AUTH_APP_ID!,
+    apiKey: process.env.AUTH_API_KEY__APP_SERVER!,
+    appId: process.env.AUTH_APPLICATION_ID!,
+    containerUrl: process.env.AUTH_CONTAINER_URL!,
     groupId_organizationAdministrators:
       process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS!,
-    url: process.env.AUTH_BASE_URL!,
+    groupId_subscriptionBusinessAnnual:
+      process.env.AUTH_GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID!,
+    groupId_subscriptionStartupAnnual:
+      process.env.AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID!,
+    externalUrl: process.env.AUTH_EXTERNAL_URL!,
     role_btxAssistant_readWrite:
       process.env.AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME!,
     role_organizationAdministrator:
@@ -127,18 +130,21 @@ const sharedConfiguration: Pick<
     username: process.env.DB_USERNAME!,
   },
   http: {
-    payloadLimit: process.env.HTTP_PAYLOAD_LIMIT ?? "500kb",
+    payloadLimit: process.env.WEB_API_PAYLOAD_LIMIT ?? "500kb",
     requestTimeoutMs: Number.parseInt(
-      process.env.HTTP_REQUEST_TIMEOUT_MS ?? "2500",
+      process.env.WEB_API_REQUEST_TIMEOUT_MS ?? "2500",
       10
     ),
-    retryDelayMs: Number.parseInt(process.env.HTTP_RETRY_DELAY_MS ?? "250", 10),
+    retryDelayMs: Number.parseInt(
+      process.env.WEB_API_RETRY_DELAY_MS ?? "250",
+      10
+    ),
   },
   payments: {
     apiKey: process.env.STRIPE_API_KEY!,
     webhookSigningKey: process.env.STRIPE_WEBHOOK_SIGNING_KEY!,
   },
-  port: Number.parseInt(process.env.SERVER_PORT ?? "4242", 10),
+  port: Number.parseInt(process.env.WEB_API_SERVER_PORT ?? "4242", 10),
   uiOrigin: process.env.UI_ORIGIN ?? "",
 };
 

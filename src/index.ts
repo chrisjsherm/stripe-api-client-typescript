@@ -11,6 +11,6 @@ import { startServer } from "./server";
  * App main()
  */
 (async function main() {
-  await initializeDatabase();
-  await startServer();
+  const databaseConnection = await initializeDatabase();
+  await startServer(databaseConnection);
 })();

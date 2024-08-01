@@ -8,5 +8,5 @@ export const developmentConfiguration: Pick<
   "isDebug" | "upsertSeedData"
 > = {
   isDebug: true,
-  upsertSeedData: process.env.UPSERT_SEED_DATA === "true",
+  upsertSeedData: process.env.WEB_API_UPSERT_SEED_DATA === "true",
 };

@@ -105,7 +105,7 @@ export async function createPaymentIntent(
       // User who created the organization is its administrator.
       await authClient.createGroupMembers({
         members: {
-          [process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS as string]: [
+          [config.auth.groupId_organizationAdministrators]: [
             {
               userId: token.id,
             },

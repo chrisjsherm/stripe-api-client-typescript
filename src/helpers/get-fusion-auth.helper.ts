@@ -15,7 +15,7 @@ export function getFusionAuth(
   if (!fusionAuth) {
     fusionAuth = new FusionAuthClient(
       environment.auth.apiKey,
-      environment.auth.url
+      environment.auth.containerUrl
     );
   }
 

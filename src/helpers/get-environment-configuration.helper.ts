@@ -14,6 +14,7 @@ export function getEnvironmentConfiguration(): IBuildConfiguration {
       console.info("🚧 Using development mode environment variables.");
       configuration = developmentEnvironment;
     } else {
+      console.info("🛫 Using production mode environment variables.");
       configuration = productionEnvironment;
     }
   }

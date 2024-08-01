@@ -5,8 +5,11 @@ export interface IBuildConfiguration {
   auth: {
     apiKey: string;
     appId: string;
+    containerUrl: string;
+    externalUrl: string;
     groupId_organizationAdministrators: string;
-    url: string;
+    groupId_subscriptionBusinessAnnual: string;
+    groupId_subscriptionStartupAnnual: string;
     role_btxAssistant_readWrite: string;
     role_organizationAdministrator: string;
   };

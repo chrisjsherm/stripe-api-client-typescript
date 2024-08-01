@@ -37,14 +37,19 @@ export async function verifyApiJwt$(
     next(new Error(message));
   } else {
     try {
+      console.info(`🔎 Verifying access token for ${req.url} from ${req.ip}`);
       await jwtVerify(accessToken, jwksClient, {
-        issuer: config.auth.url,
+        issuer: config.auth.externalUrl,
         audience: config.auth.appId,
       });
+      console.info(`✅ Access token verified for ${req.url} from ${req.ip}`);
 
       (req as Request & { verifiedToken: string }).verifiedToken = accessToken;
       next();
     } catch (e) {
+      console.info(
+        `❗️ Access token failed verification for ${req.url} from ${req.ip}`
+      );
       if (e instanceof errors.JOSEError) {
         res.status(401);
         res.send({ message: e.message, code: e.code });

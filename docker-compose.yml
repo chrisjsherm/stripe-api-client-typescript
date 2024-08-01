@@ -21,6 +21,8 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:8.8
+    profiles:
+      - "inspect_db"
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PG_ADMIN_DEFAULT_USER_EMAIL}
@@ -43,14 +45,15 @@ services:
       - smtp_net
 
   search:
-    image: opensearchproject/opensearch:2.11.0
+    image: public.ecr.aws/opensearchproject/opensearch:2
     environment:
       cluster.name: fusionauth
       discovery.type: single-node
       node.name: search
       plugins.security.disabled: true
       bootstrap.memory_lock: true
-      OPENSEARCH_JAVA_OPTS: ${AUTH_OPENSEARCH_JAVA_OPTS}
+      OPENSEARCH_JAVA_OPTS: ${OPENSEARCH_JAVA_OPTS}
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
     healthcheck:
       interval: 10s
       retries: 80
@@ -79,38 +82,38 @@ services:
       search:
         condition: service_healthy
     environment:
-      DATABASE_URL: jdbc:postgresql://db:5432/fusionauth
-      DATABASE_ROOT_USERNAME: ${DB_USERNAME}
-      DATABASE_ROOT_PASSWORD: ${DB_PASSWORD}
-      DATABASE_USERNAME: ${AUTH_DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${AUTH_DATABASE_PASSWORD}
-      FUSIONAUTH_APP_MEMORY: ${AUTH_FUSIONAUTH_APP_MEMORY}
-      FUSIONAUTH_APP_RUNTIME_MODE: ${AUTH_FUSIONAUTH_APP_RUNTIME_MODE}
-      FUSIONAUTH_APP_URL: http://fusionauth:9011
-      SEARCH_SERVERS: http://search:9200
-      SEARCH_TYPE: elasticsearch
-      FUSIONAUTH_APP_KICKSTART_FILE: ${AUTH_FUSIONAUTH_APP_KICKSTART_FILE}
       ADMIN_EMAIL: ${AUTH_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${AUTH_ADMIN_PASSWORD}
       ALLOWED_ORIGIN: ${AUTH_ALLOWED_ORIGIN}
-      API_KEY__SUPER_ADMIN: ${AUTH_API_KEY__SUPER_ADMIN}
       API_KEY__APP_SERVER: ${AUTH_API_KEY__APP_SERVER}
+      API_KEY__SUPER_ADMIN: ${AUTH_API_KEY__SUPER_ADMIN}
       APPLICATION_ID: ${AUTH_APPLICATION_ID}
       APPLICATION_NAME: ${AUTH_APPLICATION_NAME}
       ASYMMETRIC_KEY_ID: ${AUTH_ASYMMETRIC_KEY_ID}
       AUTHORIZED_ORIGIN_URL: ${AUTH_AUTHORIZED_ORIGIN_URL}
       AUTHORIZED_REDIRECT_URL: ${AUTH_AUTHORIZED_REDIRECT_URL}
+      DATABASE_PASSWORD: ${AUTH_DATABASE_PASSWORD}
+      DATABASE_ROOT_PASSWORD: ${DB_PASSWORD}
+      DATABASE_ROOT_USERNAME: ${DB_USERNAME}
+      DATABASE_URL: jdbc:postgresql://db:5432/fusionauth
+      DATABASE_USERNAME: ${AUTH_DATABASE_USERNAME}
       DEFAULT_TENANT_ID: ${AUTH_DEFAULT_TENANT_ID}
-      EMAIL_TEMPLATE_FROM_NAME: ${AUTH_EMAIL_TEMPLATE_FROM_NAME}
       EMAIL_TEMPLATE_FROM_ADDRESS: ${AUTH_EMAIL_TEMPLATE_FROM_ADDRESS}
+      EMAIL_TEMPLATE_FROM_NAME: ${AUTH_EMAIL_TEMPLATE_FROM_NAME}
+      EXTERNAL_URL: ${AUTH_EXTERNAL_URL}
+      FUSIONAUTH_APP_KICKSTART_FILE: ${AUTH_FUSIONAUTH_APP_KICKSTART_FILE}
+      FUSIONAUTH_APP_MEMORY: ${AUTH_FUSIONAUTH_APP_MEMORY}
+      FUSIONAUTH_APP_RUNTIME_MODE: ${AUTH_FUSIONAUTH_APP_RUNTIME_MODE}
       GROUP__ORGANIZATION_ADMINISTRATORS_ID: ${AUTH_GROUP__ORGANIZATION_ADMINISTRATORS_ID}
-      GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID: ${AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID}
       GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID: ${AUTH_GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID}
+      GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID: ${AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID}
       LOGOUT_URL: ${AUTH_LOGOUT_URL}
       ROLE__BTX_ASSISTANT_READ_WRITE_ID: ${AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_ID}
       ROLE__BTX_ASSISTANT_READ_WRITE_NAME: ${AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME}
       ROLE__ORGANIZATION_ADMINISTRATOR_ID: ${AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_ID}
       ROLE__ORGANIZATION_ADMINISTRATOR_NAME: ${AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME}
+      SEARCH_SERVERS: http://search:9200
+      SEARCH_TYPE: elasticsearch
       WEBHOOK_URL: ${AUTH_WEBHOOK_URL}
     networks:
       - db_net
@@ -122,6 +125,22 @@ services:
     volumes:
       - fusionauth_config:/usr/local/fusionauth/config
       - ./.fusion-auth:/usr/local/fusionauth/kickstart
+
+  web-api:
+    image: medspaah/web-api:rc0.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - prod
+    depends_on:
+      - fusionauth
+    environment:
+      WEB_API_UPSERT_SEED_DATA: ${WEB_API_UPSERT_SEED_DATA}
+    networks:
+      - db_net
+    ports:
+      - 4242:4242
 
 networks:
   db_net:

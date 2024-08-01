@@ -13,6 +13,7 @@
     "defaultTenantId": "#{ENV.DEFAULT_TENANT_ID}",
     "emailTemplateFromName": "#{ENV.EMAIL_TEMPLATE_FROM_NAME}",
     "emailTemplateFromAddress": "#{ENV.EMAIL_TEMPLATE_FROM_ADDRESS}",
+    "fusionAuthAppUrl": "#{ENV.EXTERNAL_URL}",
     "group_organizationAdministrators_id": "#{ENV.GROUP__ORGANIZATION_ADMINISTRATORS_ID}",
     "group_subscription_startup_annual_id": "#{ENV.GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID}",
     "group_subscription_business_annual_id": "#{ENV.GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID}",
@@ -89,7 +90,7 @@
       "url": "/api/tenant/#{defaultTenantId}",
       "body": {
         "tenant": {
-          "issuer": "http://localhost:9011",
+          "issuer": "#{fusionAuthAppUrl}",
           "eventConfiguration": {
             "events": {
               "user.create.complete": {

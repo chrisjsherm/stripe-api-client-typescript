@@ -1,10 +1,14 @@
 import { Product } from "../../data-models/entities/product.entity";
+import { IBuildConfiguration } from "../../environment/data-models/build-configuration.interface";
 import { AppDataSource } from "../data-source";
 
 /**
  * Insert initial product data into the database.
+ * @param environment Build environment configuration
  */
-export async function insertSeedProducts(): Promise<void> {
+export async function insertSeedProducts(
+  environment: IBuildConfiguration
+): Promise<void> {
   const productRepository = AppDataSource.getRepository(Product);
   await productRepository.upsert(
     [
@@ -14,8 +18,7 @@ export async function insertSeedProducts(): Promise<void> {
         subtitle: "Train up to five professionals",
         priceInBaseUnits: 5999,
         currencyCode: "USD",
-        groupMembershipsCsv:
-          process.env.AUTH_GROUP_ID__SUBSCRIPTION_STARTUP_ANNUAL_REV_0,
+        groupMembershipsCsv: environment.auth.groupId_subscriptionStartupAnnual,
         statementDescriptorSuffix: "1yr subscribe",
         adminCount: 1,
         userCount: 5,
@@ -28,7 +31,7 @@ export async function insertSeedProducts(): Promise<void> {
         priceInBaseUnits: 24999,
         currencyCode: "USD",
         groupMembershipsCsv:
-          process.env.AUTH_GROUP_ID__SUBSCRIPTION_BUSINESS_ANNUAL_REV_0,
+          environment.auth.groupId_subscriptionBusinessAnnual,
         statementDescriptorSuffix: "1yr subscribe",
         adminCount: 3,
         userCount: 25,

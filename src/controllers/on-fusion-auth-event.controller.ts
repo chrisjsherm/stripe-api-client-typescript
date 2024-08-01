@@ -20,7 +20,7 @@ export async function onFusionAuthEvent(
   res: Response
 ): Promise<void> {
   const { event } = JSON.parse(req.body.toString()) as EventRequest;
-  console.info(`FusionAuth event: ${event?.type ?? "unknown"}`);
+  console.info(`🔔 FusionAuth event: ${event?.type ?? "unknown"}`);
 
   if (!res.headersSent) {
     res.sendStatus(StatusCodes.OK);

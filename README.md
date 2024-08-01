@@ -5,7 +5,9 @@ Web API for the MedSpaah platform. Written in TypeScript.
 ## Configuration
 
 1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli).
-2. Copy `.env.example` as `.env` and fill in the values with your configuration.
+2. Install Docker.
+3. Install the AWS CLI.
+4. Copy `.env.example` as `.env` and fill in the values with your configuration.
 
 ### FusionAuth
 
@@ -57,6 +59,9 @@ CREATE USER new_user WITH ENCRYPTED PASSWORD 'password'
 
 ### pgAdmin
 
+To start the pgAdmin service, you need to run `docker compose` with the
+`--profile inspect_db` option.
+
 To connect to the pgAdmin database management tool, visit
 http://localhost:PG_ADMIN_PORT (default port is 5050).
 The port for the URL and credentials to log in are specified in the `.env` file.
@@ -73,6 +78,9 @@ To facilitate email services in development, we leverage an instance of the
 Mail Hog SMTP server. You can access Mail Hog by visiting http://localhost:8025.
 
 ### Database Changes & Migrations
+
+Database migrations are run automatically when the Web API server starts up and
+connects to the database.
 
 1. Generate a migration (replace \<name\> with a description):
 
@@ -91,65 +99,49 @@ npx typeorm-ts-node-esm migration:run -d ./src/db/data-source.ts
 
 ## Development
 
-1. Open a terminal and run `npm run env`
-2. Open a terminal and run: `docker compose up`
-3. Open a terminal and run database migrations:
+These instructions run the web API server locally and the remaining services
+via Docker containers. To run the UI, clone the [repo](https://github.com/chrisjsherm/ng-med-spa)
+and follow its README.
 
-```
-npx typeorm-ts-node-esm migration:run -d ./src/db/data-source.ts
-```
+1. Open a terminal and run: `docker compose up`
+2. Open a terminal and run: `npm start`
+3. Open a terminal and run (skip if done recently): `stripe login`
+4. After logging in, run:
 
-4. Open a terminal and run: `npm start`
-5. Open a terminal and run (skip if done recently): `stripe login`
-6. After logging in, run:
+   ```
+   stripe listen --forward-to localhost:4242/webhooks/stripe
+   ```
 
-```
-stripe listen --forward-to localhost:4242/webhooks/stripe
-```
+5. Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
 
-7. Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
-8. Open another terminal and run: `stripe trigger --help` to see a list of
-   Stripe events you can generate.
+> Open another terminal and run: `stripe trigger --help` to see a list of
+> Stripe events you can generate for testing purposes.
 
 To stop and remove the Docker containers: `docker compose down`
 To also remove the Docker volumes: `docker compose down -v`
-To stop the container without removing: `docker compose stop`
+To stop the containers without removing them: `docker compose stop`
 
-## Deployment
+### Production emulator
 
-### CloudFormation
+To emulate production locally, run all services as Docker containers.
 
-To create the stack, run from the root directory:
+1. Rename `.env.production.local.example` to `.env.production.local`, changing
+   any values as necessary.
+2. Build the web API service image:
 
-```bash
-aws cloudformation create-stack --stack-name MedSpaahEC2
-   --template-body file://cloud-formation/template.yml
-   --parameters file://cloud-formation/params.json
-```
+   ```shell
+   docker compose --profile prod build
+   ```
 
-In the AWS console, navigate to the stack and select the outputs tab to find
-the EC2 instance's public IP address.
+3. Start the services:
 
-From your local terminal, run:
+   ```shell
+   docker compose --env-file .env --env-file .env.production.local \
+      --profile prod up
+   ```
 
-```bash
-ssh -i ~/.ssh/my-keypair ec2-user@your-ec2-instance-public-ip
-```
+To stop and remove the containers:
 
-Having SSH'd into the instance, run:
-
-```bash
-sudo yum update -y
-sudo yum install -y docker
-sudo systemctl start docker
-docker --version
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-docker-compose --version
-```
-
-Copy the `docker-compose.yml` file from the root of this repo to your instance:
-
-```bash
-scp -i ~/.ssh/aws-east-ec2.pem docker-compose.yml ec2-user@your-ec2-instance-public-ip:/home/ec2-user/
+```shell
+docker compose --profile prod down
 ```

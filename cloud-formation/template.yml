@@ -78,6 +78,7 @@ Resources:
                   - "ecr:BatchCheckLayerAvailability"
                   - "ecr:GetAuthorizationToken"
                 Resource: "*"                
+  
   EC2Profile:
     Type: "AWS::IAM::InstanceProfile"
     Properties: 

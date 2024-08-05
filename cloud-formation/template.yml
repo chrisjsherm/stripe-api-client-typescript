@@ -67,7 +67,17 @@ Resources:
                   - "ses:SendEmail"
                   - "ses:SendRawEmail"
                 Resource: "*"
-
+        - PolicyName: "ECRPullPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetAuthorizationToken"
+                Resource: "*"                
   EC2Profile:
     Type: "AWS::IAM::InstanceProfile"
     Properties: 
@@ -111,19 +121,14 @@ Resources:
           CidrIp: !Ref SecurityGroupCidrIp
           Description: "SSH"
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: !Ref SecurityGroupCidrIp
-          Description: "HTTP"
-        - IpProtocol: tcp
-          FromPort: 1025
-          ToPort: 1025
-          Description: "Mail Hog"
+          FromPort: 4242
+          ToPort: 4242
+          Description: "Web API"
           CidrIp: !Ref SecurityGroupCidrIp
         - IpProtocol: tcp
           FromPort: 8025
           ToPort: 8025
-          Description: "PG Admin"
+          Description: "Mail Hog"
           CidrIp: !Ref SecurityGroupCidrIp
         - IpProtocol: tcp
           FromPort: 9011

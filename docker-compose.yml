@@ -127,10 +127,7 @@ services:
       - ./.fusion-auth:/usr/local/fusionauth/kickstart
 
   web-api:
-    image: medspaah/web-api:rc0.0.0
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: 258996848737.dkr.ecr.us-east-1.amazonaws.com/medspaah:latest
     profiles:
       - prod
     depends_on:

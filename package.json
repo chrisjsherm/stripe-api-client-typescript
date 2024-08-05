@@ -6,9 +6,10 @@
   "scripts": {
     "start": "npm run env && cross-env DEVELOPMENT='true' ts-node-dev --respawn ./src/index.ts",
     "env": "./node_modules/.bin/dotenvx run -- ts-node ./src/environment/environment.main.ts",
-    "env:prod": "./node_modules/.bin/dotenvx run -f .env.production.local -f .env -- ts-node ./src/environment/environment.main.ts",
+    "env:prod:local": "./node_modules/.bin/dotenvx run -f .env.production.local -f .env -- ts-node ./src/environment/environment.main.ts",
+    "env:prod:remote": "./node_modules/.bin/dotenvx run -f .env.production.remote -f .env -- ts-node ./src/environment/environment.main.ts",
     "clean": "rimraf dist/*",
-    "build": "npm run clean && npm run env:prod && tsc",
+    "build": "npm run clean && npm run env:prod:remote && tsc",
     "server": "node dist/index.js",
     "test": "jest"
   },

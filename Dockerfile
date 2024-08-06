@@ -1,5 +1,8 @@
 FROM node:18-slim AS npm-builder
 
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl
+
 COPY package*.json ./app/
 WORKDIR /app
 RUN npm install

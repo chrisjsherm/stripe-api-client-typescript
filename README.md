@@ -177,39 +177,21 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
    ssh -i ~/.ssh/my-key.pem ec2-user@<ip>
    ```
 
-3. On the instance, install Docker:
-
-   ```shell
-   sudo yum update -y
-   sudo yum install -y docker
-   sudo service docker start
-   sudo usermod -a -G docker ec2-user
-   ```
-
-   Log out of the instance and log back in. Install Docker Compose:
-
-   ```shell
-   docker --version
-   sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-   sudo chmod +x /usr/local/bin/docker-compose
-   docker-compose --version
-   ```
-
-4. On your <u>local machine</u>, update the values in `.env.production.remote`
+3. On your <u>local machine</u>, update the values in `.env.production.remote`
    with your instance's IP.
 
-5. On your <u>local machine</u>, build the web API Docker image:
+4. On your <u>local machine</u>, build the web API Docker image:
 
    ```shell
-   docker build -t medspaah/web-api .
+   docker build -t medspaah .
    ```
 
-6. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
+5. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
 
-7. Update the image for the web-api service in the `docker-compose.yml` file with
+6. Update the image for the web-api service in the `docker-compose.yml` file with
    the address of the image you pushed to ECR.
 
-8. From your <u>local machine</u>, copy files to the instance:
+7. From your <u>local machine</u>, copy files to the instance:
 
    ```shell
    printf "%s" "EC2 IP address: "
@@ -227,7 +209,7 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
    scp -i ${pemFilePath} .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
    ```
 
-9. On the <u>EC2 instance</u>, pull the image from ECR.
+8. On the <u>EC2 instance</u>, pull the image from ECR.
 
 ```shell
 aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<region>.amazonaws.com;

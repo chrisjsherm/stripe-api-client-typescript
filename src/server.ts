@@ -83,7 +83,12 @@ export async function startServer(dataSource: DataSource): Promise<void> {
     })
   );
 
-  // Contact Us API
+  // Server health check.
+  app.get("/health", (_req, res) => {
+    res.status(200).send("OK");
+  });
+
+  // Contact Us API.
   app.post(
     "/contact-us",
     generateRequestBodyValidator(contactFormJsonSchema),

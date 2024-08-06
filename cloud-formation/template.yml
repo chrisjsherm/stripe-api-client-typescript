@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Launch an EC2 instance with custom storage
+Description: Launch an EC2 instance with custom storage and monitoring
 
 Parameters:
   ImageId:
@@ -77,8 +77,23 @@ Resources:
                   - "ecr:BatchGetImage"
                   - "ecr:BatchCheckLayerAvailability"
                   - "ecr:GetAuthorizationToken"
-                Resource: "*"                
-  
+                Resource: "*"
+        - PolicyName: "CloudWatchAgentPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "cloudwatch:PutMetricData"
+                  - "ssm:GetParameter"
+                  - "ssm:GetParameters"
+                  - "ssm:GetParametersByPath"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:CreateLogGroup"
+                  - "logs:DescribeLogStreams"
+                Resource: "*"
+
   EC2Profile:
     Type: "AWS::IAM::InstanceProfile"
     Properties: 
@@ -100,6 +115,46 @@ Resources:
         - DeviceName: /dev/xvda
           Ebs:
             VolumeSize: !Ref VolumeSize
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -x  # Enable debugging
+          exec > >(tee /var/log/user-data.log|logger -t user-data) 2>&1
+
+          yum update -y
+          yum install -y amazon-cloudwatch-agent
+          yum install -y docker
+          service docker start
+          systemctl enable docker
+          systemctl enable containerd.service
+          usermod -a -G docker ec2-user
+          docker --version
+          curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+          mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+          echo '{' > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '  "metrics": {' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '    "metrics_collected": {' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '      "mem": {' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '        "measurement": [' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '          "mem_used_percent"' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '        ],' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '        "metrics_collection_interval": 60' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '      }' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '    },' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '    "append_dimensions": {' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '      "InstanceId": "${!Ref EC2Instance}"' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '    }' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '  }' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          echo '}' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+          cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+
+          echo "UserData script completed"
 
   ElasticIP:
     Type: AWS::EC2::EIP
@@ -153,7 +208,24 @@ Resources:
       ComparisonOperator: "GreaterThanThreshold"
       AlarmActions:
         - "arn:aws:sns:us-east-1:123456789012:MySNSTopic"
-  
+
+  MemoryAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if memory usage exceeds 80%"
+      Namespace: "CWAgent"
+      MetricName: "mem_used_percent"
+      Dimensions:
+        - Name: "InstanceId"
+          Value: !Ref EC2Instance
+      Statistic: "Average"
+      Period: "300"
+      EvaluationPeriods: "1"
+      Threshold: "80"
+      ComparisonOperator: "GreaterThanThreshold"
+      AlarmActions:
+        - "arn:aws:sns:us-east-1:123456789012:MySNSTopic"
+
 Outputs:
   InstanceId:
     Description: Instance ID of the newly created EC2 instance

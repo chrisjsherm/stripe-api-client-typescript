@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:16.0-bookworm
-    restart: unless-stopped
+    restart: always
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: ${DB_USERNAME}
@@ -34,11 +34,12 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   smtp:
     image: mailhog/mailhog:v1.0.1
-    restart: unless-stopped
+    restart: always
     ports:
       - 1025:1025
       - 8025:8025
@@ -59,7 +60,7 @@ services:
       interval: 10s
       retries: 80
       test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9200/
-    restart: unless-stopped
+    restart: always
     ulimits:
       memlock:
         soft: 1024
@@ -85,14 +86,12 @@ services:
     environment:
       ADMIN_EMAIL: ${AUTH_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${AUTH_ADMIN_PASSWORD}
-      ALLOWED_ORIGIN: ${AUTH_ALLOWED_ORIGIN}
+      ALLOWED_ORIGIN: ${UI_ORIGIN}
       API_KEY__APP_SERVER: ${AUTH_API_KEY__APP_SERVER}
       API_KEY__SUPER_ADMIN: ${AUTH_API_KEY__SUPER_ADMIN}
       APPLICATION_ID: ${AUTH_APPLICATION_ID}
       APPLICATION_NAME: ${AUTH_APPLICATION_NAME}
       ASYMMETRIC_KEY_ID: ${AUTH_ASYMMETRIC_KEY_ID}
-      AUTHORIZED_ORIGIN_URL: ${AUTH_AUTHORIZED_ORIGIN_URL}
-      AUTHORIZED_REDIRECT_URL: ${AUTH_AUTHORIZED_REDIRECT_URL}
       DATABASE_PASSWORD: ${AUTH_DATABASE_PASSWORD}
       DATABASE_ROOT_PASSWORD: ${DB_PASSWORD}
       DATABASE_ROOT_USERNAME: ${DB_USERNAME}
@@ -120,7 +119,13 @@ services:
       - db_net
       - search_net
       - smtp_net
-    restart: unless-stopped
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9011/api/status || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     ports:
       - 9011:9011
     volumes:
@@ -132,10 +137,19 @@ services:
     profiles:
       - prod
     depends_on:
-      - fusionauth
+      db:
+        condition: service_healthy
+      fusionauth:
+        condition: service_healthy
     environment:
       WEB_API_UPSERT_SEED_DATA: ${WEB_API_UPSERT_SEED_DATA}
-    restart: unless-stopped
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4242/health || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - db_net
     ports:

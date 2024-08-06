@@ -8,8 +8,6 @@
     "applicationId": "#{ENV.APPLICATION_ID}",
     "applicationName": "#{ENV.APPLICATION_NAME}",
     "asymmetricKeyId": "#{ENV.ASYMMETRIC_KEY_ID}",
-    "authorizedOriginURL": "#{ENV.AUTHORIZED_ORIGIN_URL}",
-    "authorizedRedirectURL": "#{ENV.AUTHORIZED_REDIRECT_URL}",
     "defaultTenantId": "#{ENV.DEFAULT_TENANT_ID}",
     "emailTemplateFromName": "#{ENV.EMAIL_TEMPLATE_FROM_NAME}",
     "emailTemplateFromAddress": "#{ENV.EMAIL_TEMPLATE_FROM_ADDRESS}",
@@ -330,8 +328,8 @@
             "accessTokenPopulateId": "9dbaf6c9-f399-4e9a-b4e3-707e54116c56"
           },
           "oauthConfiguration": {
-            "authorizedRedirectURLs": ["#{authorizedRedirectURL}"],
-            "authorizedOriginURLs": ["#{authorizedOriginURL}"],
+            "authorizedRedirectURLs": ["#{allowedOrigin}"],
+            "authorizedOriginURLs": ["#{allowedOrigin}"],
             "clientSecret": "super-secret-secret-that-should-be-regenerated-for-production",
             "logoutURL": "#{logoutURL}",
             "enabledGrants": ["authorization_code", "refresh_token"],

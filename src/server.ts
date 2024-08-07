@@ -120,7 +120,7 @@ export async function startServer(dataSource: DataSource): Promise<void> {
 
   try {
     const server = await app.listen(config.port);
-    console.info(`🚀 Server running at http://localhost:${config.port}`);
+    console.info(`🚀 Server running on port ${config.port}`);
 
     // Handle termination signal.
     process.on("SIGTERM", async () => {

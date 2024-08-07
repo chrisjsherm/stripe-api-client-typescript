@@ -97,6 +97,12 @@ npx typeorm-ts-node-esm migration:generate ./src/db/migrations/<name> -d ./src/d
 npx typeorm-ts-node-esm migration:run -d ./src/db/data-source.ts
 ```
 
+### Cloudflare
+
+We use Cloudflare's Turnstile service to prevent spam from bots. You will need
+to configure Turnstile and the secret key to AWS Parameter Store at the path
+configured in the `.env` file.
+
 ## Development
 
 These instructions run the web API server locally and the remaining services

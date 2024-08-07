@@ -12,7 +12,7 @@
     "ParameterValue": "your-keypair-name"
   },
   {
-    "ParameterKey": "SecurityGroupCidrIp",
+    "ParameterKey": "SshCidrIp",
     "ParameterValue": "0.0.0.0/0"
   },
   {

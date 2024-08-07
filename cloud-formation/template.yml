@@ -2,24 +2,31 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Launch an EC2 instance with custom storage and monitoring
 
 Parameters:
-  ImageId:
+  InstanceAMI:
     Description: EC2 Image ID
     Type: String
+    Default: ami-0ba9883b710b05ac6
     ConstraintDescription: must be a valid ID in the target region
 
   InstanceType:
     Description: EC2 instance type
     Type: String
+    Default: t3.medium
     ConstraintDescription: must be a valid EC2 instance type.
 
   KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
   SecurityGroupCidrIp:
+    Description: The IP address range that can be used to SSH to the EC2 instances
     Type: String
-    Description: "The IP address range that can access the instance (e.g., x.x.x.x/32)"
+    Default: 0.0.0.0/0
+    MinLength: "9"
+    MaxLength: "18"
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
 
   SubnetId:
     Description: The subnet ID to launch the instance in
@@ -102,13 +109,106 @@ Resources:
 
   EC2Instance:
     Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          default:
+            - 01_setupCfnHup
+            - 02_config-amazon-cloudwatch-agent
+            - 03_restart_amazon-cloudwatch-agent
+            - 04_setupDocker
+          UpdateEnvironment:
+            - 02_config-amazon-cloudwatch-agent
+            - 03_restart_amazon-cloudwatch-agent
+
+        # Definition of json configuration of AmazonCloudWatchAgent, you can change the configuration below.
+        02_config-amazon-cloudwatch-agent:
+          files:
+            /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json:
+              content: |
+                {
+                  "metrics": {
+                    "append_dimensions": {
+                      "ImageId": "${!aws:ImageId}",
+                      "InstanceId": "${!aws:InstanceId}",
+                      "InstanceType": "${!aws:InstanceType}"
+                    },
+                    "metrics_collected": {
+                      "mem": {
+                        "measurement": [
+                          "mem_used_percent"
+                        ]
+                      },
+                      "swap": {
+                        "measurement": [
+                          "swap_used_percent"
+                        ]
+                      }
+                    }
+                  }
+                }
+
+        # Invoke amazon-cloudwatch-agent-ctl to restart the AmazonCloudWatchAgent.
+        03_restart_amazon-cloudwatch-agent:
+          commands:
+            01_stop_service:
+              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop
+            02_start_service:
+              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+
+        # Start Docker services automatically at boot
+        04_setupDocker:
+          commands:
+            01_enable_docker:
+              command: systemctl enable docker
+            02_enable_containerd:
+              command: systemctl enable containerd.service
+
+        # Cfn-hup setting, it is to monitor the change of metadata.
+        # When there is change in the contents of json file in the metadata section, cfn-hup will call cfn-init to restart the AmazonCloudWatchAgent.
+        01_setupCfnHup:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+                interval=1
+              mode: "000400"
+              owner: root
+              group: root
+            /etc/cfn/hooks.d/amazon-cloudwatch-agent-auto-reloader.conf:
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.EC2Instance.Metadata.AWS::CloudFormation::Init.02_config-amazon-cloudwatch-agent
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region} --configsets UpdateEnvironment
+                runas=root
+              mode: "000400"
+              owner: root
+              group: root
+            /lib/systemd/system/cfn-hup.service:
+              content: |
+                [Unit]
+                Description=cfn-hup daemon
+                [Service]
+                Type=simple
+                ExecStart=/opt/aws/bin/cfn-hup
+                Restart=always
+                [Install]
+                WantedBy=multi-user.target
+          commands:
+            01enable_cfn_hup:
+              command: systemctl enable cfn-hup.service
+            02start_cfn_hup:
+              command: systemctl start cfn-hup.service
     Properties: 
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       SubnetId: !Ref SubnetId
       SecurityGroupIds: 
         - !Ref InstanceSecurityGroup
-      ImageId: !Ref ImageId
+      ImageId: !Ref InstanceAMI
       IamInstanceProfile:
         Ref: "EC2Profile"
       BlockDeviceMappings:
@@ -125,34 +225,15 @@ Resources:
           yum install -y amazon-cloudwatch-agent
           yum install -y docker
           service docker start
-          systemctl enable docker
-          systemctl enable containerd.service
           usermod -a -G docker ec2-user
           docker --version
           curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
-          mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
-          echo '{' > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '  "metrics": {' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '    "metrics_collected": {' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '      "mem": {' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '        "measurement": [' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '          "mem_used_percent"' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '        ],' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '        "metrics_collection_interval": 60' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '      }' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '    },' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '    "append_dimensions": {' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '      "InstanceId": "${!Ref EC2Instance}"' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '    }' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '  }' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          echo '}' >> /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-
-          cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-
-          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+          rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region} --configsets default
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
 
           echo "UserData script completed"
 

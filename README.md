@@ -168,30 +168,21 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
       --capabilities CAPABILITY_IAM
    ```
 
-2. In the AWS console, navigate to the stack and select the "Outputs" tab to find
-   the EC2 instance's public IP address.
-
-   From your local terminal, run the command below, replacing the IP address.
-
-   ```shell
-   ssh -i ~/.ssh/my-key.pem ec2-user@<ip>
-   ```
-
-3. On your <u>local machine</u>, update the values in `.env.production.remote`
-   with your instance's IP.
-
-4. On your <u>local machine</u>, build the web API Docker image:
+2. On your <u>local machine</u>, build the web API Docker image:
 
    ```shell
    docker build -t medspaah .
    ```
 
-5. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
+3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
 
-6. Update the image for the web-api service in the `docker-compose.yml` file with
+4. Update the image for the web-api service in the `docker-compose.yml` file with
    the address of the image you pushed to ECR.
 
-7. From your <u>local machine</u>, copy files to the instance:
+5. From your <u>local machine</u>, copy files to the instance. The EC2 IP
+   will be in the Outputs tab of your CloudFormation stack in the AWS console.
+   The .pem file is the one you needed to create and add to EC2 via the AWS
+   console in the same region as your CloudFormation stack.
 
    ```shell
    printf "%s" "EC2 IP address: "
@@ -209,19 +200,34 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
    scp -i ${pemFilePath} .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
    ```
 
-8. On the <u>EC2 instance</u>, pull the image from ECR.
+6. SSH into the EC2 instance:
 
-```shell
-aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<region>.amazonaws.com;
-docker pull <aws-account-id>.dkr.ecr.<region>.amazonaws.com/<image-name>:<optional-tag>;
-```
+   ```shell
+   ssh -i ${pemFilePath} ec2-user@${ec2Ip}
+   ```
 
-10. Start the Docker services:
+7. On the <u>EC2 instance</u>, pull the image from ECR.
 
-    ```shell
-    docker-compose --env-file .env --env-file .env.production.remote --profile prod up -d
-    docker-compose logs -f
-    ```
+   ```shell
+   printf "%s" "AWS region: "
+   read region
+
+   printf "%s" "AWS account ID: "
+   read accountId
+
+   printf "%s" "ECR image name: "
+   read imageName
+
+   aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${region}.amazonaws.com;
+   docker pull ${accountId}.dkr.ecr.${region}.amazonaws.com/${imageName};
+   ```
+
+8. Start the Docker services:
+
+   ```shell
+   docker-compose --env-file .env --env-file .env.production.remote --profile prod up -d
+   docker-compose logs -f
+   ```
 
 #### Update the stack
 

@@ -103,8 +103,8 @@ export async function onPaymentIntentSucceededEvent$(
     await backoffRetry<ClientResponse<MemberResponse>>(
       3,
       buildConfig.http.retryDelayMs,
-      () => {
-        return authClient.createGroupMembers({
+      async () => {
+        return await authClient.createGroupMembers({
           members: groupAssignments,
         });
       },

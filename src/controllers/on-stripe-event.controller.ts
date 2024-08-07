@@ -46,14 +46,14 @@ export async function onStripeEvent(
   console.info(
     `🔔 Stripe event occurred on ${new Date(
       event.created * 1000
-    ).toUTCString()}: ${eventType}`
+    ).toUTCString()} with ID ${event.id} (${eventType})`
   );
 
   try {
     switch (eventType) {
       case "customer.created":
         console.info(
-          `Webhook: Created Stripe customer with ID: ${
+          `🙋‍♂️ Webhook: Created Stripe customer with ID: ${
             (data.object as Stripe.Customer).id
           }`
         );
@@ -62,7 +62,7 @@ export async function onStripeEvent(
       case "payment_intent.succeeded":
         const paymentIntent = data.object as Stripe.PaymentIntent;
         console.info(
-          `Webhook: Payment captured for payment intent: ${paymentIntent.id}`
+          `💰 Webhook: Payment captured for payment intent: ${paymentIntent.id}`
         );
 
         await onPaymentIntentSucceededEvent$(
@@ -74,12 +74,16 @@ export async function onStripeEvent(
 
       case "payment_intent.payment_failed":
         console.info(
-          `Webhook: Payment failed for payment intent ${
+          `❗️ Webhook: Payment failed for payment intent ${
             (data.object as Stripe.PaymentIntent).id
           }.`
         );
         break;
     }
+
+    console.info(
+      `✅ Webhook: Stripe event ${event.id} (${eventType}) processed successfully`
+    );
   } catch (e) {
     return onErrorProcessingHttpRequest(
       e,

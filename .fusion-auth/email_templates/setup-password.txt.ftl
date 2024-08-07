@@ -1,5 +1,7 @@
-Your account has been created and you must setup a password. Click on the following link to setup your password.
+Welcome to the MedSpaah platform!
 
-http://localhost:9011/password/change/${changePasswordId}?client_id=${(application.oauthConfiguration.clientId)!''}&tenantId=${user.tenantId}
+Your account has been created and you must setup a password. Visit the URL below to set up your password.
 
-- FusionAuth Admin
+[#assign url = "${tenant.issuer}/password/change/${changePasswordId}?client_id=${(application.oauthConfiguration.clientId)!''}&tenantId=${user.tenantId}" /]
+
+${url}

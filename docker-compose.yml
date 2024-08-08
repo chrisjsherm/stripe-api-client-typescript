@@ -39,6 +39,8 @@ services:
 
   smtp:
     image: mailhog/mailhog:v1.0.1
+    profiles:
+      - "debug"
     restart: always
     ports:
       - 1025:1025

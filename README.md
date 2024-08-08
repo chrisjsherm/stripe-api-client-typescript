@@ -109,7 +109,7 @@ These instructions run the web API server locally and the remaining services
 via Docker containers. To run the UI, clone the [repo](https://github.com/chrisjsherm/ng-med-spa)
 and follow its README.
 
-1. Open a terminal and run: `docker compose up`
+1. Open a terminal and run: `docker compose --profile debug --profile inspect_db up`
 2. Open a terminal and run: `npm start`
 3. Open a terminal and run (skip if done recently): `stripe login`
 4. After logging in, run:
@@ -123,8 +123,8 @@ and follow its README.
 > Open another terminal and run: `stripe trigger --help` to see a list of
 > Stripe events you can generate for testing purposes.
 
-To stop and remove the Docker containers: `docker compose down`
-To also remove the Docker volumes: `docker compose down -v`
+To stop and remove the Docker containers: `docker compose --profile debug --profile inspect_db down`
+To also remove the Docker volumes: `docker compose --profile debug --profile inspect_db down -v`
 To stop the containers without removing them: `docker compose stop`
 
 ### Production emulator

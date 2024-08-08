@@ -2,6 +2,16 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Launch an EC2 instance with custom storage and monitoring
 
 Parameters:
+  ApplicationName:
+    Type: String
+    Default: "medspaah"
+    Description: "Tag for the name of this application"
+    
+  OrganizationName:
+    Type: String
+    Default: "acme-corp"
+    Description: "Tag for the name of your organization"
+
   InstanceAMI:
     Description: EC2 Image ID
     Type: String
@@ -314,3 +324,18 @@ Outputs:
   PublicIP:
     Description: Public IP address of the EC2 instance
     Value: !GetAtt EC2Instance.PublicIp
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Application Configuration"
+        Parameters:
+          - ApplicationName
+          - OrganizationName
+
+  Tags:
+    - Key: Application
+      Value: !Ref ApplicationName
+    - Key: Organization
+      Value: !Ref OrganizationName

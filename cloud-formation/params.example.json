@@ -1,5 +1,9 @@
 [
   {
+    "ParameterKey": "ApplicationName",
+    "ParameterValue": "medspaah"
+  },
+  {
     "ParameterKey": "InstanceAMI",
     "ParameterValue": "ami-0427090fd1714168b"
   },
@@ -10,6 +14,10 @@
   {
     "ParameterKey": "KeyName",
     "ParameterValue": "your-keypair-name"
+  },
+  {
+    "ParameterKey": "OrganizationName",
+    "ParameterValue": "acme-corp"
   },
   {
     "ParameterKey": "SshCidrIp",

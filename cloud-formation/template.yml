@@ -335,7 +335,7 @@ Metadata:
           - OrganizationName
 
   Tags:
-    - Key: Application
+    - Key: application
       Value: !Ref ApplicationName
-    - Key: Organization
+    - Key: organization
       Value: !Ref OrganizationName

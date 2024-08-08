@@ -158,7 +158,11 @@ docker compose --profile prod down
 
 To get started with AWS CloudFormation, you need to create an EC2 key pair
 on your computer and add it to EC2 in the region you want to use via the
-AWS console.
+AWS console. You can add the key pair under <b>EC2 > Network & Security > Key Pairs</b>
+
+In the AWS console, visit SES to create an identity for your domain. You will
+need to go through the DNS verification process and then create an SMTP user,
+adding the user's credentials to the `.env.production.remote` file.
 
 You also need to place your Cloudflare Turnstile secret key at the path
 configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variable.

@@ -27,7 +27,7 @@ Payments are facilitated via the Stripe API.
 The Postgres server runs one database for application data and another for
 FusionAuth data.
 
-The first time you run `docker compose up` via `npm start`, the `postgres`
+The first time you run `docker compose` via `npm start`, the `postgres`
 container will create a database and user with the environment parameters
 specified in `.env`. The container will not automatically create these resources
 on subsequent starts without deleting the volume attached to the container.
@@ -172,7 +172,7 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
 1. Run from the root directory:
 
    ```shell
-   aws cloudformation create-stack --stack-name MedSpaahEC2 \
+   aws cloudformation create-stack --stack-name medspaah-ec2 \
       --template-body file://cloud-formation/template.yml \
       --parameters file://cloud-formation/params.json \
       --capabilities CAPABILITY_IAM
@@ -244,7 +244,7 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
 Update the stack in a single step:
 
 ```shell
-aws cloudformation update-stack --stack-name MedSpaahEC2 \
+aws cloudformation update-stack --stack-name medspaah-ec2 \
    --template-body file://cloud-formation/template.yml \
    --parameters file://cloud-formation/params.json \
    --capabilities CAPABILITY_IAM
@@ -256,7 +256,7 @@ Create change set before updating:
 
    ```shell
    aws cloudformation create-change-set \
-      --stack-name MedSpaahEC2 \
+      --stack-name medspaah-ec2 \
       --change-set-name my-change-set \
       --template-body file://cloud-formation/template.yml \
       --parameters file://cloud-formation/params.json \
@@ -268,7 +268,7 @@ Create change set before updating:
 
    ```shell
    aws cloudformation describe-change-set \
-      --stack-name MedSpaahEC2 \
+      --stack-name medspaah-ec2 \
       --change-set-name my-change-set
    ```
 
@@ -276,6 +276,6 @@ Create change set before updating:
 
    ```shell
    aws cloudformation execute-change-set \
-      --stack-name MedSpaahEC2 \
+      --stack-name medspaah-ec2 \
       --change-set-name my-change-set
    ```

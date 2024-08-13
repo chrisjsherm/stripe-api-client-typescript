@@ -130,8 +130,8 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:9011/api/status || exit 1"]
       interval: 1m
       timeout: 10s
-      retries: 3
-      start_period: 60s
+      retries: 5
+      start_period: 1m
     ports:
       - 9011:9011
     volumes:
@@ -152,9 +152,9 @@ services:
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4242/health || exit 1"]
-      interval: 1m
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 30s
     networks:
       - db_net

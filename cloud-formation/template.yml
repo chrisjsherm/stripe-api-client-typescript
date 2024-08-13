@@ -57,6 +57,11 @@ Resources:
   RoleEC2InstanceAccess:
     Type: "AWS::IAM::Role"
     Properties: 
+      Tags:
+        - Key: "application"
+          Value: "medspaah-com"
+        - Key: "organization"
+          Value: "sherman-digital"
       AssumeRolePolicyDocument: 
         Version: "2012-10-17"
         Statement: 
@@ -213,6 +218,11 @@ Resources:
             02start_cfn_hup:
               command: systemctl start cfn-hup.service
     Properties: 
+      Tags:
+        - Key: "application"
+          Value: "medspaah-com"
+        - Key: "organization"
+          Value: "sherman-digital"
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       SubnetId: !Ref SubnetId
@@ -249,6 +259,12 @@ Resources:
 
   ElasticIP:
     Type: AWS::EC2::EIP
+    Properties: 
+      Tags:
+        - Key: "application"
+          Value: "medspaah-com"
+        - Key: "organization"
+          Value: "sherman-digital"
 
   EIPAssociation:
     Type: AWS::EC2::EIPAssociation
@@ -259,6 +275,11 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties: 
+      Tags:
+        - Key: "application"
+          Value: "medspaah-com"
+        - Key: "organization"
+          Value: "sherman-digital"
       GroupDescription: Enable SSH access and open ports for services
       VpcId: !Ref VpcId
       SecurityGroupIngress: 
@@ -285,7 +306,12 @@ Resources:
 
   CPUAlarmHigh:
     Type: AWS::CloudWatch::Alarm
-    Properties:
+    Properties: 
+      Tags:
+        - Key: "application"
+          Value: "medspaah-com"
+        - Key: "organization"
+          Value: "sherman-digital"
       AlarmDescription: "Alarm if CPU usage exceeds 80%"
       Namespace: "AWS/EC2"
       MetricName: "CPUUtilization"
@@ -302,7 +328,12 @@ Resources:
 
   MemoryAlarmHigh:
     Type: AWS::CloudWatch::Alarm
-    Properties:
+    Properties: 
+      Tags:
+        - Key: "application"
+          Value: "medspaah-com"
+        - Key: "organization"
+          Value: "sherman-digital"
       AlarmDescription: "Alarm if memory usage exceeds 80%"
       Namespace: "CWAgent"
       MetricName: "mem_used_percent"
@@ -333,9 +364,3 @@ Metadata:
         Parameters:
           - ApplicationName
           - OrganizationName
-
-  Tags:
-    - Key: application
-      Value: !Ref ApplicationName
-    - Key: organization
-      Value: !Ref OrganizationName

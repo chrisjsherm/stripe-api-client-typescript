@@ -5,9 +5,10 @@ Web API for the MedSpaah platform. Written in TypeScript.
 ## Configuration
 
 1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli).
-2. Install Docker.
+2. Install Docker Desktop.
 3. Install the AWS CLI.
-4. Copy `.env.example` as `.env` and fill in the values with your configuration.
+4. Install Terraform.
+5. Copy `.env.example` to `.env` and fill in the values with your configuration.
 
 ### FusionAuth
 
@@ -16,23 +17,27 @@ for authentication. Much of the development instance configuration is handled by
 `./.fusion-auth/kickstart.json`, but this only runs the first time the container
 starts.
 
-To modify configuration of an existing FusionAuth instance, use Terraform.
-You will likely need to import the FusionAuth resource you want to modify, just
+To access the local FusionAuth instance, visit the [FusionAuth Dashboard](http://localhost:9011/admin/)
+instance created by the `docker-compose.yml` file.
+
+#### Terraform
+
+To modify or add to the configuration of an existing FusionAuth instance, use Terraform.
+
+To modify an existing resource, import the resource you want to modify, just
 as we have done with the default tenant (see `/.fusion-auth/terraform/tenants.tf`).
-Environment variables are set using the `TF_VAR_` syntax and loaded from the
-`.env` files via `dotenvx`.
+
+Terraform environment variables are set using the `TF_VAR_` syntax and loaded
+from the `.env` files via `dotenvx`.
 
 To get started, navigate to the terraform directory and run:
 `npx dotenvx run -f ../../.env -- terraform init`
 
-Before make a change, run:
+Before adding or modifying resources, run:
 `npx dotenvx run -f ../../.env -- terraform plan`
 
 To apply changes, run:
 `npx dotenvx run -f ../../.env -- terraform apply`
-
-To access the local FusionAuth instance, visit the [FusionAuth Dashboard](http://localhost:9011/admin/)
-instance created by the `docker-compose.yml` file.
 
 ### Stripe
 
@@ -91,44 +96,49 @@ Once connected to pgAdmin, add a server. On the "Connection" tab:
 ### Mail Hog
 
 To facilitate email services in development, we leverage an instance of the
-Mail Hog SMTP server. You can access Mail Hog by visiting http://localhost:8025.
+Mail Hog SMTP server. You can access the Mail Hog container by visiting http://localhost:8025.
 
 ### Database Changes & Migrations
 
 Database migrations are run automatically when the Web API server starts up and
 connects to the database.
 
+To modify the data model:
+
 1. Generate a migration (replace \<name\> with a description):
 
-```
-npx typeorm-ts-node-esm migration:generate ./src/db/migrations/<name> -d ./src/db/data-source.ts --pretty
-```
+   ```
+   npx typeorm-ts-node-esm migration:generate ./src/db/migrations/<name> -d ./src/db/data-source.ts --pretty
+   ```
 
 2. Import the migration to `./src/db/data-source.ts` and add it to the end of the
    `migrations` array.
 
 3. Run the migration:
 
-```
-npx typeorm-ts-node-esm migration:run -d ./src/db/data-source.ts
-```
+   ```
+   npx typeorm-ts-node-esm migration:run -d ./src/db/data-source.ts
+   ```
 
 ### Cloudflare
 
-We use Cloudflare's Turnstile service to prevent spam from bots. You will need
-to configure Turnstile and the secret key to AWS Parameter Store at the path
-configured in the `.env` file.
+We use Cloudflare's Turnstile service to prevent spam from bots. After configuring
+Turnstile on the Cloudflare dashboard, you must add the secret key to AWS Parameter
+Store. Be sure to update the AWS and Turnstile `.env` variables.
 
-## Development
+## Develop
 
-These instructions run the web API server locally and the remaining services
-via Docker containers. To run the UI, clone the [repo](https://github.com/chrisjsherm/ng-med-spa)
-and follow its README.
+These instructions run the web API server locally and other services
+via Docker containers. To run the UI, first clone the [UI repo](https://github.com/chrisjsherm/ng-med-spa)
+and follow its README. Then complete the following:
 
-1. Open a terminal and run: `docker compose --profile debug --profile inspect_db up`
+1. Open a terminal and run:
+   ```shell
+   docker compose --profile debug --profile inspect_db up
+   ```
 2. Open a terminal and run: `npm start`
 3. Open a terminal and run (skip if done recently): `stripe login`
-4. After logging in, run:
+4. After logging in to Stripe, run:
 
    ```
    stripe listen --forward-to localhost:4242/webhooks/stripe
@@ -136,16 +146,31 @@ and follow its README.
 
 5. Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
 
-> Open another terminal and run: `stripe trigger --help` to see a list of
-> Stripe events you can generate for testing purposes.
+   > Open another terminal and run: `stripe trigger --help` to see a list of
+   > Stripe events you can generate for testing purposes.
 
-To stop and remove the Docker containers: `docker compose --profile debug --profile inspect_db down`
-To also remove the Docker volumes: `docker compose --profile debug --profile inspect_db down -v`
-To stop the containers without removing them: `docker compose stop`
+To stop and remove the Docker containers:
+
+```shell
+docker compose --profile debug --profile inspect_db down`
+```
+
+To also remove the Docker volumes:
+
+```shell
+docker compose --profile debug --profile inspect_db down -v
+```
+
+To stop the containers without removing them:
+
+```shell
+docker compose --profile debug --profile inspect_db stop
+```
 
 ### Production emulator
 
-To emulate production locally, run all services as Docker containers.
+In production, all services, including the web API, will run in Docker containers.
+To emulate this environment locally, following these instructions:
 
 1. Rename `.env.production.local.example` to `.env.production.local`, changing
    any values as necessary.
@@ -168,7 +193,7 @@ To stop and remove the containers:
 docker compose --profile prod down
 ```
 
-## Deployment
+## Deploy
 
 ### CloudFormation
 

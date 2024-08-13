@@ -144,7 +144,7 @@ and follow its README. Then complete the following:
    stripe listen --forward-to localhost:4242/webhooks/stripe
    ```
 
-5. Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
+   > Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
 
    > Open another terminal and run: `stripe trigger --help` to see a list of
    > Stripe events you can generate for testing purposes.
@@ -169,28 +169,42 @@ docker compose --profile debug --profile inspect_db stop
 
 ### Production emulator
 
-In production, all services, including the web API, will run in Docker containers.
-To emulate this environment locally, following these instructions:
+In production, all services, including the web API, run in Docker containers.
+To emulate this environment while developing the UI locally, following these instructions:
 
 1. Rename `.env.production.local.example` to `.env.production.local`, changing
-   any values as necessary.
-2. Build the web API service image:
+   values as necessary.
+2. Build the web API Docker image:
 
    ```shell
-   docker compose --profile prod build
+   docker build --build-arg NPM_BUILD_TASK=build:local -t medspaah:local .
    ```
 
-3. Start the services:
+3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
+
+4. Start the services:
 
    ```shell
    docker compose --env-file .env --env-file .env.production.local \
-      --profile prod up
+      --profile prod --profile debug up
    ```
+
+5. Open a terminal and run (skip if done recently): `stripe login`
+6. After logging in to Stripe, run:
+
+   ```shell
+   stripe listen --forward-to localhost:4242/webhooks/stripe
+   ```
+
+   > Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
+
+   > Open another terminal and run: `stripe trigger --help` to see a list of
+   > Stripe events you can generate for testing purposes.
 
 To stop and remove the containers:
 
 ```shell
-docker compose --profile prod down
+docker compose --profile prod --profile debug down
 ```
 
 ## Deploy
@@ -227,10 +241,7 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
 
 3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
 
-4. Update the image for the web-api service in the `docker-compose.yml` file with
-   the address of the image you pushed to ECR.
-
-5. From your <u>local machine</u>, copy files to the instance. The EC2 IP
+4. From your <u>local machine</u>, copy files to the instance. The EC2 IP
    will be in the Outputs tab of your CloudFormation stack in the AWS console.
    The .pem file is the one you needed to create and add to EC2 via the AWS
    console in the same region as your CloudFormation stack.
@@ -251,13 +262,13 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
    scp -i ${pemFilePath} .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
    ```
 
-6. SSH into the EC2 instance:
+5. SSH into the EC2 instance:
 
    ```shell
    ssh -i ${pemFilePath} ec2-user@${ec2Ip}
    ```
 
-7. On the <u>EC2 instance</u>, pull the image from ECR.
+6. On the <u>EC2 instance</u>, pull the image from ECR.
 
    ```shell
    printf "%s" "AWS region: "
@@ -273,7 +284,7 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
    docker pull ${accountId}.dkr.ecr.${region}.amazonaws.com/${imageName};
    ```
 
-8. Start the Docker services:
+7. Start the Docker services:
 
    ```shell
    docker-compose --env-file .env --env-file .env.production.remote --profile prod up -d

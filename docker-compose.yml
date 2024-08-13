@@ -139,7 +139,7 @@ services:
       - ./.fusion-auth:/usr/local/fusionauth/kickstart
 
   web-api:
-    image: 258996848737.dkr.ecr.us-east-1.amazonaws.com/medspaah:latest
+    image: ${WEB_API_IMAGE:-258996848737.dkr.ecr.us-east-1.amazonaws.com/medspaah:latest}
     profiles:
       - prod
     depends_on:

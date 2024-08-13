@@ -10,6 +10,7 @@
     "env:prod:remote": "./node_modules/.bin/dotenvx run -f .env.production.remote -f .env -- ts-node ./src/environment/environment.main.ts",
     "clean": "rimraf dist/*",
     "build": "npm run clean && npm run env:prod:remote && tsc",
+    "build:local": "npm run clean && npm run env:prod:local && tsc",
     "server": "node dist/index.js",
     "test": "jest"
   },

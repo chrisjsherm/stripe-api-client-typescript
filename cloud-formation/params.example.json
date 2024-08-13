@@ -1,15 +1,15 @@
 [
   {
     "ParameterKey": "ApplicationName",
-    "ParameterValue": "medspaah"
+    "ParameterValue": "your-domain-name"
   },
   {
     "ParameterKey": "InstanceAMI",
-    "ParameterValue": "ami-0427090fd1714168b"
+    "ParameterValue": "ami-0ba9883b710b05ac6"
   },
   {
     "ParameterKey": "InstanceType",
-    "ParameterValue": "t2.micro"
+    "ParameterValue": "t2.medium"
   },
   {
     "ParameterKey": "KeyName",

@@ -212,15 +212,17 @@ docker compose --profile prod --profile debug down
 ### CloudFormation
 
 To get started with AWS CloudFormation, you need to create an EC2 key pair
-on your computer and add it to EC2 in the region you want to use via the
-AWS console. You can add the key pair under <b>EC2 > Network & Security > Key Pairs</b>
+on your computer and add it to EC2 in the region you want to use. You can add the key pair under <b>EC2 > Network & Security > Key Pairs</b>
 
 In the AWS console, visit SES to create an identity for your domain. You will
-need to go through the DNS verification process and then create an SMTP user,
-adding the user's credentials to the `.env.production.remote` file.
+need to go through the DNS verification process and then create an SMTP user.
 
-You also need to place your Cloudflare Turnstile secret key at the path
-configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variable.
+Copy `.env.production.remote.example` to `.env.production.remote` and replace
+values, as necessary. If you have not already done this with the other `.env`
+files, do so now.
+
+Copy `cloud-formation/params.example.json` to `cloud-formation/params.json`,
+updating the values.
 
 #### Create stack
 
@@ -241,10 +243,13 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
 
 3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
 
-4. From your <u>local machine</u>, copy files to the instance. The EC2 IP
-   will be in the Outputs tab of your CloudFormation stack in the AWS console.
-   The .pem file is the one you needed to create and add to EC2 via the AWS
-   console in the same region as your CloudFormation stack.
+4. Configure your domain to point to the EC2 instance's IP address with your
+   DNS provider using an "A" record. The EC2 IP will be in the Outputs tab of the CloudFormation
+   stack in the AWS Console. Use this as the target value.
+
+5. From your <u>local machine</u>, copy files to the instance. The .pem file is
+   the one you created and added to EC2 via the AWS console in the same
+   region as your CloudFormation stack.
 
    ```shell
    printf "%s" "EC2 IP address: "
@@ -262,13 +267,13 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
    scp -i ${pemFilePath} .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
    ```
 
-5. SSH into the EC2 instance:
+6. SSH into the EC2 instance:
 
    ```shell
    ssh -i ${pemFilePath} ec2-user@${ec2Ip}
    ```
 
-6. On the <u>EC2 instance</u>, pull the image from ECR.
+7. On the <u>EC2 instance</u>, pull the image from ECR.
 
    ```shell
    printf "%s" "AWS region: "
@@ -284,11 +289,11 @@ configured in the `CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH` environment variab
    docker pull ${accountId}.dkr.ecr.${region}.amazonaws.com/${imageName};
    ```
 
-7. Start the Docker services:
+8. Start the Docker services:
 
    ```shell
    docker-compose --env-file .env --env-file .env.production.remote --profile prod up -d
-   docker-compose logs -f
+   docker-compose logs -f # or docker-compose logs <service-name>
    ```
 
 #### Update the stack
@@ -331,3 +336,9 @@ Create change set before updating:
       --stack-name medspaah-ec2 \
       --change-set-name my-change-set
    ```
+
+#### Delete the stack
+
+```shell
+aws cloudformation delete-stack --stack-name medspaah-ec2
+```

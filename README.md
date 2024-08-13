@@ -212,7 +212,8 @@ docker compose --profile prod --profile debug down
 ### CloudFormation
 
 To get started with AWS CloudFormation, you need to create an EC2 key pair
-on your computer and add it to EC2 in the region you want to use. You can add the key pair under <b>EC2 > Network & Security > Key Pairs</b>
+on your computer and add it to AWS EC2 in the region you want to use. You can
+add the key pair under <b>EC2 > Network & Security > Key Pairs</b>
 
 In the AWS console, visit SES to create an identity for your domain. You will
 need to go through the DNS verification process and then create an SMTP user.
@@ -244,12 +245,11 @@ updating the values.
 3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
 
 4. Configure your domain to point to the EC2 instance's IP address with your
-   DNS provider using an "A" record. The EC2 IP will be in the Outputs tab of the CloudFormation
-   stack in the AWS Console. Use this as the target value.
+   DNS provider using an "A" record. The EC2 IP address will be in the Outputs
+   tab of the CloudFormation stack in the AWS Console. Use the IP address as the target value in the DNS entry.
 
 5. From your <u>local machine</u>, copy files to the instance. The .pem file is
-   the one you created and added to EC2 via the AWS console in the same
-   region as your CloudFormation stack.
+   the key pair you created and added to EC2 via the AWS console. The key pair must be in the same region as your CloudFormation stack.
 
    ```shell
    printf "%s" "EC2 IP address: "

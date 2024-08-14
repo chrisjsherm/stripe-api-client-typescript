@@ -2,16 +2,11 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Launch an EC2 instance with custom storage and monitoring
 
 Parameters:
-  ApplicationName:
+  ApplicationTag:
     Type: String
     Default: "medspaah"
     Description: "Tag for the name of this application"
     
-  OrganizationName:
-    Type: String
-    Default: "acme-corp"
-    Description: "Tag for the name of your organization"
-
   InstanceAMI:
     Description: EC2 Image ID
     Type: String
@@ -28,6 +23,15 @@ Parameters:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  OrganizationTag:
+    Type: String
+    Default: "acme-corp"
+    Description: "Tag for the name of your organization"
+
+  ParameterStoreArnTurnstileSecretKey:
+    Type: String
+    Description: "Amazon resource name for the Cloudflare Turnstile secret key"
 
   SshCidrIp:
     Description: The IP address range that can be used to SSH to the EC2 instances
@@ -59,9 +63,9 @@ Resources:
     Properties: 
       Tags:
         - Key: "application"
-          Value: "medspaah-com"
+          Value: !Ref ApplicationTag
         - Key: "organization"
-          Value: "sherman-digital"
+          Value: !Ref OrganizationTag
       AssumeRolePolicyDocument: 
         Version: "2012-10-17"
         Statement: 
@@ -79,7 +83,7 @@ Resources:
                   - "ssm:GetParameter"
                   - "ssm:GetParameters"
                   - "ssm:GetParametersByPath"
-                Resource: "arn:aws:ssm:*:*:parameter/*"
+                Resource: !Ref ParameterStoreArnTurnstileSecretKey
         - PolicyName: "SESPolicy"
           PolicyDocument: 
             Version: "2012-10-17"
@@ -220,9 +224,9 @@ Resources:
     Properties: 
       Tags:
         - Key: "application"
-          Value: "medspaah-com"
+          Value: !Ref ApplicationTag
         - Key: "organization"
-          Value: "sherman-digital"
+          Value: !Ref OrganizationTag
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       SubnetId: !Ref SubnetId
@@ -262,9 +266,9 @@ Resources:
     Properties: 
       Tags:
         - Key: "application"
-          Value: "medspaah-com"
+          Value: !Ref ApplicationTag
         - Key: "organization"
-          Value: "sherman-digital"
+          Value: !Ref OrganizationTag
 
   EIPAssociation:
     Type: AWS::EC2::EIPAssociation
@@ -277,9 +281,9 @@ Resources:
     Properties: 
       Tags:
         - Key: "application"
-          Value: "medspaah-com"
+          Value: !Ref ApplicationTag
         - Key: "organization"
-          Value: "sherman-digital"
+          Value: !Ref OrganizationTag
       GroupDescription: Enable SSH access and open ports for services
       VpcId: !Ref VpcId
       SecurityGroupIngress: 
@@ -309,9 +313,9 @@ Resources:
     Properties: 
       Tags:
         - Key: "application"
-          Value: "medspaah-com"
+          Value: !Ref ApplicationTag
         - Key: "organization"
-          Value: "sherman-digital"
+          Value: !Ref OrganizationTag
       AlarmDescription: "Alarm if CPU usage exceeds 80%"
       Namespace: "AWS/EC2"
       MetricName: "CPUUtilization"
@@ -331,9 +335,9 @@ Resources:
     Properties: 
       Tags:
         - Key: "application"
-          Value: "medspaah-com"
+          Value: !Ref ApplicationTag
         - Key: "organization"
-          Value: "sherman-digital"
+          Value: !Ref OrganizationTag
       AlarmDescription: "Alarm if memory usage exceeds 80%"
       Namespace: "CWAgent"
       MetricName: "mem_used_percent"
@@ -355,12 +359,3 @@ Outputs:
   PublicIP:
     Description: Public IP address of the EC2 instance
     Value: !GetAtt EC2Instance.PublicIp
-
-Metadata:
-  AWS::CloudFormation::Interface:
-    ParameterGroups:
-      - Label:
-          default: "Application Configuration"
-        Parameters:
-          - ApplicationName
-          - OrganizationName

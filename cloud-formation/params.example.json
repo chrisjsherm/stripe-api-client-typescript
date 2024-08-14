@@ -1,6 +1,6 @@
 [
   {
-    "ParameterKey": "ApplicationName",
+    "ParameterKey": "ApplicationTag",
     "ParameterValue": "your-domain-name"
   },
   {
@@ -16,8 +16,12 @@
     "ParameterValue": "your-keypair-name"
   },
   {
-    "ParameterKey": "OrganizationName",
+    "ParameterKey": "OrganizationTag",
     "ParameterValue": "acme-corp"
+  },
+  {
+    "ParameterKey": "ParameterStoreArnTurnstileSecretKey",
+    "ParameterValue": "arn:aws:ssm:region:account-id:path"
   },
   {
     "ParameterKey": "SshCidrIp",

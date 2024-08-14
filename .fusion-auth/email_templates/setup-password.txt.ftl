@@ -1,4 +1,4 @@
-Welcome to the MedSpaah platform!
+Welcome to the MedSpaah platform
 
 Your account has been created and you must setup a password. Visit the URL below to set up your password.
 

@@ -1,4 +1,4 @@
-<h2>Welcome to the MedSpaah platform!</h2>
+<h2>Welcome to the MedSpaah platform</h2>
 
 [#if user.verified]
   <p>

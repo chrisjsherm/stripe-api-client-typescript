@@ -1,4 +1,4 @@
-Welcome to the MedSpaah platform!
+Welcome to the MedSpaah platform
 
 [#if user.verified]
 Your email has already been verified, but feel free to complete the verification process to verify your verification of your email address.

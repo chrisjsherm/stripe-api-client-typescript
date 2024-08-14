@@ -1,4 +1,4 @@
-<h2>Welcome to the MedSpaah platform!</h2>
+<h2>Welcome to the MedSpaah platform</h2>
 
 <p>
   Your account has been created and you must setup a password. Visit the URL

@@ -96,6 +96,7 @@ Resources:
                 Action: 
                   - "ses:SendEmail"
                   - "ses:SendRawEmail"
+                # Action seems to apply to the addressee, not just sender.
                 Resource: "*"
         - PolicyName: "ECRGetAuthTokenPolicy"
           PolicyDocument:
@@ -104,6 +105,7 @@ Resources:
               - Effect: "Allow"
                 Action:
                   - "ecr:GetAuthorizationToken"
+                # Action appears all-or-nothing for the entire registry.
                 Resource: "*"
         - PolicyName: "ECRPullPolicy"
           PolicyDocument:

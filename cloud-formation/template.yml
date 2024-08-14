@@ -6,7 +6,11 @@ Parameters:
     Type: String
     Default: "medspaah"
     Description: "Tag for the name of this application"
-    
+
+  EcrRepositoryArn:
+    Type: String
+    Description: "Amazon resource name of your elastic container registry repository" 
+
   InstanceAMI:
     Description: EC2 Image ID
     Type: String
@@ -93,6 +97,14 @@ Resources:
                   - "ses:SendEmail"
                   - "ses:SendRawEmail"
                 Resource: "*"
+        - PolicyName: "ECRGetAuthTokenPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "ecr:GetAuthorizationToken"
+                Resource: "*"
         - PolicyName: "ECRPullPolicy"
           PolicyDocument:
             Version: "2012-10-17"
@@ -102,8 +114,7 @@ Resources:
                   - "ecr:GetDownloadUrlForLayer"
                   - "ecr:BatchGetImage"
                   - "ecr:BatchCheckLayerAvailability"
-                  - "ecr:GetAuthorizationToken"
-                Resource: "*"
+                Resource: !Ref EcrRepositoryArn
         - PolicyName: "CloudWatchAgentPolicy"
           PolicyDocument:
             Version: "2012-10-17"

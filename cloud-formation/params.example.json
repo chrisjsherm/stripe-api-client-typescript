@@ -4,6 +4,10 @@
     "ParameterValue": "your-domain-name"
   },
   {
+    "ParameterKey": "EcrRepositoryArm",
+    "ParameterValue": "arn:aws:ecr:region:account-id:repository/repository-name"
+  },
+  {
     "ParameterKey": "InstanceAMI",
     "ParameterValue": "ami-0ba9883b710b05ac6"
   },

@@ -70,6 +70,8 @@ Resources:
           Value: !Ref ApplicationTag
         - Key: "organization"
           Value: !Ref OrganizationTag
+        - Key: "AppManagerCFNStackKey"
+          Value: !Ref 'AWS::StackId'
       AssumeRolePolicyDocument: 
         Version: "2012-10-17"
         Statement: 
@@ -240,6 +242,8 @@ Resources:
           Value: !Ref ApplicationTag
         - Key: "organization"
           Value: !Ref OrganizationTag
+        - Key: "AppManagerCFNStackKey"
+          Value: !Ref 'AWS::StackId'
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       SubnetId: !Ref SubnetId
@@ -282,6 +286,8 @@ Resources:
           Value: !Ref ApplicationTag
         - Key: "organization"
           Value: !Ref OrganizationTag
+        - Key: "AppManagerCFNStackKey"
+          Value: !Ref 'AWS::StackId'
 
   EIPAssociation:
     Type: AWS::EC2::EIPAssociation
@@ -297,6 +303,8 @@ Resources:
           Value: !Ref ApplicationTag
         - Key: "organization"
           Value: !Ref OrganizationTag
+        - Key: "AppManagerCFNStackKey"
+          Value: !Ref 'AWS::StackId'
       GroupDescription: Enable SSH access and open ports for services
       VpcId: !Ref VpcId
       SecurityGroupIngress: 
@@ -329,6 +337,8 @@ Resources:
           Value: !Ref ApplicationTag
         - Key: "organization"
           Value: !Ref OrganizationTag
+        - Key: "AppManagerCFNStackKey"
+          Value: !Ref 'AWS::StackId'
       AlarmDescription: "Alarm if CPU usage exceeds 80%"
       Namespace: "AWS/EC2"
       MetricName: "CPUUtilization"
@@ -351,6 +361,8 @@ Resources:
           Value: !Ref ApplicationTag
         - Key: "organization"
           Value: !Ref OrganizationTag
+        - Key: "AppManagerCFNStackKey"
+          Value: !Ref 'AWS::StackId'
       AlarmDescription: "Alarm if memory usage exceeds 80%"
       Namespace: "CWAgent"
       MetricName: "mem_used_percent"

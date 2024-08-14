@@ -293,7 +293,7 @@ updating the values.
 
    ```shell
    docker-compose --env-file .env --env-file .env.production.remote --profile prod up -d
-   docker-compose logs -f # or docker-compose logs <service-name>
+   docker-compose logs -f # Or: docker-compose logs <service-name>
    ```
 
 #### Update the stack

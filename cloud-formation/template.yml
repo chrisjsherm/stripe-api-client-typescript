@@ -28,6 +28,11 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
+  NotifyAt:
+    Description: Email address to send SNS notifications to
+    Type: String
+    AllowedPattern: '[^@]+@[^@]+\.[^@]+'
+
   OrganizationTag:
     Type: String
     Default: "acme-corp"
@@ -107,7 +112,7 @@ Resources:
               - Effect: "Allow"
                 Action:
                   - "ecr:GetAuthorizationToken"
-                # Action appears all-or-nothing for the entire registry.
+                # Action appears to require all-or-nothing for the repositories in the registry.
                 Resource: "*"
         - PolicyName: "ECRPullPolicy"
           PolicyDocument:
@@ -119,21 +124,8 @@ Resources:
                   - "ecr:BatchGetImage"
                   - "ecr:BatchCheckLayerAvailability"
                 Resource: !Ref EcrRepositoryArn
-        - PolicyName: "CloudWatchAgentPolicy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action:
-                  - "cloudwatch:PutMetricData"
-                  - "ssm:GetParameter"
-                  - "ssm:GetParameters"
-                  - "ssm:GetParametersByPath"
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
-                  - "logs:CreateLogGroup"
-                  - "logs:DescribeLogStreams"
-                Resource: "*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
 
   EC2Profile:
     Type: "AWS::IAM::InstanceProfile"
@@ -329,6 +321,24 @@ Resources:
           CidrIp: 0.0.0.0/0
           Description: "FusionAuth"
 
+  NotificationsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !Ref NotifyAt
+      Protocol: "email"
+      TopicArn: !Ref NotificationsTopic
+
+  NotificationsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Tags:
+        - Key: "application"
+          Value: !Ref ApplicationTag
+        - Key: "organization"
+          Value: !Ref OrganizationTag
+        - Key: "AppManagerCFNStackKey"
+          Value: !Ref 'AWS::StackId'
+  
   CPUAlarmHigh:
     Type: AWS::CloudWatch::Alarm
     Properties: 
@@ -351,7 +361,8 @@ Resources:
       Threshold: "80"
       ComparisonOperator: "GreaterThanThreshold"
       AlarmActions:
-        - "arn:aws:sns:us-east-1:123456789012:MySNSTopic"
+        - !Ref NotificationsTopic
+      Unit: "Percent"
 
   MemoryAlarmHigh:
     Type: AWS::CloudWatch::Alarm
@@ -375,7 +386,9 @@ Resources:
       Threshold: "80"
       ComparisonOperator: "GreaterThanThreshold"
       AlarmActions:
-        - "arn:aws:sns:us-east-1:123456789012:MySNSTopic"
+        - !Ref NotificationsTopic
+      Unit: "Percent"
+
 
 Outputs:
   InstanceId:

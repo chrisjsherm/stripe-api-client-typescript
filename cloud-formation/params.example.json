@@ -20,6 +20,10 @@
     "ParameterValue": "your-keypair-name"
   },
   {
+    "ParameterKey": "NotifyAt",
+    "ParameterValue": "your-email@domain.com"
+  },
+  {
     "ParameterKey": "OrganizationTag",
     "ParameterValue": "acme-corp"
   },

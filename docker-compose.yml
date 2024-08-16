@@ -126,6 +126,7 @@ services:
       - db_net
       - search_net
       - smtp_net
+      - web_net
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9011/api/status || exit 1"]
@@ -159,8 +160,26 @@ services:
       start_period: 30s
     networks:
       - db_net
+      - web_net
     ports:
       - 4242:4242
+
+  web-proxy:
+    image: nginx:latest
+    profiles:
+      - prod
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ../ng-med-spa/dist/ng-med-spa:/usr/share/nginx/html/ng-med-spa:ro
+    depends_on:
+      - fusionauth
+      - web-api
+    networks:
+      - web_net
 
 networks:
   db_net:
@@ -168,6 +187,8 @@ networks:
   search_net:
     driver: bridge
   smtp_net:
+    driver: bridge
+  web_net:
     driver: bridge
 
 volumes:

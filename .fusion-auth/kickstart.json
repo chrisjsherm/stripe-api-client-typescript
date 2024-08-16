@@ -8,6 +8,7 @@
     "applicationId": "#{ENV.APPLICATION_ID}",
     "applicationName": "#{ENV.APPLICATION_NAME}",
     "asymmetricKeyId": "#{ENV.ASYMMETRIC_KEY_ID}",
+    "clientSecret": "#{ENV.CLIENT_SECRET}",
     "defaultTenantId": "#{ENV.DEFAULT_TENANT_ID}",
     "emailHost": "#{ENV.EMAIL_HOST}",
     "emailPort": "#{ENV.EMAIL_PORT}",
@@ -180,7 +181,7 @@
           "oauthConfiguration": {
             "authorizedRedirectURLs": ["#{allowedOrigin}"],
             "authorizedOriginURLs": ["#{allowedOrigin}"],
-            "clientSecret": "super-secret-secret-that-should-be-regenerated-for-production",
+            "clientSecret": "#{clientSecret}",
             "logoutURL": "#{logoutURL}",
             "enabledGrants": ["authorization_code", "refresh_token"],
             "debug": true,

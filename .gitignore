@@ -1,3 +1,6 @@
+*.crt
+*.key
+*.pem
 cloud-formation/params.json
 .env.production.remote
 environment.ts

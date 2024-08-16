@@ -126,6 +126,17 @@ We use Cloudflare's Turnstile service to prevent spam from bots. After configuri
 Turnstile on the Cloudflare dashboard, you must add the secret key to AWS Parameter
 Store. Be sure to update the AWS and Turnstile `.env` variables.
 
+# Nginx
+
+We use Nginx as a reverse proxy.
+
+1. Place your certificate, private key, and root certificate files in the `/nginx/ssl` directory. Update the `nginx.conf` file to match the names of these files.
+2. Generate a Diffie-Hellman key:
+   ```shell
+   cd /nginx/ssl
+   openssl dhparam -out dhparam.pem 4096
+   ```
+
 ## Develop
 
 These instructions run the web API server locally and other services
@@ -182,15 +193,23 @@ To emulate this environment while developing the UI locally, following these ins
 
 3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
 
-4. Start the services:
+4. Modify your local `/etc/hosts` to include these entries:
+
+   ```shell
+   127.0.0.0   auth.your-domain.com
+   127.0.0.0   api.your-domain.com
+   127.0.0.0   your-domain.com
+   ```
+
+5. Start the services:
 
    ```shell
    docker compose --env-file .env --env-file .env.production.local \
       --profile prod --profile debug up
    ```
 
-5. Open a terminal and run (skip if done recently): `stripe login`
-6. After logging in to Stripe, run:
+6. Open a terminal and run (skip if done recently): `stripe login`
+7. After logging in to Stripe, run:
 
    ```shell
    stripe listen --forward-to localhost:4242/webhooks/stripe

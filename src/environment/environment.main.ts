@@ -8,6 +8,7 @@ import { throwIfEnvNotSet } from "./helpers/throw-if-env-not-set.helper";
 import { writeEnvironmentFiles } from "./helpers/write-environment-files.helper";
 import { productionConfiguration } from "./production.configuration";
 
+console.info("🔍 Ensuring environment variables are set...");
 throwIfEnvNotSet(
   "AUTH_ADMIN_EMAIL",
   "AUTH_ADMIN_PASSWORD",
@@ -65,6 +66,7 @@ throwIfEnvNotSet(
   "WEB_API_SERVER_PORT",
   "WEB_API_UPSERT_SEED_DATA"
 );
+console.info("✅ Environment variables are set.");
 
 const sharedConfiguration: Pick<
   IBuildConfiguration,
@@ -146,6 +148,7 @@ const sharedConfiguration: Pick<
   uiOrigin: process.env.UI_ORIGIN ?? "",
 };
 
+console.info("📝 Writing environment files");
 // Write the environment files when Node runs this file.
 (function main(...environmentFiles: IEnvironmentFile[]): void {
   writeEnvironmentFiles(...environmentFiles);
@@ -165,3 +168,4 @@ const sharedConfiguration: Pick<
     },
   }
 );
+console.info("✅ Environment file created.");

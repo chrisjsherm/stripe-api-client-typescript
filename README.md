@@ -126,9 +126,9 @@ We use Cloudflare's Turnstile service to prevent spam from bots. After configuri
 Turnstile on the Cloudflare dashboard, you must add the secret key to AWS Parameter
 Store. Be sure to update the AWS and Turnstile `.env` variables.
 
-# Nginx
+### nginx
 
-We use Nginx as a reverse proxy.
+We use nginx as a reverse proxy.
 
 1. Place your certificate, private key, and root certificate files in the `/nginx/ssl` directory. Update the `nginx.conf` file to match the names of these files.
 2. Generate a Diffie-Hellman key:
@@ -196,20 +196,28 @@ To emulate this environment while developing the UI locally, following these ins
 4. Modify your local `/etc/hosts` to include these entries:
 
    ```shell
-   127.0.0.0   auth.your-domain.com
    127.0.0.0   api.your-domain.com
-   127.0.0.0   your-domain.com
+   127.0.0.0   app.your-domain.com
+   127.0.0.0   auth.your-domain.com
    ```
 
-5. Start the services:
+5. Adjust the `nginx/nginx.conf` file to match the DNS configuration.
+
+6. Start the services:
 
    ```shell
+   # See the file combined with environment variables.
+   docker compose --env-file .env --env-file .env.production.local  \
+      --profile prod --profile debug config
+
+   # Create the services.
    docker compose --env-file .env --env-file .env.production.local \
       --profile prod --profile debug up
    ```
 
-6. Open a terminal and run (skip if done recently): `stripe login`
-7. After logging in to Stripe, run:
+7. Open a terminal and run (skip if done recently): `stripe login`
+
+8. After logging in to Stripe, run:
 
    ```shell
    stripe listen --forward-to localhost:4242/webhooks/stripe
@@ -219,6 +227,10 @@ To emulate this environment while developing the UI locally, following these ins
 
    > Open another terminal and run: `stripe trigger --help` to see a list of
    > Stripe events you can generate for testing purposes.
+
+9. After starting the stack, you will need to access each subdomain in your browser directly and proceed past the warning about an invalid certificate before being able to successfully run the application.
+   - api.your-domain.com/health
+   - auth.your-domain.com/admin
 
 To stop and remove the containers:
 

@@ -242,23 +242,21 @@ docker compose --profile prod --profile debug down
 
 ### CloudFormation
 
-To get started with AWS CloudFormation, you need to create an EC2 key pair
-on your computer and add it to AWS EC2 in the region you want to use. You can
-add the key pair under <b>EC2 > Network & Security > Key Pairs</b>
+1. To get started with AWS CloudFormation, you need to create an EC2 key pair
+   on your computer and add it to AWS EC2 in the region you want to use. You can
+   add the key pair under <b>EC2 > Network & Security > Key Pairs</b>
 
-In the AWS console, visit SES to create an identity for your domain. You will
-need to go through the DNS verification process and then create an SMTP user.
+2. In the AWS console, <b>visit SES to create an identity for your domain</b>. You will
+   need to go through the DNS verification process and then create an SMTP user.
 
-Copy `.env.production.remote.example` to `.env.production.remote` and replace
-values, as necessary. If you have not already done this with the other `.env`
-files, do so now.
+3. Copy `.env.production.remote.example` to `.env.production.remote` and replace
+   values, as necessary. If you have not already done this with the other `.env`
+   files, do so now.
 
-Copy `cloud-formation/params.example.json` to `cloud-formation/params.json`,
-updating the values.
+4. Copy `cloud-formation/params.example.json` to `cloud-formation/params.json`,
+   updating the values.
 
-#### Create stack
-
-1. Run from the root directory:
+5. Run from the root directory:
 
    ```shell
    aws cloudformation create-stack --stack-name medspaah-ec2 \
@@ -267,65 +265,92 @@ updating the values.
       --capabilities CAPABILITY_IAM
    ```
 
-2. On your <u>local machine</u>, build the web API Docker image:
+6. Configure Stripe webhook. The endpoint will be https://api.your-domain/webhooks/stripe and the events to send are:
+
+   - customer.created
+   - payment_intent.succeeded
+   - payment_intent.payment_failed
+
+   > Once created, you will need to update the `.env.production.remote` configuration with the webhook signing key.
+
+7. On your <u>local machine</u>, build the web API Docker image:
 
    ```shell
    docker build -t medspaah .
    ```
 
-3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
+8. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
 
-4. Configure your domain to point to the EC2 instance's IP address with your
-   DNS provider using an "A" record. The EC2 IP address will be in the Outputs
-   tab of the CloudFormation stack in the AWS Console. Use the IP address as the target value in the DNS entry.
+9. Configure your domain to point to the EC2 instance's IP address with your
+   DNS provider using an "A" record. The <b>EC2 IP address will be in the Outputs
+   tab of the CloudFormation stack</b> in the AWS Console. Use the IP address as the target value in the DNS entry. You will need to create an entry for each subdomain:
 
-5. From your <u>local machine</u>, copy files to the instance. The .pem file is
-   the key pair you created and added to EC2 via the AWS console. The key pair must be in the same region as your CloudFormation stack.
+   - api
+   - app
+   - auth
 
-   ```shell
-   printf "%s" "EC2 IP address: "
-   read ec2Ip
+10. From your <u>local machine</u>, copy files to the instance. The .pem file is
+    the key pair you created and added to EC2 via the AWS console. The key pair must be in the same region as your CloudFormation stack.
 
-   printf "%s" "path to .pem file: "
-   read pemFilePath
+    ```shell
+    printf "%s" "EC2 IP address: "
+    read ec2Ip
 
-   scp -i ${pemFilePath} -rp .fusion-auth ec2-user@${ec2Ip}:/home/ec2-user
+    printf "%s" "path to .pem file: "
+    read pemFilePath
 
-   scp -i ${pemFilePath} docker-compose.yml ec2-user@${ec2Ip}:/home/ec2-user
+    scp -i ${pemFilePath} -rp .fusion-auth ec2-user@${ec2Ip}:/home/ec2-user
 
-   scp -i ${pemFilePath} .env ec2-user@${ec2Ip}:/home/ec2-user
+    scp -i ${pemFilePath} docker-compose.yml ec2-user@${ec2Ip}:/home/ec2-user
 
-   scp -i ${pemFilePath} .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
-   ```
+    scp -i ${pemFilePath} .env ec2-user@${ec2Ip}:/home/ec2-user
 
-6. SSH into the EC2 instance:
+    scp -i ${pemFilePath} .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
 
-   ```shell
-   ssh -i ${pemFilePath} ec2-user@${ec2Ip}
-   ```
+    scp -i ${pemFilePath} -rp nginx ec2-user@${ec2Ip}:/home/ec2-user
+    ```
 
-7. On the <u>EC2 instance</u>, pull the image from ECR.
+11. Run the NPM build task for the UI repository and copy files to EC2:
 
-   ```shell
-   printf "%s" "AWS region: "
-   read region
+    ```shell
+    cd ../ng-med-spa
+    npm run build
+    cd ../stripe-api-client-typescript
+    scp -i ${pemFilePath} -rp ../ng-med-spa/dist/ng-med-spa ec2-user@${ec2Ip}:/home/ec2-user/nginx/html
+    ```
 
-   printf "%s" "AWS account ID: "
-   read accountId
+12. SSH into the EC2 instance:
 
-   printf "%s" "ECR image name: "
-   read imageName
+    ```shell
+    ssh -i ${pemFilePath} ec2-user@${ec2Ip}
+    ```
 
-   aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${region}.amazonaws.com;
-   docker pull ${accountId}.dkr.ecr.${region}.amazonaws.com/${imageName};
-   ```
+13. On the <u>EC2 instance</u>, pull the image from ECR.
 
-8. Start the Docker services:
+    ```shell
+    printf "%s" "AWS region: "
+    read region
 
-   ```shell
-   docker-compose --env-file .env --env-file .env.production.remote --profile prod up -d
-   docker-compose logs -f # Or: docker-compose logs <service-name>
-   ```
+    printf "%s" "AWS account ID: "
+    read accountId
+
+    printf "%s" "ECR image name: "
+    read imageName
+
+    aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${region}.amazonaws.com;
+    docker pull ${accountId}.dkr.ecr.${region}.amazonaws.com/${imageName};
+    ```
+
+14. Start the Docker services:
+
+    ```shell
+    # See the file combined with environment variables.
+    docker-compose --env-file .env --env-file .env.production.remote \
+      --profile prod config
+
+    docker-compose --env-file .env --env-file .env.production.remote --profile prod up -d
+    docker-compose logs -f # Or: docker-compose logs <service-name>
+    ```
 
 #### Update the stack
 

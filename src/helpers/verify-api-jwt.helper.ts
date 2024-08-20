@@ -31,7 +31,7 @@ export async function verifyApiJwt$(
   }
 
   if (!accessToken) {
-    const message = "Missing authentication token.";
+    const message = `❗️ Missing authentication token for ${req.url} from ${req.ip}.`;
     res.status(StatusCodes.UNAUTHORIZED);
     res.send({ message });
     next(new Error(message));

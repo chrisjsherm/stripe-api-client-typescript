@@ -168,13 +168,19 @@ services:
     image: nginx:latest
     profiles:
       - prod
+    healthcheck:
+      test: ["CMD", "service", "nginx", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     ports:
       - 80:80
       - 443:443
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ${UI_FILES_DIR}:/usr/share/nginx/html/ng-med-spa:ro
+      - ${UI_FILES_DIR}:/usr/share/nginx/html:ro
     depends_on:
       - fusionauth
       - web-api

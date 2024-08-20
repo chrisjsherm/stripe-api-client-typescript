@@ -306,20 +306,15 @@ Resources:
           CidrIp: !Ref SshCidrIp
           Description: "SSH"
         - IpProtocol: tcp
-          FromPort: 4242
-          ToPort: 4242
-          Description: "Web API"
+          FromPort: 80
+          ToPort: 80
+          Description: "HTTP"
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 8025
-          ToPort: 8025
-          Description: "Mail Hog"
-          CidrIp: !Ref SshCidrIp
-        - IpProtocol: tcp
-          FromPort: 9011
-          ToPort: 9011
+          FromPort: 443
+          ToPort: 443
+          Description: "HTTPS"
           CidrIp: 0.0.0.0/0
-          Description: "FusionAuth"
 
   NotificationsSubscription:
     Type: AWS::SNS::Subscription

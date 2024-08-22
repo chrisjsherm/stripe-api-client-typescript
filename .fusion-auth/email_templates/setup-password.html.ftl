@@ -1,8 +1,9 @@
-<h2>Welcome to the MedSpaah platform</h2>
+<h2>Welcome to the MedSpaah Platform</h2>
 
 <p>
-  Your account has been created and you must setup a password. Visit the URL
-  below to set up your password.
+  Your organization has invited you to create an account. Please review our
+  <a href="https://app.medspaah.com/terms-of-service">Terms of Service</a> and then visit the URL below to set your password. By setting your password,
+  you are agreeing to the <a href="https://app.medspaah.com/terms-of-service">Terms of Service</a>
 <p>
 
 <p>

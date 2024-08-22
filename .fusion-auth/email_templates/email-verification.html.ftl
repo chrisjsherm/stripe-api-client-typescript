@@ -1,4 +1,6 @@
-<h2>Welcome to the MedSpaah platform</h2>
+<h2>Welcome to the MedSpaah Platform</h2>
+
+<p>Review our <a href="https://app.medspaah.com/terms-of-service">Terms of Service</a> and then use the instructions below to verify your email. By verifying your email, you are agreeing to the Terms of Service.</p>
 
 [#if user.verified]
   <p>

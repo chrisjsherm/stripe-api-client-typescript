@@ -1,4 +1,6 @@
-<h2>Reset your MedSpaah password</h2>
+<h2>Reset your MedSpaah Password</h2>
+
+<p>Before resetting your password, please review our <a href="https://app.medspaah.com/terms-of-service">Terms of Service</a>. By resetting your password, you are agreeing to the Terms of Service.</p>
 
 [#setting url_escaping_charset="UTF-8"]
 <p>
@@ -14,4 +16,3 @@
   [#list state!{} as key, value][#if key != "tenantId" && key != "client_id" && value??][#assign url = url + "&" + key?url + "=" + value?url/][/#if][/#list]
   <a href="${url}">${url}</a>
 </p>
-

@@ -1,4 +1,6 @@
-Welcome to the MedSpaah platform
+Welcome to the MedSpaah Platform
+
+Review our Terms of Service (https://app.medspaah.com/terms-of-service) and then use the instructions below to verify your email. By verifying your email, you are agreeing to the Terms of Service.
 
 [#if user.verified]
 Your email has already been verified, but feel free to complete the verification process to verify your verification of your email address.

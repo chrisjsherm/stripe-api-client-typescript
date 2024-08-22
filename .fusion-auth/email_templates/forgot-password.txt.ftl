@@ -1,4 +1,6 @@
-Reset your MedSpaah password
+Reset your MedSpaah Password
+
+Before resetting your password, please review our Terms of Service (https://app.medspaah.com/terms-of-service). By resetting your password, you are agreeing to the Terms of Service.
 
 [#setting url_escaping_charset="UTF-8"]
 To change your password, visit the URL below.

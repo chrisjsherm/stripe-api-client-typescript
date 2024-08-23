@@ -316,7 +316,7 @@ docker compose --profile prod --profile debug down
     cd ../ng-med-spa
     npm run build
     cd ../stripe-api-client-typescript
-    scp -i ${pemFilePath} -rp ../ng-med-spa/dist/ng-med-spa ec2-user@${ec2Ip}:/home/ec2-user/nginx/html
+    rsync -aP --delete -e "ssh -i ${pemFilePath}" ../ng-med-spa/dist/ng-med-spa/ ec2-user@${ec2Ip}:/home/ec2-user/nginx/html
     ```
 
 12. SSH into the EC2 instance:

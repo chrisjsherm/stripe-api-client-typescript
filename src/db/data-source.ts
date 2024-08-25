@@ -11,7 +11,6 @@ import { Initial1721833505708 } from "./migrations/1721833505708-initial";
 
 const { db: config } = getEnvironmentConfiguration();
 
-console.log(`username: ${config.username}`);
 /**
  * Database connection configuration.
  */

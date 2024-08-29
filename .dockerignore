@@ -1,8 +1,10 @@
-.*
-coverage
-dist
-node_modules
-docker-compose.yml
-Dockerfile
-README.md
-todo.md
+.vscode
+ cloud-formation
+ coverage
+ dist
+ node_modules
+ .git
+ .gitignore
+ docker-compose.yml
+ Dockerfile
+ README.md

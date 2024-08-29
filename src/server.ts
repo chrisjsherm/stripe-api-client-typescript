@@ -134,7 +134,7 @@ export async function startServer(dataSource: DataSource): Promise<void> {
       });
     });
   } catch (error) {
-    console.error("Error starting server", error);
+    console.error("❗️ Error starting server", error);
     throw error;
   }
 }

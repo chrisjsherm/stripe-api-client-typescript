@@ -163,7 +163,7 @@ and follow its README. Then complete the following:
 To stop and remove the Docker containers:
 
 ```shell
-docker compose --profile debug --profile inspect_db down`
+docker compose --profile debug --profile inspect_db down
 ```
 
 To also remove the Docker volumes:
@@ -242,12 +242,12 @@ docker compose --profile prod --profile debug down
 
 ### CloudFormation
 
-1. To get started with AWS CloudFormation, you need to create an EC2 key pair
+1. In the AWS console, <b>visit SES to create an identity for your domain</b>. You will
+   need to go through the DNS verification process and then create an SMTP user.
+
+2. To get started with AWS CloudFormation, you need to create an EC2 key pair
    on your computer and add it to AWS EC2 in the region you want to use. You can
    add the key pair under <b>EC2 > Network & Security > Key Pairs</b>
-
-2. In the AWS console, <b>visit SES to create an identity for your domain</b>. You will
-   need to go through the DNS verification process and then create an SMTP user.
 
 3. Copy `.env.production.remote.example` to `.env.production.remote` and replace
    values, as necessary. If you have not already done this with the other `.env`
@@ -259,7 +259,7 @@ docker compose --profile prod --profile debug down
 5. Run from the root directory:
 
    ```shell
-   aws cloudformation create-stack --stack-name medspaah-ec2 \
+   aws cloudformation create-stack --stack-name medspaah-com \
       --template-body file://cloud-formation/template.yml \
       --parameters file://cloud-formation/params.json \
       --capabilities CAPABILITY_IAM
@@ -357,7 +357,7 @@ docker compose --profile prod --profile debug down
 Update the stack in a single step:
 
 ```shell
-aws cloudformation update-stack --stack-name medspaah-ec2 \
+aws cloudformation update-stack --stack-name medspaah-com \
    --template-body file://cloud-formation/template.yml \
    --parameters file://cloud-formation/params.json \
    --capabilities CAPABILITY_IAM
@@ -369,7 +369,7 @@ Create change set before updating:
 
    ```shell
    aws cloudformation create-change-set \
-      --stack-name medspaah-ec2 \
+      --stack-name medspaah-com \
       --change-set-name my-change-set \
       --template-body file://cloud-formation/template.yml \
       --parameters file://cloud-formation/params.json \
@@ -381,7 +381,7 @@ Create change set before updating:
 
    ```shell
    aws cloudformation describe-change-set \
-      --stack-name medspaah-ec2 \
+      --stack-name medspaah-com \
       --change-set-name my-change-set
    ```
 
@@ -389,12 +389,12 @@ Create change set before updating:
 
    ```shell
    aws cloudformation execute-change-set \
-      --stack-name medspaah-ec2 \
+      --stack-name medspaah-com \
       --change-set-name my-change-set
    ```
 
 #### Delete the stack
 
 ```shell
-aws cloudformation delete-stack --stack-name medspaah-ec2
+aws cloudformation delete-stack --stack-name medspaah-com
 ```

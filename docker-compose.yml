@@ -165,7 +165,7 @@ services:
       - 4242:4242
 
   web-proxy:
-    image: nginx:latest
+    image: nginx:1.27
     profiles:
       - prod
     restart: always

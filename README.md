@@ -296,33 +296,27 @@ docker compose --profile prod --profile debug down
     printf "%s" "EC2 IP address: "
     read ec2Ip
 
-    printf "%s" "path to .pem file: "
-    read pemFilePath
+    scp -i ~/.ssh/aws-ec2.pem -rp .fusion-auth ec2-user@${ec2Ip}:/home/ec2-user
 
-    scp -i ${pemFilePath} -rp .fusion-auth ec2-user@${ec2Ip}:/home/ec2-user
+    scp -i ~/.ssh/aws-ec2.pem docker-compose.yml ec2-user@${ec2Ip}:/home/ec2-user
 
-    scp -i ${pemFilePath} docker-compose.yml ec2-user@${ec2Ip}:/home/ec2-user
+    scp -i ~/.ssh/aws-ec2.pem .env ec2-user@${ec2Ip}:/home/ec2-user
 
-    scp -i ${pemFilePath} .env ec2-user@${ec2Ip}:/home/ec2-user
+    scp -i ~/.ssh/aws-ec2.pem .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
 
-    scp -i ${pemFilePath} .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
-
-    scp -i ${pemFilePath} -rp nginx ec2-user@${ec2Ip}:/home/ec2-user
+    scp -i ~/.ssh/aws-ec2.pem -rp nginx ec2-user@${ec2Ip}:/home/ec2-user
     ```
 
 11. Run the NPM build task for the UI repository and copy files to EC2:
 
     ```shell
-    cd ../ng-med-spa
-    npm run build
-    cd ../stripe-api-client-typescript
-    rsync -aP --delete -e "ssh -i ${pemFilePath}" ../ng-med-spa/dist/ng-med-spa/ ec2-user@${ec2Ip}:/home/ec2-user/nginx/html
+    sh ../ng-med-spa/deploy-to-aws.sh
     ```
 
 12. SSH into the EC2 instance:
 
     ```shell
-    ssh -i ${pemFilePath} ec2-user@${ec2Ip}
+    ssh -i ~/.ssh/aws-ec2.pem ec2-user@${ec2Ip}
     ```
 
 13. On the <u>EC2 instance</u>, pull the image from ECR.

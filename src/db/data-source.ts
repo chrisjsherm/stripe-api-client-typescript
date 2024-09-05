@@ -1,6 +1,7 @@
 import {} from "module";
 import { DataSource } from "typeorm";
 import { BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin-pattern.entity";
+import { BotulinumToxinTreatment } from "../data-models/entities/botulinum-toxin-treatment.entity";
 import { BotulinumToxin } from "../data-models/entities/botulinum-toxin.entity";
 import { BotulinumToxin_JOIN_BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin_JOIN_botulinum-toxin-pattern.entity";
 import { Organization } from "../data-models/entities/organization.entity";
@@ -8,6 +9,7 @@ import { ProductSubscription } from "../data-models/entities/product-subscriptio
 import { Product } from "../data-models/entities/product.entity";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { Initial1721833505708 } from "./migrations/1721833505708-initial";
+import { Treatment1725565055175 } from "./migrations/1725565055175-Treatment";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -25,14 +27,15 @@ export const AppDataSource = new DataSource({
   synchronize: false,
   logging: true,
   entities: [
+    BotulinumToxin_JOIN_BotulinumToxinPattern,
     BotulinumToxin,
     BotulinumToxinPattern,
-    BotulinumToxin_JOIN_BotulinumToxinPattern,
+    BotulinumToxinTreatment,
     Organization,
     Product,
     ProductSubscription,
   ],
   subscribers: [],
-  migrations: [Initial1721833505708],
+  migrations: [Initial1721833505708, Treatment1725565055175],
   migrationsRun: true,
 });

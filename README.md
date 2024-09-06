@@ -105,16 +105,17 @@ connects to the database.
 
 To modify the data model:
 
-1. Generate a migration (replace \<name\> with a description):
+1. Start the database.
+2. Generate a migration (replace \<name\> with a description):
 
    ```
    npx typeorm-ts-node-commonjs migration:generate ./src/db/migrations/<name> -d ./src/db/data-source.ts --pretty
    ```
 
-2. Import the migration to `./src/db/data-source.ts` and add it to the end of the
+3. Import the migration to `./src/db/data-source.ts` and add it to the end of the
    `migrations` array.
 
-3. Run the migration:
+4. Run the migration:
 
    ```
    npx typeorm-ts-node-commonjs migration:run -d ./src/db/data-source.ts

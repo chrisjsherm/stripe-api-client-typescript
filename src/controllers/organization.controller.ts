@@ -7,6 +7,10 @@ import {
   botulinumToxinPatternViewModelJsonSchema,
 } from "../data-models/entities/botulinum-toxin-pattern.entity";
 import {
+  BotulinumToxinTreatment,
+  IBotulinumToxinTreatmentViewModelCreate,
+} from "../data-models/entities/botulinum-toxin-treatment.entity";
+import {
   BotulinumToxin,
   IBotulinumToxin,
   botulinumToxinJsonSchema,
@@ -70,6 +74,11 @@ organizationsRouter.delete(
   "/me/botulinum-toxin-patterns/:patternId",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   deleteToxinPattern
+);
+organizationsRouter.post(
+  "/me/botulinum-toxin-treatments",
+  hasAnyRole([]),
+  createToxinTreatment
 );
 
 const config = getEnvironmentConfiguration();
@@ -506,6 +515,44 @@ async function updateToxin(req: Request, res: Response): Promise<void> {
     onErrorProcessingHttpRequest(
       err,
       `An error occurred deleting toxin with ID ${toxinId}.`,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Create a botulinum toxin treatment entry in the database.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function createToxinTreatment(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const treatment: IBotulinumToxinTreatmentViewModelCreate = req.body;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
+    const savedTreatment = await treatmentRepo.create({
+      ...treatment,
+      organizationId,
+    });
+
+    res.json({
+      data: savedTreatment,
+    });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred saving the treatment.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

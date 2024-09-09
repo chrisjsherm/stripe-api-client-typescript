@@ -55,6 +55,8 @@ export const schema: JSONSchemaType<IBotulinumToxinTreatmentViewModelCreate> = {
           "patternId",
           "toxinUnits",
         ],
+        minItems: 1,
+        maxItems: 100,
         additionalProperties: false,
       },
     },

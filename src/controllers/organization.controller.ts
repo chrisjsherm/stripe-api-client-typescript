@@ -10,6 +10,7 @@ import {
   BotulinumToxinTreatment,
   IBotulinumToxinTreatmentViewModelCreate,
 } from "../data-models/entities/botulinum-toxin-treatment.entity";
+import { BotulinumToxinTreatment_JOIN_BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin-treatment_JOIN_botulinum-toxin-pattern.entity";
 import {
   BotulinumToxin,
   IBotulinumToxin,
@@ -541,14 +542,29 @@ async function createToxinTreatment(
     }
 
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
-    const savedTreatment = await treatmentRepo.create({
-      ...treatment,
-      clinicianId: userId,
-      organizationId,
+    const savedTreatment = await treatmentRepo
+      .create({
+        clinicianId: userId,
+        organizationId,
+      })
+      .save();
+    const relationRepo = AppDataSource.getRepository(
+      BotulinumToxinTreatment_JOIN_BotulinumToxinPattern
+    );
+    const patternRelations = treatment.treatmentPatterns.map((pattern) => {
+      return relationRepo.create({
+        ...pattern,
+        treatmentId: savedTreatment.id,
+      });
     });
+    await relationRepo.save(patternRelations);
 
     res.json({
-      data: savedTreatment,
+      data: {
+        id: savedTreatment.id,
+        clinicianId: savedTreatment.clinicianId,
+        createdDateTime: savedTreatment.createdDateTime,
+      },
     });
   } catch (err) {
     onErrorProcessingHttpRequest(

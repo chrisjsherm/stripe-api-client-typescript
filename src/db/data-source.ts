@@ -12,6 +12,7 @@ import { getEnvironmentConfiguration } from "../helpers/get-environment-configur
 import { Initial1721833505708 } from "./migrations/1721833505708-initial";
 import { Treatment1725565055175 } from "./migrations/1725565055175-Treatment";
 import { TreatmentJOINPattern1725632907196 } from "./migrations/1725632907196-treatment-JOIN-pattern";
+import { TreatmentClinicianId1725889970874 } from "./migrations/1725889970874-TreatmentClinicianId";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -43,6 +44,7 @@ export const AppDataSource = new DataSource({
     Initial1721833505708,
     Treatment1725565055175,
     TreatmentJOINPattern1725632907196,
+    TreatmentClinicianId1725889970874,
   ],
   migrationsRun: true,
 });

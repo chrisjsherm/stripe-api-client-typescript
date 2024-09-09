@@ -533,7 +533,7 @@ async function createToxinTreatment(
   const treatment: IBotulinumToxinTreatmentViewModelCreate = req.body;
 
   try {
-    const { organizationId } = decodeFusionAuthAccessToken(req);
+    const { organizationId, id: userId } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
       throw createError.BadRequest(
         "Your user account is not associated with an organization."
@@ -543,6 +543,7 @@ async function createToxinTreatment(
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
     const savedTreatment = await treatmentRepo.create({
       ...treatment,
+      clinicianId: userId,
       organizationId,
     });
 

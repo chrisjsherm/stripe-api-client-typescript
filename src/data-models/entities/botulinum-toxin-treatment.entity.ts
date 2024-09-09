@@ -17,6 +17,9 @@ export class BotulinumToxinTreatment extends CoreEntity {
   )
   patterns: Relation<BotulinumToxinTreatment_JOIN_BotulinumToxinPattern[]>;
 
+  @Column({ type: "uuid" })
+  clinicianId: string;
+
   @ManyToOne(() => Organization, { nullable: false })
   organization: Relation<Organization>;
 

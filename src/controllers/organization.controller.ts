@@ -587,6 +587,8 @@ async function createToxinTreatment(
 }
 
 async function getToxinTreatments(req: Request, res: Response): Promise<void> {
+  const clinicianIdFilter =
+    req.query[ConstantConfiguration.queryParam_clinicianId];
   try {
     const { organizationId } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
@@ -596,10 +598,15 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
     }
 
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
+    const whereClause: any = {
+      organizationId,
+    };
+    if (clinicianIdFilter) {
+      console.log(`Clinician ID: ${clinicianIdFilter}`);
+      whereClause.clinicianId = clinicianIdFilter;
+    }
     const treatments = await treatmentRepo.find({
-      where: {
-        organizationId,
-      },
+      where: whereClause,
       relations: {
         patterns: true,
       },

@@ -12,4 +12,6 @@ export const ConstantConfiguration = {
   stripe_paymentIntent_metadata_productIdsCsv: "product_ids",
   stripe_paymentIntent_metadata_organizationId: "organization_id",
   stripe_paymentIntent_metadata_userId: "tenant__user_id",
+
+  queryParam_clinicianId: "clinicianId",
 };

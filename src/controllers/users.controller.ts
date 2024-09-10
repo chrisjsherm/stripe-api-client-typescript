@@ -1,4 +1,4 @@
-import { Sort, User, UserRegistration } from "@fusionauth/typescript-client";
+import { User, UserRegistration } from "@fusionauth/typescript-client";
 import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
@@ -12,6 +12,7 @@ import { associateUserWithCustomer$ } from "../helpers/associate-customer-with-u
 import { createStripeCustomer$ } from "../helpers/create-stripe-customer.helper";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
 import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
+import { getUsersByOrganization$ } from "../helpers/get-auth-users-by-organization.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import getStripe from "../helpers/get-stripe.helper";
@@ -174,7 +175,7 @@ async function getUsers(req: Request, res: Response): Promise<void> {
       );
     }
 
-    const users = await getUsersByOrganization$(organizationId);
+    const users = await getUsersByOrganization$(organizationId, authClient);
     res.json({
       data: users,
     });
@@ -243,7 +244,7 @@ async function invite(req: Request, res: Response): Promise<void> {
         .split(",")
         .forEach((id: string) => groupIds.add(id));
     }
-    const users = await getUsersByOrganization$(organizationId);
+    const users = await getUsersByOrganization$(organizationId, authClient);
     if (users.length >= maxUsers) {
       throw createError.BadRequest(
         `Your organization is using ${users.length} of ${maxUsers} user accounts.`
@@ -344,7 +345,7 @@ async function modifyOrganizationAdministratorStatus(
       );
     }
 
-    const users = await getUsersByOrganization$(organizationId);
+    const users = await getUsersByOrganization$(organizationId, authClient);
     const adminCount = users.reduce((acc: number, user: User): number => {
       const isAdmin = user.registrations
         ?.find((registration: UserRegistration): boolean => {
@@ -473,53 +474,4 @@ async function refreshGroupMemberships(
       res
     );
   }
-}
-
-/**
- * Retrieve users in an organization.
- * @param organizationId Organization for which to retrieve users
- * @returns Array of users
- */
-async function getUsersByOrganization$(
-  organizationId: string
-): Promise<User[]> {
-  const searchResult = await authClient.searchUsersByQuery({
-    search: {
-      query: JSON.stringify({
-        match: {
-          "data.organizationId": {
-            query: organizationId,
-          },
-        },
-      }),
-      accurateTotal: true,
-      sortFields: [
-        {
-          name: "fullName",
-          order: Sort.asc,
-        },
-        {
-          name: "email",
-          order: Sort.asc,
-        },
-        {
-          name: "insertInstant",
-          order: Sort.asc,
-        },
-      ],
-    },
-  });
-
-  if (searchResult.exception) {
-    throw createError.InternalServerError(searchResult.exception.message);
-  }
-
-  if (searchResult.response.total !== searchResult.response.users?.length) {
-    throw createError.InternalServerError(
-      "System error: The number of users in your organization has exceeded " +
-        "the limit. Pagination must be implemented to proceed."
-    );
-  }
-
-  return searchResult.response.users ?? [];
 }

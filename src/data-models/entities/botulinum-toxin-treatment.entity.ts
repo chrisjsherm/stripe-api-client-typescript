@@ -74,5 +74,10 @@ export const schema: JSONSchemaType<IBotulinumToxinTreatmentViewModelCreate> = {
 export interface IBotulinumToxinTreatmentViewModelRead {
   id: string;
   createdDateTime: string;
+  clinician: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+  };
   treatmentPatterns: IBotulinumToxinTreatmentPatternViewModelRead[];
 }

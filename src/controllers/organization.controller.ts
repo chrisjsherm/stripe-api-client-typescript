@@ -9,8 +9,12 @@ import {
 import {
   BotulinumToxinTreatment,
   IBotulinumToxinTreatmentViewModelCreate,
+  IBotulinumToxinTreatmentViewModelRead,
 } from "../data-models/entities/botulinum-toxin-treatment.entity";
-import { BotulinumToxinTreatment_JOIN_BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin-treatment_JOIN_botulinum-toxin-pattern.entity";
+import {
+  BotulinumToxinTreatment_JOIN_BotulinumToxinPattern,
+  IBotulinumToxinTreatmentPatternViewModelRead,
+} from "../data-models/entities/botulinum-toxin-treatment_JOIN_botulinum-toxin-pattern.entity";
 import {
   BotulinumToxin,
   IBotulinumToxin,
@@ -23,6 +27,7 @@ import { AppDataSource } from "../db/data-source";
 import { environment } from "../environment/environment";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
 import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
+import { getUsersByOrganization$ } from "../helpers/get-auth-users-by-organization.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { hasAnyRole } from "../helpers/has-any-role.helper";
@@ -80,6 +85,11 @@ organizationsRouter.post(
   "/me/botulinum-toxin-treatments",
   hasAnyRole([]),
   createToxinTreatment
+);
+organizationsRouter.get(
+  "/me/botulinum-toxin-treatments",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  getToxinTreatments
 );
 
 const config = getEnvironmentConfiguration();
@@ -570,6 +580,114 @@ async function createToxinTreatment(
     onErrorProcessingHttpRequest(
       err,
       "An error occurred saving the treatment.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+async function getToxinTreatments(req: Request, res: Response): Promise<void> {
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your account is not associated with an organization."
+      );
+    }
+
+    const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
+    const treatments = await treatmentRepo.find({
+      where: {
+        organizationId,
+      },
+      relations: {
+        patterns: true,
+      },
+      order: {
+        createdDateTime: "DESC",
+      },
+    });
+
+    const patternsRepo = AppDataSource.getRepository(BotulinumToxinPattern);
+    const patterns = await patternsRepo.find({
+      where: {
+        organizationId,
+      },
+    });
+    const patternById = new Map<string, BotulinumToxinPattern>();
+    for (const pattern of patterns) {
+      patternById.set(pattern.id, pattern);
+    }
+
+    const toxinsRepo = AppDataSource.getRepository(BotulinumToxin);
+    const toxins = await toxinsRepo.find({
+      where: {
+        organizationId,
+      },
+    });
+    const toxinById = new Map<string, BotulinumToxin>();
+    for (const toxin of toxins) {
+      toxinById.set(toxin.id, toxin);
+    }
+
+    const users = await getUsersByOrganization$(organizationId, authClient);
+    const userNameById = new Map<
+      string,
+      { firstName: string; lastName: string }
+    >();
+    for (const user of users) {
+      userNameById.set(user.id!, {
+        firstName: user.firstName!,
+        lastName: user.lastName!,
+      });
+    }
+
+    const results: IBotulinumToxinTreatmentViewModelRead[] = [];
+    for (const treatment of treatments) {
+      results.push({
+        id: treatment.id,
+        createdDateTime: treatment.createdDateTime.toISOString(),
+        clinician: {
+          id: treatment.clinicianId,
+          firstName: userNameById.get(treatment.clinicianId)?.firstName,
+          lastName: userNameById.get(treatment.clinicianId)?.lastName,
+        },
+        treatmentPatterns: treatment.patterns.map(
+          (
+            patternAssociation: BotulinumToxinTreatment_JOIN_BotulinumToxinPattern
+          ): IBotulinumToxinTreatmentPatternViewModelRead => {
+            const product = toxinById.get(patternAssociation.productId);
+            if (!product) {
+              throw createError.Conflict(
+                `The treatment with ID ${treatment.id} references a product with ID ${patternAssociation.productId} that does not exist.`
+              );
+            }
+            const pattern = patternById.get(patternAssociation.patternId);
+            if (!pattern) {
+              throw createError.Conflict(
+                `The treatment with ID ${treatment.id} references a pattern with ID ${patternAssociation.patternId} that does not exist.`
+              );
+            }
+            return {
+              diluentMl: patternAssociation.diluentMl,
+              priceChargedPerToxinUnitInBaseCurrencyUnits:
+                patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits,
+              product: { id: product.id, name: product.name },
+              pattern: { id: pattern.id, name: pattern.name },
+              toxinUnits: patternAssociation.toxinUnits,
+            };
+          }
+        ),
+      });
+    }
+
+    res.json({
+      data: results,
+    });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred retrieving treatments.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

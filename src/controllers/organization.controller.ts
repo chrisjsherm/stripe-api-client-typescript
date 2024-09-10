@@ -663,7 +663,8 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
           }
 
           totalPrice +=
-            patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits;
+            patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits *
+            patternAssociation.toxinUnits;
           return {
             diluentMl: patternAssociation.diluentMl,
             priceChargedPerToxinUnitInBaseCurrencyUnits:

@@ -644,6 +644,37 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
 
     const results: IBotulinumToxinTreatmentViewModelRead[] = [];
     for (const treatment of treatments) {
+      let totalPrice = 0;
+      const treatmentPatterns = treatment.patterns.map(
+        (
+          patternAssociation: BotulinumToxinTreatment_JOIN_BotulinumToxinPattern
+        ): IBotulinumToxinTreatmentPatternViewModelRead => {
+          const product = toxinById.get(patternAssociation.productId);
+          if (!product) {
+            throw createError.Conflict(
+              `The treatment with ID ${treatment.id} references a product with ID ${patternAssociation.productId} that does not exist.`
+            );
+          }
+          const pattern = patternById.get(patternAssociation.patternId);
+          if (!pattern) {
+            throw createError.Conflict(
+              `The treatment with ID ${treatment.id} references a pattern with ID ${patternAssociation.patternId} that does not exist.`
+            );
+          }
+
+          totalPrice +=
+            patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits;
+          return {
+            diluentMl: patternAssociation.diluentMl,
+            priceChargedPerToxinUnitInBaseCurrencyUnits:
+              patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits,
+            product: { id: product.id, name: product.name },
+            pattern: { id: pattern.id, name: pattern.name },
+            toxinUnits: patternAssociation.toxinUnits,
+          };
+        }
+      );
+
       results.push({
         id: treatment.id,
         createdDateTime: treatment.createdDateTime.toISOString(),
@@ -652,32 +683,8 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
           firstName: userNameById.get(treatment.clinicianId)?.firstName,
           lastName: userNameById.get(treatment.clinicianId)?.lastName,
         },
-        treatmentPatterns: treatment.patterns.map(
-          (
-            patternAssociation: BotulinumToxinTreatment_JOIN_BotulinumToxinPattern
-          ): IBotulinumToxinTreatmentPatternViewModelRead => {
-            const product = toxinById.get(patternAssociation.productId);
-            if (!product) {
-              throw createError.Conflict(
-                `The treatment with ID ${treatment.id} references a product with ID ${patternAssociation.productId} that does not exist.`
-              );
-            }
-            const pattern = patternById.get(patternAssociation.patternId);
-            if (!pattern) {
-              throw createError.Conflict(
-                `The treatment with ID ${treatment.id} references a pattern with ID ${patternAssociation.patternId} that does not exist.`
-              );
-            }
-            return {
-              diluentMl: patternAssociation.diluentMl,
-              priceChargedPerToxinUnitInBaseCurrencyUnits:
-                patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits,
-              product: { id: product.id, name: product.name },
-              pattern: { id: pattern.id, name: pattern.name },
-              toxinUnits: patternAssociation.toxinUnits,
-            };
-          }
-        ),
+        treatmentPatterns,
+        totalPriceChargedInBaseCurrencyUnits: totalPrice,
       });
     }
 

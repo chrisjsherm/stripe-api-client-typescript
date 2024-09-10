@@ -80,4 +80,5 @@ export interface IBotulinumToxinTreatmentViewModelRead {
     lastName?: string;
   };
   treatmentPatterns: IBotulinumToxinTreatmentPatternViewModelRead[];
+  totalPriceChargedInBaseCurrencyUnits: number;
 }

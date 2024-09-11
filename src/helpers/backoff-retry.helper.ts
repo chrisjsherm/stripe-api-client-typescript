@@ -34,11 +34,9 @@ export function backoffRetry<T>(
       const delayMs = Math.pow(2, attemptCount) * baseDelayMs;
 
       console.info(
-        `Initiating ${operationName} retry attempt ${
-          attemptCount + 1
-        } of ${maxRetries} in ${
-          Math.round((delayMs / 1000) * 10) / 10
-        } seconds.`
+        `Initiating ${operationName} attempt ${attemptCount + 2} of ${
+          maxRetries + 1
+        } in ${Math.round((delayMs / 1000) * 10) / 10} seconds.`
       );
 
       await delay(delayMs);

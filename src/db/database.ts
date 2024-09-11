@@ -18,7 +18,7 @@ export async function initializeDatabase(): Promise<DataSource> {
   try {
     const dataSource = await backoffRetry(
       5,
-      1000,
+      5000,
       () => AppDataSource.initialize(),
       "Database connection"
     );

@@ -1,6 +1,13 @@
+import { User } from "@fusionauth/typescript-client";
 import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
+import {
+  Between,
+  FindOptionsWhere,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+} from "typeorm";
 import {
   BotulinumToxinPattern,
   IBotulinumToxinPatternViewModel,
@@ -90,6 +97,12 @@ organizationsRouter.get(
   "/me/botulinum-toxin-treatments",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   getToxinTreatments
+);
+
+organizationsRouter.get(
+  "/me/clinicians",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  getClinicians
 );
 
 const config = getEnvironmentConfiguration();
@@ -586,9 +599,16 @@ async function createToxinTreatment(
   }
 }
 
+/**
+ * Get botulinum toxin treatments, optionally filtered
+ * @param req HTTP request
+ * @param res HTTP response
+ */
 async function getToxinTreatments(req: Request, res: Response): Promise<void> {
   const clinicianIdFilter =
     req.query[ConstantConfiguration.queryParam_clinicianId];
+  const dateFromFilter = req.query[ConstantConfiguration.queryParam_dateFrom];
+  const dateToFilter = req.query[ConstantConfiguration.queryParam_dateTo];
   try {
     const { organizationId } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
@@ -598,12 +618,29 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
     }
 
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
-    const whereClause: any = {
+    const whereClause: FindOptionsWhere<BotulinumToxinTreatment> = {
       organizationId,
     };
-    if (clinicianIdFilter) {
-      console.log(`Clinician ID: ${clinicianIdFilter}`);
+    if (typeof clinicianIdFilter === "string") {
       whereClause.clinicianId = clinicianIdFilter;
+    }
+    if (
+      typeof dateFromFilter === "string" ||
+      typeof dateToFilter === "string"
+    ) {
+      if (
+        typeof dateFromFilter === "string" &&
+        typeof dateToFilter === "string"
+      ) {
+        whereClause.createdDateTime = Between(
+          new Date(dateFromFilter),
+          new Date(dateToFilter)
+        );
+      } else if (typeof dateFromFilter === "string") {
+        whereClause.createdDateTime = MoreThanOrEqual(new Date(dateFromFilter));
+      } else if (typeof dateToFilter === "string") {
+        whereClause.createdDateTime = LessThanOrEqual(new Date(dateToFilter));
+      }
     }
     const treatments = await treatmentRepo.find({
       where: whereClause,
@@ -703,6 +740,44 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
     onErrorProcessingHttpRequest(
       err,
       "An error occurred retrieving treatments.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Get clinicians associated with the organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function getClinicians(req: Request, res: Response): Promise<void> {
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your account is not associated with an organization."
+      );
+    }
+
+    const clinicians = await getUsersByOrganization$(
+      organizationId,
+      authClient
+    );
+
+    res.json({
+      data: clinicians.map((clinician: User) => {
+        return {
+          id: clinician.id,
+          firstName: clinician.firstName,
+          lastName: clinician.lastName,
+        };
+      }),
+    });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred retrieving clinicians.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

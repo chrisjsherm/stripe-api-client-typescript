@@ -14,6 +14,6 @@ export const ConstantConfiguration = {
   stripe_paymentIntent_metadata_userId: "tenant__user_id",
 
   queryParam_clinicianId: "clinicianId",
-  queryParam_dateFrom: "dateFrom",
-  queryParam_dateTo: "dateTo",
+  queryParam_dateStart: "dateStart",
+  queryParam_dateEnd: "dateEnd",
 };

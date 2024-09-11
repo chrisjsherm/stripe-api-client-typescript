@@ -600,15 +600,15 @@ async function createToxinTreatment(
 }
 
 /**
- * Get botulinum toxin treatments, optionally filtered
+ * Get botulinum toxin treatments, optionally filtered.
  * @param req HTTP request
  * @param res HTTP response
  */
 async function getToxinTreatments(req: Request, res: Response): Promise<void> {
   const clinicianIdFilter =
     req.query[ConstantConfiguration.queryParam_clinicianId];
-  const dateFromFilter = req.query[ConstantConfiguration.queryParam_dateFrom];
-  const dateToFilter = req.query[ConstantConfiguration.queryParam_dateTo];
+  const dateStartFilter = req.query[ConstantConfiguration.queryParam_dateStart];
+  const dateEndFilter = req.query[ConstantConfiguration.queryParam_dateEnd];
   try {
     const { organizationId } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
@@ -625,21 +625,23 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
       whereClause.clinicianId = clinicianIdFilter;
     }
     if (
-      typeof dateFromFilter === "string" ||
-      typeof dateToFilter === "string"
+      typeof dateStartFilter === "string" ||
+      typeof dateEndFilter === "string"
     ) {
       if (
-        typeof dateFromFilter === "string" &&
-        typeof dateToFilter === "string"
+        typeof dateStartFilter === "string" &&
+        typeof dateEndFilter === "string"
       ) {
         whereClause.createdDateTime = Between(
-          new Date(dateFromFilter),
-          new Date(dateToFilter)
+          new Date(dateStartFilter),
+          new Date(dateEndFilter)
         );
-      } else if (typeof dateFromFilter === "string") {
-        whereClause.createdDateTime = MoreThanOrEqual(new Date(dateFromFilter));
-      } else if (typeof dateToFilter === "string") {
-        whereClause.createdDateTime = LessThanOrEqual(new Date(dateToFilter));
+      } else if (typeof dateStartFilter === "string") {
+        whereClause.createdDateTime = MoreThanOrEqual(
+          new Date(dateStartFilter)
+        );
+      } else if (typeof dateEndFilter === "string") {
+        whereClause.createdDateTime = LessThanOrEqual(new Date(dateEndFilter));
       }
     }
     const treatments = await treatmentRepo.find({

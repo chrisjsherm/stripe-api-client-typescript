@@ -191,6 +191,8 @@ Resources:
     Type: AWS::EC2::EIP
     Properties: 
       Tags:
+        - Key: "Name"
+          Value: !Ref ApplicationTag
         - Key: "application"
           Value: !Ref ApplicationTag
         - Key: "organization"

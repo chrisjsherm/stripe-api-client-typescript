@@ -146,7 +146,7 @@ and follow its README. Then complete the following:
 
 1. Open a terminal and run:
    ```shell
-   docker compose --profile debug --profile inspect_db up
+   docker compose --profile debug --profile inspect_db up -d
    ```
 2. Open a terminal and run: `npm start`
 3. Open a terminal and run (skip if done recently): `stripe login`

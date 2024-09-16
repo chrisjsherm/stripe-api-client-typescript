@@ -8,10 +8,7 @@ import { ProductSubscription } from "../data-models/entities/product-subscriptio
 import { AppDataSource } from "../db/data-source";
 import { environment } from "../environment/environment";
 import { applyDefaultMemberships$ } from "../helpers/apply-default-group-memberships.helper";
-import { associateUserWithCustomer$ } from "../helpers/associate-customer-with-user.helper";
-import { createStripeCustomer$ } from "../helpers/create-stripe-customer.helper";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
-import { getAuthUserById$ } from "../helpers/get-auth-user-by-id.helper";
 import { getUsersByOrganization$ } from "../helpers/get-auth-users-by-organization.helper";
 import { getEnvironmentConfiguration } from "../helpers/get-environment-configuration.helper";
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
@@ -45,53 +42,12 @@ usersRouter.get(
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   getUsers
 );
-usersRouter.post("/me/customer", createCustomer);
 usersRouter.post("/verify-email", resendEmailVerificationMessage);
 usersRouter.post("/refresh-group-memberships", refreshGroupMemberships);
 
 const config = getEnvironmentConfiguration();
 const stripeClient = getStripe(config);
 const authClient = getFusionAuth(config);
-
-/**
- * Create a customer associated with the authenticated user.
- * @param req HTTP request
- * @param res HTTP response
- */
-async function createCustomer(req: Request, res: Response): Promise<void> {
-  console.info("Received create customer request.");
-
-  try {
-    const token = decodeFusionAuthAccessToken(req);
-    const userQueryResult = await getAuthUserById$(token.id, authClient);
-
-    if (
-      userQueryResult.data?.[
-        ConstantConfiguration.fusionAuth_user_data_stripeCustomerId
-      ] !== undefined
-    ) {
-      throw createError.Conflict(
-        "This user is already associated with a Stripe customer."
-      );
-    }
-
-    const customer = await createStripeCustomer$(token, stripeClient);
-    await associateUserWithCustomer$(token.id, customer.id, authClient);
-
-    if (!res.headersSent) {
-      res.status(StatusCodes.CREATED).send({
-        data: { stripeCustomerId: customer.id },
-      });
-    }
-  } catch (err) {
-    onErrorProcessingHttpRequest(
-      err,
-      "An error occurred creating the Stripe customer.",
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      res
-    );
-  }
-}
 
 /**
  * Delete a user.

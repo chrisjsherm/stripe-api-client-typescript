@@ -31,7 +31,11 @@ export async function applyDefaultMemberships$(
     accessToken.organizationId
   );
 
-  const user = await getAuthUserById$(accessToken.id, authClient);
+  const user = await getAuthUserById$(
+    accessToken.id,
+    accessToken.organizationId,
+    authClient
+  );
   const currentMemberships = user.memberships ?? [];
 
   for (const membership of currentMemberships) {
@@ -57,5 +61,9 @@ export async function applyDefaultMemberships$(
     });
   }
 
-  return await getAuthUserById$(accessToken.id, authClient);
+  return await getAuthUserById$(
+    accessToken.id,
+    accessToken.organizationId,
+    authClient
+  );
 }

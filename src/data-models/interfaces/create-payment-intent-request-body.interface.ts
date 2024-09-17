@@ -5,5 +5,5 @@ import { IOrganization } from "./organization.interface";
  */
 export interface ICreatePaymentIntentRequestBody {
   productId: string;
-  organization: Omit<IOrganization, "id"> & { id?: string };
+  organization: IOrganization;
 }

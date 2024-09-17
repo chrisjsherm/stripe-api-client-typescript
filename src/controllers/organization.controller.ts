@@ -117,12 +117,24 @@ async function createOrganization(req: Request, res: Response): Promise<void> {
   const organization: Organization = req.body;
 
   try {
-    const userInfo = decodeFusionAuthAccessToken(req);
-    const authUser = await getAuthUserById$(userInfo.id, authClient);
+    const authToken = decodeFusionAuthAccessToken(req);
+
+    const getUserResult = await authClient.retrieveUser(authToken.id);
+    if (getUserResult.exception) {
+      throw getUserResult.exception;
+    } else if (getUserResult.response.user === undefined) {
+      throw createError.NotFound(`Could not find user ${authToken.id}.`);
+    }
+
+    const authUser = getUserResult.response.user;
     const organizationId = authUser.data?.[
       ConstantConfiguration.fusionAuth_user_data_organizationId
     ] as string;
-    if (userInfo.organizationId !== undefined || organizationId !== undefined) {
+
+    if (
+      authToken.organizationId !== undefined ||
+      organizationId !== undefined
+    ) {
       throw createError.BadRequest(
         "User is already associated with an organization."
       );
@@ -134,7 +146,7 @@ async function createOrganization(req: Request, res: Response): Promise<void> {
       .save();
 
     try {
-      await authClient.patchUser(userInfo.id, {
+      await authClient.patchUser(authToken.id, {
         user: {
           data: {
             [ConstantConfiguration.fusionAuth_user_data_organizationId]:
@@ -146,6 +158,17 @@ async function createOrganization(req: Request, res: Response): Promise<void> {
       await createdOrganization.softRemove();
       throw err;
     }
+
+    // User who created the organization is its administrator.
+    await authClient.createGroupMembers({
+      members: {
+        [config.auth.groupId_organizationAdministrators]: [
+          {
+            userId: authToken.id,
+          },
+        ],
+      },
+    });
 
     res.status(StatusCodes.CREATED).json({
       data: {

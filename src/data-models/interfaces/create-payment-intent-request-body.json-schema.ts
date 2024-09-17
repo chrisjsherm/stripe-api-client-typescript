@@ -13,7 +13,7 @@ export const createPaymentIntentRequestBodyJsonSchema: JSONSchemaType<ICreatePay
       organization: {
         type: "object",
         properties: {
-          id: { type: "string", nullable: true },
+          id: { type: "string" },
           name: { type: "string" },
           mailingAddress: { $ref: "#/definitions/streetAddress" },
         },

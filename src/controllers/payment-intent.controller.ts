@@ -44,6 +44,18 @@ export async function createPaymentIntent(
 ): Promise<void> {
   try {
     const productId: string = req.body.productId;
+    const requestBodyOrganization: IOrganization = req.body.organization;
+
+    const token = decodeFusionAuthAccessToken(req);
+
+    if (!token.organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+    // Overwrite request body with authenticated user value to prevent funny business.
+    requestBodyOrganization.id = token.organizationId;
+
     if (productId === undefined) {
       throw createError.BadRequest("The request body is missing a product ID.");
     }
@@ -58,9 +70,11 @@ export async function createPaymentIntent(
       );
     }
 
-    const token = decodeFusionAuthAccessToken(req);
-    const userQueryResult = await getAuthUserById$(token.id, authClient);
-
+    const userQueryResult = await getAuthUserById$(
+      token.id,
+      token.organizationId,
+      authClient
+    );
     let customerId: string | undefined =
       userQueryResult.data?.[
         ConstantConfiguration.fusionAuth_user_data_stripeCustomerId
@@ -70,49 +84,28 @@ export async function createPaymentIntent(
       customerId = customer.id;
       await associateUserWithCustomer$(token.id, customer.id, authClient);
     }
-
-    const organization: IOrganization = req.body.organization;
-    let savedOrganizationId: string | undefined =
-      userQueryResult.data?.[
-        ConstantConfiguration.fusionAuth_user_data_organizationId
-      ];
-    if (savedOrganizationId && savedOrganizationId !== organization.id) {
-      throw createError.Forbidden(
-        "The organization ID in the request body does not match the " +
-          "organization associated with your account."
-      );
-    }
-
-    // Create the organization or make updates to an existing one, if necessary.
     const organizationRepository = AppDataSource.getRepository(Organization);
-    const upsertResult = await organizationRepository.upsert(organization, {
-      conflictPaths: ["id"],
-      skipUpdateIfNoValuesChanged: true,
+    const existingOrganization = await organizationRepository.findOneOrFail({
+      where: { id: token.organizationId },
     });
 
-    if (savedOrganizationId == null) {
-      // Associate newly created organization with the user.
-      savedOrganizationId = upsertResult.identifiers[0].id;
-      await authClient.patchUser(token.id, {
-        user: {
-          data: {
-            [ConstantConfiguration.fusionAuth_user_data_organizationId]:
-              savedOrganizationId,
-          },
-        },
-      });
-
-      // User who created the organization is its administrator.
-      await authClient.createGroupMembers({
-        members: {
-          [config.auth.groupId_organizationAdministrators]: [
-            {
-              userId: token.id,
-            },
-          ],
-        },
-      });
-    }
+    // Make updates based on request body.
+    existingOrganization.name = requestBodyOrganization.name;
+    existingOrganization.mailingAddress.city =
+      requestBodyOrganization.mailingAddress.city;
+    existingOrganization.mailingAddress.country =
+      requestBodyOrganization.mailingAddress.country;
+    existingOrganization.mailingAddress.postalCode =
+      requestBodyOrganization.mailingAddress.postalCode;
+    existingOrganization.mailingAddress.state =
+      requestBodyOrganization.mailingAddress.state;
+    existingOrganization.mailingAddress.street1 =
+      requestBodyOrganization.mailingAddress.street1;
+    existingOrganization.mailingAddress.street2 =
+      requestBodyOrganization.mailingAddress.street2 ?? null;
+    existingOrganization.mailingAddress.streetAddressType =
+      requestBodyOrganization.mailingAddress.streetAddressType;
+    await existingOrganization.save();
 
     const params: Stripe.PaymentIntentCreateParams = {
       amount: product.priceInBaseUnits,
@@ -125,21 +118,21 @@ export async function createPaymentIntent(
       metadata: {
         [ConstantConfiguration.stripe_paymentIntent_metadata_userId]: token.id,
         [ConstantConfiguration.stripe_paymentIntent_metadata_organizationId]:
-          savedOrganizationId!,
+          existingOrganization.id,
         [ConstantConfiguration.stripe_paymentIntent_metadata_productIdsCsv]:
           product.id,
       },
       receipt_email: token.email,
       shipping: {
         address: {
-          city: organization.mailingAddress.city,
-          country: organization.mailingAddress.country,
-          line1: organization.mailingAddress.street1,
-          line2: organization.mailingAddress.street2 ?? undefined,
-          postal_code: organization.mailingAddress.postalCode,
-          state: organization.mailingAddress.state,
+          city: requestBodyOrganization.mailingAddress.city,
+          country: requestBodyOrganization.mailingAddress.country,
+          line1: requestBodyOrganization.mailingAddress.street1,
+          line2: requestBodyOrganization.mailingAddress.street2 ?? undefined,
+          postal_code: requestBodyOrganization.mailingAddress.postalCode,
+          state: requestBodyOrganization.mailingAddress.state,
         },
-        name: organization.name,
+        name: requestBodyOrganization.name,
       },
       statement_descriptor_suffix: product.statementDescriptorSuffix,
     };

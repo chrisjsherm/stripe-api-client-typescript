@@ -13,7 +13,7 @@ export class BotulinumToxinPattern extends CoreEntity {
   @Column({ type: "varchar" })
   name: string;
 
-  @Column({ type: "jsonb" })
+  @Column({ type: "jsonb", update: false })
   locations: ICenteredCoordinate[];
 
   @ManyToOne(() => Organization, { nullable: false })

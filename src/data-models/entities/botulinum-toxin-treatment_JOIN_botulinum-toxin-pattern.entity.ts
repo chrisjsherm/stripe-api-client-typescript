@@ -1,8 +1,5 @@
 import { Column, Entity, ManyToOne, Relation } from "typeorm";
-import {
-  BotulinumToxinPattern,
-  IBotulinumToxinPatternViewModel,
-} from "./botulinum-toxin-pattern.entity";
+import { BotulinumToxinPattern } from "./botulinum-toxin-pattern.entity";
 import { BotulinumToxinTreatment } from "./botulinum-toxin-treatment.entity";
 import { BotulinumToxin, IBotulinumToxin } from "./botulinum-toxin.entity";
 import { CoreEntity } from "./core-entity.model";
@@ -57,9 +54,10 @@ export interface IBotulinumToxinTreatmentPatternViewModelCreate {
  * View model for reading the treatment-pattern relationship.
  */
 export interface IBotulinumToxinTreatmentPatternViewModelRead {
+  id: string;
+  name: string;
   diluentMl: number;
   priceChargedPerToxinUnitInBaseCurrencyUnits: number;
   product: Pick<IBotulinumToxin, "id" | "name">;
-  pattern: Pick<IBotulinumToxinPatternViewModel, "id" | "name">;
   toxinUnits: number;
 }

@@ -2,6 +2,8 @@
  * Constant configuration values that are not intended to be configurable.
  */
 export const ConstantConfiguration = {
+  currencyCodeDefault: "USD",
+
   fusionAuth_cookie_accessToken: "app.at",
   fusionAuth_cookiePrefix_knownDevice: "fusionauth.known-device.",
   fusionAuth_jwksRoute: "/.well-known/jwks.json",

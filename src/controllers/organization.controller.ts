@@ -740,11 +740,12 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
             patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits *
             patternAssociation.toxinUnits;
           return {
+            id: pattern.id,
             diluentMl: patternAssociation.diluentMl,
+            name: pattern.name,
             priceChargedPerToxinUnitInBaseCurrencyUnits:
               patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits,
             product: { id: product.id, name: product.name },
-            pattern: { id: pattern.id, name: pattern.name },
             toxinUnits: patternAssociation.toxinUnits,
           };
         }
@@ -851,11 +852,12 @@ async function getToxinTreatmentById(
           patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits *
           patternAssociation.toxinUnits;
         return {
+          id: pattern.id,
           diluentMl: patternAssociation.diluentMl,
           priceChargedPerToxinUnitInBaseCurrencyUnits:
             patternAssociation.priceChargedPerToxinUnitInBaseCurrencyUnits,
           product: { id: product.id, name: product.name },
-          pattern: { id: pattern.id, name: pattern.name },
+          name: pattern.name,
           toxinUnits: patternAssociation.toxinUnits,
         };
       }
@@ -876,6 +878,7 @@ async function getToxinTreatmentById(
           firstName: clinician.firstName,
           lastName: clinician.lastName,
         },
+        currencyCode: ConstantConfiguration.currencyCodeDefault,
         treatmentPatterns,
         totalPriceChargedInBaseCurrencyUnits: totalPrice,
       },

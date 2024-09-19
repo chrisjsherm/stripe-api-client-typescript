@@ -347,6 +347,79 @@ docker compose --profile prod --profile debug down
     docker-compose logs -f # Or: docker-compose logs <service-name>
     ```
 
+### Deploy application updates
+
+> Warning: this should not be done with users active
+
+1. Update package.json and .env.production.remote with the new version.
+
+2. On your <u>local machine</u>, build the web API Docker image:
+
+   ```shell
+   docker build -t medspaah:version .
+   ```
+
+3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
+
+4. Run the NPM build task for the UI repository and copy files to EC2:
+
+   ```shell
+   sh ../ng-med-spa/deploy-to-aws.sh
+   ```
+
+5. From your <u>local machine</u>, copy files to the instance. The .pem file is
+   the key pair you created and added to EC2 via the AWS console. The key pair must be in the same region as your CloudFormation stack.
+
+   ```shell
+   printf "%s" "EC2 IP address: "
+   read ec2Ip
+
+   scp -i ~/.ssh/aws-ec2.pem -rp .fusion-auth ec2-user@${ec2Ip}:/home/ec2-user
+
+   scp -i ~/.ssh/aws-ec2.pem docker-compose.yml ec2-user@${ec2Ip}:/home/ec2-user
+
+   scp -i ~/.ssh/aws-ec2.pem .env ec2-user@${ec2Ip}:/home/ec2-user
+
+   scp -i ~/.ssh/aws-ec2.pem .env.production.remote ec2-user@${ec2Ip}:/home/ec2-user
+
+   scp -i ~/.ssh/aws-ec2.pem -rp nginx ec2-user@${ec2Ip}:/home/ec2-user
+   ```
+
+6. SSH into the EC2 instance:
+
+   ```shell
+   ssh -i ~/.ssh/aws-ec2.pem ec2-user@${ec2Ip}
+   ```
+
+7. On the <u>EC2 instance</u>, pull the image from ECR.
+
+   ```shell
+   printf "%s" "AWS region: "
+   read region
+
+   printf "%s" "AWS account ID: "
+   read accountId
+
+   printf "%s" "ECR image name: "
+   read imageName
+
+   aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${region}.amazonaws.com;
+   ```
+
+8. Update the Docker services:
+
+   ```shell
+   # See the file combined with environment variables.
+   docker-compose --env-file .env --env-file .env.production.remote \
+     --profile prod config
+
+   docker-compose --env-file .env --env-file .env.production.remote --profile pull
+   docker-compose --env-file .env --env-file .env.production.remote --profile up -d
+   docker-compose logs -f # Or: docker-compose logs <service-name>
+   ```
+
+9. Clear Cloudflare cache
+
 #### Update the stack
 
 Update the stack in a single step:

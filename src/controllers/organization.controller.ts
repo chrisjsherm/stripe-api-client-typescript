@@ -414,7 +414,7 @@ async function getToxins(req: Request, res: Response): Promise<void> {
 async function getUserOrganization(req: Request, res: Response): Promise<void> {
   try {
     const userInfo = decodeFusionAuthAccessToken(req);
-    if (userInfo.organizationId === undefined) {
+    if (!userInfo.organizationId) {
       res.json({
         data: null,
       });

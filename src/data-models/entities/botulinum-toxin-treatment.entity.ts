@@ -6,7 +6,7 @@ import {
   IBotulinumToxinTreatmentPatternViewModelRead,
 } from "./botulinum-toxin-treatment_JOIN_botulinum-toxin-pattern.entity";
 import { CoreEntity } from "./core-entity.model";
-import { Organization } from "./organization.entity";
+import { PhysicalLocation } from "./physical-location.entity";
 
 @Entity()
 export class BotulinumToxinTreatment extends CoreEntity {
@@ -20,17 +20,18 @@ export class BotulinumToxinTreatment extends CoreEntity {
   @Column({ type: "uuid" })
   clinicianId: string;
 
-  @ManyToOne(() => Organization, { nullable: false })
-  organization: Relation<Organization>;
+  @ManyToOne(() => PhysicalLocation, { nullable: false })
+  physicalLocation: Relation<PhysicalLocation>;
 
   @Column({ type: "uuid" })
-  organizationId: string;
+  physicalLocationId: string;
 }
 
 /**
  * View model for creating a treatment.
  */
 export interface IBotulinumToxinTreatmentViewModelCreate {
+  physicalLocationId: string;
   treatmentPatterns: IBotulinumToxinTreatmentPatternViewModelCreate[];
 }
 
@@ -40,6 +41,9 @@ export interface IBotulinumToxinTreatmentViewModelCreate {
 export const schema: JSONSchemaType<IBotulinumToxinTreatmentViewModelCreate> = {
   type: "object",
   properties: {
+    physicalLocationId: {
+      type: "string",
+    },
     treatmentPatterns: {
       type: "array",
       items: {
@@ -64,7 +68,7 @@ export const schema: JSONSchemaType<IBotulinumToxinTreatmentViewModelCreate> = {
       },
     },
   },
-  required: ["treatmentPatterns"],
+  required: ["physicalLocationId", "treatmentPatterns"],
   additionalProperties: false,
 };
 

@@ -29,6 +29,7 @@ import {
 } from "../data-models/entities/botulinum-toxin.entity";
 import { BotulinumToxin_JOIN_BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin_JOIN_botulinum-toxin-pattern.entity";
 import { Organization } from "../data-models/entities/organization.entity";
+import { PhysicalLocation } from "../data-models/entities/physical-location.entity";
 import { createOrganizationJsonSchema } from "../data-models/interfaces/organization-create.json-schema";
 import { AppDataSource } from "../db/data-source";
 import { environment } from "../environment/environment";
@@ -592,11 +593,19 @@ async function createToxinTreatment(
       );
     }
 
+    const locationRepo = AppDataSource.getRepository(PhysicalLocation);
+    await locationRepo.findOneOrFail({
+      where: {
+        organizationId,
+        id: treatment.physicalLocationId,
+      },
+    });
+
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
     const savedTreatment = await treatmentRepo
       .create({
         clinicianId: userId,
-        organizationId,
+        physicalLocationId: treatment.physicalLocationId,
       })
       .save();
     const relationRepo = AppDataSource.getRepository(
@@ -647,7 +656,9 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
 
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
     const whereClause: FindOptionsWhere<BotulinumToxinTreatment> = {
-      organizationId,
+      physicalLocation: {
+        organizationId,
+      },
     };
     if (typeof clinicianIdFilter === "string") {
       whereClause.clinicianId = clinicianIdFilter;
@@ -799,7 +810,9 @@ async function getToxinTreatmentById(
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
     const whereClause: FindOptionsWhere<BotulinumToxinTreatment> = {
       id: treatmentId,
-      organizationId,
+      physicalLocation: {
+        organizationId,
+      },
     };
     const treatment = await treatmentRepo.findOneOrFail({
       where: whereClause,

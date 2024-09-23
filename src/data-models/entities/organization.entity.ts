@@ -1,7 +1,8 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, OneToMany } from "typeorm";
 import { StreetAddress } from "../classes/street-address.class";
 import { IOrganization } from "../interfaces/organization.interface";
 import { CoreEntity } from "./core-entity.model";
+import { PhysicalLocation } from "./physical-location.entity";
 
 /**
  * Organization database entity.
@@ -13,4 +14,7 @@ export class Organization extends CoreEntity implements IOrganization {
 
   @Column(() => StreetAddress)
   mailingAddress: StreetAddress;
+
+  @OneToMany(() => PhysicalLocation, (location) => location.organization)
+  physicalLocations: PhysicalLocation[];
 }

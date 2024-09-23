@@ -9,6 +9,7 @@ import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import { organizationsRouter } from "./controllers/organization.controller";
 import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
+import { physicalLocationsRouter } from "./controllers/physical-locations.controller";
 import { productSubscriptionsRouter } from "./controllers/product-subscriptions.controller";
 import { productsRouter } from "./controllers/products.controller";
 import { usersRouter } from "./controllers/users.controller";
@@ -106,8 +107,11 @@ export async function startServer(dataSource: DataSource): Promise<void> {
    */
   app.use(verifyApiJwt$);
 
-  // Organization API
+  // Organizations API
   app.use("/organizations", organizationsRouter);
+
+  // Locations API
+  app.use("/organizations/me/physical-locations", physicalLocationsRouter);
 
   // Payment Intents API
   app.use("/payment-intent", hasAnyRole([]), paymentIntentsRouter);

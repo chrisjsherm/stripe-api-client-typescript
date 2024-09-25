@@ -52,7 +52,7 @@ organizationsRouter.post(
   createOrganization
 );
 
-organizationsRouter.get("/me", hasAnyRole([]), getUserOrganization);
+organizationsRouter.get("/me", hasAnyRole([]), getOrganization);
 
 organizationsRouter.get("/me/botulinum-toxins", hasAnyRole([]), getToxins);
 organizationsRouter.post(
@@ -412,7 +412,7 @@ async function getToxins(req: Request, res: Response): Promise<void> {
  * @param req HTTP request
  * @param res HTTP response
  */
-async function getUserOrganization(req: Request, res: Response): Promise<void> {
+async function getOrganization(req: Request, res: Response): Promise<void> {
   try {
     const userInfo = decodeFusionAuthAccessToken(req);
     if (!userInfo.organizationId) {
@@ -423,16 +423,36 @@ async function getUserOrganization(req: Request, res: Response): Promise<void> {
     }
 
     const organizationRepo = AppDataSource.getRepository(Organization);
-    const organization = await organizationRepo
-      .createQueryBuilder("organization")
-      .where("organization.id = :id", { id: userInfo.organizationId })
-      .getOne();
-
-    if (organization === null) {
-      throw createError.NotFound(
-        `Organization with id "${userInfo.organizationId}" was not found.`
-      );
-    }
+    const organization = await organizationRepo.findOneOrFail({
+      where: { id: userInfo.organizationId },
+      relations: {
+        physicalLocations: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        mailingAddress: {
+          street1: true,
+          street2: true,
+          city: true,
+          state: true,
+          postalCode: true,
+          country: true,
+        },
+        physicalLocations: {
+          id: true,
+          name: true,
+          physicalAddress: {
+            street1: true,
+            street2: true,
+            city: true,
+            state: true,
+            postalCode: true,
+            country: true,
+          },
+        },
+      },
+    });
 
     res.json({
       data: organization,

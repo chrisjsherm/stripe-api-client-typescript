@@ -28,7 +28,10 @@ import {
   botulinumToxinJsonSchema,
 } from "../data-models/entities/botulinum-toxin.entity";
 import { BotulinumToxin_JOIN_BotulinumToxinPattern } from "../data-models/entities/botulinum-toxin_JOIN_botulinum-toxin-pattern.entity";
-import { Organization } from "../data-models/entities/organization.entity";
+import {
+  Organization,
+  updateNameJsonSchema,
+} from "../data-models/entities/organization.entity";
 import { PhysicalLocation } from "../data-models/entities/physical-location.entity";
 import { createOrganizationJsonSchema } from "../data-models/interfaces/organization-create.json-schema";
 import { AppDataSource } from "../db/data-source";
@@ -45,14 +48,19 @@ import { ConstantConfiguration } from "../services/constant-configuration.servic
 
 export const organizationsRouter = Router();
 /** Routes */
+organizationsRouter.get("/me", hasAnyRole([]), getOrganization);
 organizationsRouter.post(
   "/",
   hasAnyRole([]),
   generateRequestBodyValidator(createOrganizationJsonSchema),
   createOrganization
 );
-
-organizationsRouter.get("/me", hasAnyRole([]), getOrganization);
+organizationsRouter.put(
+  "/me/name",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  generateRequestBodyValidator(updateNameJsonSchema),
+  updateName
+);
 
 organizationsRouter.get("/me/botulinum-toxins", hasAnyRole([]), getToxins);
 organizationsRouter.post(
@@ -113,6 +121,69 @@ organizationsRouter.get(
 
 const config = getEnvironmentConfiguration();
 const authClient = getFusionAuth(config);
+
+/**
+ * Update the organization name.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function updateName(req: Request, res: Response): Promise<void> {
+  const newName = req.body.name;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const repo = AppDataSource.getRepository(Organization);
+    const org = await repo.findOneOrFail({
+      where: {
+        id: organizationId,
+      },
+      relations: {
+        physicalLocations: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        mailingAddress: {
+          street1: true,
+          street2: true,
+          city: true,
+          state: true,
+          postalCode: true,
+          country: true,
+        },
+        physicalLocations: {
+          id: true,
+          name: true,
+          physicalAddress: {
+            street1: true,
+            street2: true,
+            city: true,
+            state: true,
+            postalCode: true,
+            country: true,
+          },
+        },
+      },
+    });
+    org.name = newName;
+    await org.save();
+
+    res.json({ data: org });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred updating the organization name.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
 
 /**
  * Create an organization entity

@@ -1,3 +1,4 @@
+import { JSONSchemaType } from "ajv";
 import { Column, Entity, OneToMany } from "typeorm";
 import { StreetAddress } from "../classes/street-address.class";
 import { IOrganization } from "../interfaces/organization.interface";
@@ -21,3 +22,20 @@ export class Organization extends CoreEntity implements IOrganization {
   })
   physicalLocations: PhysicalLocation[];
 }
+
+/**
+ * Validation schema for updating organization name.
+ */
+export const updateNameJsonSchema: JSONSchemaType<Pick<Organization, "name">> =
+  {
+    type: "object",
+    properties: {
+      name: {
+        type: "string",
+        minLength: 3,
+        maxLength: 128,
+      },
+    },
+    required: ["name"],
+    additionalProperties: false,
+  };

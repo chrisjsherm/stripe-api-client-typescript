@@ -10,7 +10,7 @@ export const createOrganizationJsonSchema: JSONSchemaType<
 > = {
   type: "object",
   properties: {
-    name: { type: "string", maxLength: 128 },
+    name: { type: "string", minLength: 3, maxLength: 128 },
     mailingAddress: { $ref: "#/definitions/streetAddress" },
     physicalLocations: {
       type: "array",

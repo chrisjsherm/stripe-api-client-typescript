@@ -9,12 +9,66 @@ import { hasAnyRole } from "../helpers/has-any-role.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 
 export const physicalLocationsRouter = Router();
+physicalLocationsRouter.delete(
+  "/:locationId",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  deleteLocationById
+);
 physicalLocationsRouter.get("/", hasAnyRole([]), getLocations);
 physicalLocationsRouter.get(
   "/:locationId",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   getLocationById
 );
+
+/**
+ * Delete location by ID.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function deleteLocationById(req: Request, res: Response): Promise<void> {
+  const locationId = req.params.locationId;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const locationRepo = AppDataSource.getRepository(PhysicalLocation);
+    const locationCount = await locationRepo.countBy({ organizationId });
+    if (locationCount < 2) {
+      throw createError.BadRequest("You cannot delete the last location.");
+    }
+
+    const location = await locationRepo.findOne({
+      where: {
+        organizationId,
+        id: locationId,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (location === null) {
+      throw createError.NotFound(
+        "The location you tried to delete does not exist."
+      );
+    }
+    await location.softRemove();
+
+    res.status(StatusCodes.OK);
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred deleting the location.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
 
 /**
  * Get location by ID.

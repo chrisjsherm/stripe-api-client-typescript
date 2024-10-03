@@ -1,12 +1,16 @@
 import { Request, Response, Router } from "express";
 import * as createError from "http-errors";
 import { StatusCodes } from "http-status-codes";
-import { PhysicalLocation } from "../data-models/entities/physical-location.entity";
+import {
+  createPhysicalLocationJsonSchema,
+  PhysicalLocation,
+} from "../data-models/entities/physical-location.entity";
 import { AppDataSource } from "../db/data-source";
 import { environment } from "../environment/environment";
 import { decodeFusionAuthAccessToken } from "../helpers/decode-fusion-auth-access-token.helper";
 import { hasAnyRole } from "../helpers/has-any-role.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
+import { generateRequestBodyValidator } from "../helpers/validate-request-body.middleware";
 
 export const physicalLocationsRouter = Router();
 physicalLocationsRouter.delete(
@@ -20,6 +24,45 @@ physicalLocationsRouter.get(
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   getLocationById
 );
+physicalLocationsRouter.post(
+  "/",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  generateRequestBodyValidator(createPhysicalLocationJsonSchema),
+  createLocation
+);
+
+/**
+ * Create a new location for the authenticated user's organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function createLocation(req: Request, res: Response): Promise<void> {
+  const location: Partial<PhysicalLocation> = req.body;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const locationRepo = AppDataSource.getRepository(PhysicalLocation);
+    const createdLocation = await locationRepo.save({
+      ...location,
+      organizationId,
+    });
+
+    res.json({ data: createdLocation });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred creating the location.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
 
 /**
  * Delete location by ID.
@@ -48,9 +91,7 @@ async function deleteLocationById(req: Request, res: Response): Promise<void> {
         organizationId,
         id: locationId,
       },
-      select: {
-        id: true,
-      },
+      select: { id: true },
     });
     if (location === null) {
       throw createError.NotFound(
@@ -59,7 +100,7 @@ async function deleteLocationById(req: Request, res: Response): Promise<void> {
     }
     await location.softRemove();
 
-    res.status(StatusCodes.OK);
+    res.status(StatusCodes.OK).send();
   } catch (err) {
     onErrorProcessingHttpRequest(
       err,

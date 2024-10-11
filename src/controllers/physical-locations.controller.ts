@@ -30,6 +30,11 @@ physicalLocationsRouter.post(
   generateRequestBodyValidator(createPhysicalLocationJsonSchema),
   createLocation
 );
+physicalLocationsRouter.put(
+  "/:locationId",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  updateLocationById
+);
 
 /**
  * Create a new location for the authenticated user's organization.
@@ -202,6 +207,48 @@ async function getLocations(req: Request, res: Response): Promise<void> {
     onErrorProcessingHttpRequest(
       err,
       "An error occurred retrieving locations.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Update location by ID.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function updateLocationById(req: Request, res: Response): Promise<void> {
+  const locationId = req.params.locationId;
+  const modifiedLocation: Pick<PhysicalLocation, "name" | "physicalAddress"> =
+    req.body;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const locationRepo = AppDataSource.getRepository(PhysicalLocation);
+    const location = await locationRepo.findOneOrFail({
+      where: {
+        organizationId,
+        id: locationId,
+      },
+    });
+    location.name = modifiedLocation.name;
+    location.physicalAddress = modifiedLocation.physicalAddress;
+    await location.save();
+
+    res.json({
+      data: modifiedLocation,
+    });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred updating the location.",
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

@@ -494,7 +494,7 @@ async function getOrganization(req: Request, res: Response): Promise<void> {
     }
 
     const organizationRepo = AppDataSource.getRepository(Organization);
-    const organization = await organizationRepo.findOneOrFail({
+    const organization = await organizationRepo.findOne({
       where: { id: userInfo.organizationId },
       relations: {
         physicalLocations: true,
@@ -509,6 +509,7 @@ async function getOrganization(req: Request, res: Response): Promise<void> {
           state: true,
           postalCode: true,
           country: true,
+          streetAddressType: true,
         },
         physicalLocations: {
           id: true,
@@ -520,6 +521,7 @@ async function getOrganization(req: Request, res: Response): Promise<void> {
             state: true,
             postalCode: true,
             country: true,
+            streetAddressType: true,
           },
         },
       },

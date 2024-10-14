@@ -115,7 +115,7 @@ To modify the data model:
 3. Import the migration to `./src/db/data-source.ts` and add it to the end of the
    `migrations` array.
 
-4. Run the migration:
+4. Run the migration (if running server has not already run automatically):
 
    ```
    npx typeorm-ts-node-commonjs migration:run -d ./src/db/data-source.ts

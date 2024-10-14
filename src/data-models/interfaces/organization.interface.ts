@@ -7,4 +7,5 @@ export interface IOrganization {
   id: string;
   name: string;
   mailingAddress: IStreetAddressable;
+  mailRecipientName?: string;
 }

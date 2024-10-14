@@ -16,6 +16,9 @@ export class Organization extends CoreEntity implements IOrganization {
   @Column(() => StreetAddress)
   mailingAddress: StreetAddress;
 
+  @Column({ type: "varchar", nullable: true })
+  mailRecipientName?: string;
+
   @OneToMany(() => PhysicalLocation, (location) => location.organization, {
     // Enable saving physical locations from the organization side of the relationship.
     cascade: true,

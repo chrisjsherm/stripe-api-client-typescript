@@ -15,6 +15,7 @@ import { Treatment1725565055175 } from "./migrations/1725565055175-Treatment";
 import { TreatmentJOINPattern1725632907196 } from "./migrations/1725632907196-treatment-JOIN-pattern";
 import { TreatmentClinicianId1725889970874 } from "./migrations/1725889970874-TreatmentClinicianId";
 import { TreatmentLocation1727104118401 } from "./migrations/1727104118401-treatment-location";
+import { MailRecipientName1728920227286 } from "./migrations/1728920227286-mail-recipient-name";
 
 const { db: config } = getEnvironmentConfiguration();
 
@@ -49,6 +50,7 @@ export const AppDataSource = new DataSource({
     TreatmentJOINPattern1725632907196,
     TreatmentClinicianId1725889970874,
     TreatmentLocation1727104118401,
+    MailRecipientName1728920227286,
   ],
   migrationsRun: true,
 });

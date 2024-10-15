@@ -32,7 +32,11 @@ import {
   Organization,
   updateNameJsonSchema,
 } from "../data-models/entities/organization.entity";
-import { PhysicalLocation } from "../data-models/entities/physical-location.entity";
+import {
+  PhysicalLocation,
+  createPhysicalLocationJsonSchema,
+} from "../data-models/entities/physical-location.entity";
+import { StreetAddressType } from "../data-models/enums/street-address-type.enum";
 import { createOrganizationJsonSchema } from "../data-models/interfaces/organization-create.json-schema";
 import { AppDataSource } from "../db/data-source";
 import { environment } from "../environment/environment";
@@ -60,6 +64,12 @@ organizationsRouter.put(
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   generateRequestBodyValidator(updateNameJsonSchema),
   updateName
+);
+organizationsRouter.put(
+  "/me/mailing-address",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  generateRequestBodyValidator(createPhysicalLocationJsonSchema),
+  updateMailingAddress
 );
 
 organizationsRouter.get("/me/botulinum-toxins", hasAnyRole([]), getToxins);
@@ -121,6 +131,49 @@ organizationsRouter.get(
 
 const config = getEnvironmentConfiguration();
 const authClient = getFusionAuth(config);
+
+/**
+ * Update the organization's mailing address.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function updateMailingAddress(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const location: Pick<PhysicalLocation, "name" | "physicalAddress"> = req.body;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your user account is not associated with an organization."
+      );
+    }
+
+    const repo = AppDataSource.getRepository(Organization);
+    const org = await repo.findOneOrFail({
+      where: {
+        id: organizationId,
+      },
+    });
+    org.mailRecipientName = location.name;
+    org.mailingAddress = {
+      ...location.physicalAddress,
+      streetAddressType: StreetAddressType.Mailing,
+    };
+    await org.save();
+
+    res.json({ data: location });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      "An error occurred updating the mailing address.",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
 
 /**
  * Update the organization name.

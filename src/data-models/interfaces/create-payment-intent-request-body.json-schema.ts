@@ -15,6 +15,12 @@ export const createPaymentIntentRequestBodyJsonSchema: JSONSchemaType<ICreatePay
         properties: {
           id: { type: "string" },
           name: { type: "string" },
+          mailRecipientName: {
+            type: "string",
+            minLength: 3,
+            maxLength: 128,
+            nullable: true,
+          },
           mailingAddress: { $ref: "#/definitions/streetAddress" },
         },
         required: ["name", "mailingAddress"],

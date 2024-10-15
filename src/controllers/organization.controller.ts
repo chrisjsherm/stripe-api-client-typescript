@@ -202,6 +202,7 @@ async function updateName(req: Request, res: Response): Promise<void> {
       select: {
         id: true,
         name: true,
+        mailRecipientName: true,
         mailingAddress: {
           street1: true,
           street2: true,
@@ -564,6 +565,7 @@ async function getOrganization(req: Request, res: Response): Promise<void> {
           country: true,
           streetAddressType: true,
         },
+        mailRecipientName: true,
         physicalLocations: {
           id: true,
           name: true,

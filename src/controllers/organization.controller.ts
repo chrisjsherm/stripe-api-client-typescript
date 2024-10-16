@@ -956,16 +956,33 @@ async function getToxinTreatmentById(
     }
 
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
-    const whereClause: FindOptionsWhere<BotulinumToxinTreatment> = {
-      id: treatmentId,
-      physicalLocation: {
-        organizationId,
-      },
-    };
     const treatment = await treatmentRepo.findOneOrFail({
-      where: whereClause,
+      where: {
+        id: treatmentId,
+        physicalLocation: {
+          organizationId,
+        },
+      },
       relations: {
         patterns: true,
+        physicalLocation: true,
+      },
+      select: {
+        id: true,
+        createdDateTime: true,
+        clinicianId: true,
+        physicalLocation: {
+          id: true,
+          name: true,
+          physicalAddress: {
+            street1: true,
+            street2: true,
+            city: true,
+            state: true,
+            postalCode: true,
+            country: true,
+          },
+        },
       },
     });
 
@@ -1040,6 +1057,7 @@ async function getToxinTreatmentById(
           lastName: clinician.lastName,
         },
         currencyCode: ConstantConfiguration.currencyCodeDefault,
+        physicalLocation: treatment.physicalLocation,
         treatmentPatterns,
         totalPriceChargedInBaseCurrencyUnits: totalPrice,
       },

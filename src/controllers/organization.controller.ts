@@ -47,8 +47,10 @@ import { getEnvironmentConfiguration } from "../helpers/get-environment-configur
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { hasAnyRole } from "../helpers/has-any-role.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
+import { generateQueryParamValidator } from "../helpers/validate-query-params.middleware";
 import { generateRequestBodyValidator } from "../helpers/validate-request-body.middleware";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
+import { getToxinTreatmentsQueryParamsJsonSchema } from "./ajv/get-toxin-treatments-query-params.schema";
 
 export const organizationsRouter = Router();
 /** Routes */
@@ -115,6 +117,7 @@ organizationsRouter.post(
 organizationsRouter.get(
   "/me/botulinum-toxin-treatments",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
+  generateQueryParamValidator(getToxinTreatmentsQueryParamsJsonSchema),
   getToxinTreatments
 );
 organizationsRouter.get(

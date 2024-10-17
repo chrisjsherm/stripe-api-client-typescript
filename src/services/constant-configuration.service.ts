@@ -18,4 +18,5 @@ export const ConstantConfiguration = {
   queryParam_clinicianId: "clinicianId",
   queryParam_dateStart: "dateStart",
   queryParam_dateEnd: "dateEnd",
+  queryParam_locationId: "locationId",
 };

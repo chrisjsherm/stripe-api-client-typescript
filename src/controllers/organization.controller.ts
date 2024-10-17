@@ -797,6 +797,9 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
     req.query[ConstantConfiguration.queryParam_clinicianId];
   const dateStartFilter = req.query[ConstantConfiguration.queryParam_dateStart];
   const dateEndFilter = req.query[ConstantConfiguration.queryParam_dateEnd];
+  const locationIdFilter =
+    req.query[ConstantConfiguration.queryParam_locationId];
+
   try {
     const { organizationId } = decodeFusionAuthAccessToken(req);
     if (!organizationId) {
@@ -833,6 +836,9 @@ async function getToxinTreatments(req: Request, res: Response): Promise<void> {
       } else if (typeof dateEndFilter === "string") {
         whereClause.createdDateTime = LessThanOrEqual(new Date(dateEndFilter));
       }
+    }
+    if (typeof locationIdFilter === "string") {
+      whereClause.physicalLocationId = locationIdFilter;
     }
     const treatments = await treatmentRepo.find({
       where: whereClause,

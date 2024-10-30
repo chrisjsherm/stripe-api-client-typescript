@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create VPC w/ public and private subnets
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: "10.0.0.0/22"
+    Description: CIDR block for the VPC.
+  PublicSubnet1Cidr:
+    Type: String
+    Default: "10.0.0.0/24"
+    Description: CIDR block for the first public subnet.
+  PublicSubnet2Cidr:
+    Type: String
+    Default: "10.0.1.0/24"
+    Description: CIDR block for the second public subnet.
+  PrivateSubnet1Cidr:
+    Type: String
+    Default: "10.0.2.0/24"
+    Description: CIDR block for the first private subnet.
+  PrivateSubnet2Cidr:
+    Type: String
+    Default: "10.0.3.0/24"
+    Description: CIDR block for the second private subnet.
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: MedspaahVpc
+
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: MedspaahInternetGateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Route Table for Public Subnets
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: MedspaahPublicRouteTable
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGateway
+
+  # Public Subnet 1
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1Cidr
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: MedspaahPublicSubnet1
+
+  # Public Subnet 2
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2Cidr
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: MedspaahPublicSubnet2
+
+  # Associate Public Subnets with Route Table
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # Private Subnet 1
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet1Cidr
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: MedspaahPrivateSubnet1
+
+  # Private Subnet 2
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet2Cidr
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: MedspaahPrivateSubnet2
+
+  # NAT Gateway for Private Subnets (optional, required for internet access)
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: AttachGateway
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: MedspaahNatGateway
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: MedspaahPrivateRouteTable
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NatGateway
+
+  # Associate Private Subnets with Private Route Table
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+Outputs:
+  VPCId:
+    Description: ID of the VPC
+    Value: !Ref VPC
+  PublicSubnet1Id:
+    Description: ID of the first public subnet
+    Value: !Ref PublicSubnet1
+  PublicSubnet2Id:
+    Description: ID of the second public subnet
+    Value: !Ref PublicSubnet2
+  PrivateSubnet1Id:
+    Description: ID of the first private subnet
+    Value: !Ref PrivateSubnet1
+  PrivateSubnet2Id:
+    Description: ID of the second private subnet
+    Value: !Ref PrivateSubnet2

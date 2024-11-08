@@ -12,6 +12,7 @@ import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
 import { physicalLocationsRouter } from "./controllers/physical-locations.controller";
 import { productSubscriptionsRouter } from "./controllers/product-subscriptions.controller";
 import { productsRouter } from "./controllers/products.controller";
+import { toxinTreatmentsRouter } from "./controllers/toxin-treatments.controller";
 import { toxinsRouter } from "./controllers/toxins.controller";
 import { usersRouter } from "./controllers/users.controller";
 import { contactFormJsonSchema } from "./data-models/interfaces/contact-form.interface";
@@ -122,6 +123,12 @@ export async function startServer(dataSource: DataSource): Promise<void> {
 
   // Toxins API.
   app.use("/organizations/me/botulinum-toxins", toxinsRouter);
+
+  // Toxin Treatments API.
+  app.use(
+    "/organizations/me/botulinum-toxin-treatments",
+    toxinTreatmentsRouter
+  );
 
   // Users API
   app.use("/users", usersRouter);

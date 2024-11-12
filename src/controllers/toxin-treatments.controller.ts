@@ -34,19 +34,15 @@ import { getToxinTreatmentsQueryParamsJsonSchema } from "./ajv/get-toxin-treatme
 
 export const toxinTreatmentsRouter = Router();
 
-toxinTreatmentsRouter.post(
-  "/me/botulinum-toxin-treatments",
-  hasAnyRole([]),
-  createToxinTreatment
-);
+toxinTreatmentsRouter.post("/", hasAnyRole([]), createToxinTreatment);
 toxinTreatmentsRouter.get(
-  "/me/botulinum-toxin-treatments",
+  "/",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   generateQueryParamValidator(getToxinTreatmentsQueryParamsJsonSchema),
   getToxinTreatments
 );
 toxinTreatmentsRouter.get(
-  "/me/botulinum-toxin-treatments/:treatmentId",
+  "/:treatmentId",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   getToxinTreatmentById
 );

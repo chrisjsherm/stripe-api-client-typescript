@@ -8,6 +8,7 @@ export interface IBuildConfiguration {
     containerUrl: string;
     externalUrl: string;
     groupId_organizationAdministrators: string;
+    groupId_patients: string;
     groupId_subscriptionBusinessAnnual: string;
     groupId_subscriptionStartupAnnual: string;
     role_btxAssistant_readWrite: string;

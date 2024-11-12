@@ -33,6 +33,7 @@ throwIfEnvNotSet(
   "AUTH_GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID",
   "AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID",
   "AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS",
+  "AUTH_GROUP_ID__PATIENTS",
   "AUTH_GROUP_ID__SUBSCRIPTION_BUSINESS_ANNUAL_REV_0",
   "AUTH_GROUP_ID__SUBSCRIPTION_STARTUP_ANNUAL_REV_0",
   "AUTH_LOGOUT_URL",
@@ -86,6 +87,7 @@ const sharedConfiguration: Pick<
     containerUrl: process.env.AUTH_CONTAINER_URL!,
     groupId_organizationAdministrators:
       process.env.AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS!,
+    groupId_patients: process.env.AUTH_GROUP_ID__PATIENTS!,
     groupId_subscriptionBusinessAnnual:
       process.env.AUTH_GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID!,
     groupId_subscriptionStartupAnnual:

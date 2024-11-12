@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "PgAdminAccessIP",
+    "ParameterValue": "38.34.110.70/32"
+  },
+  {
+    "ParameterKey": "PGAdminEmail",
+    "ParameterValue": "admin@medspaah.com"
+  },
+  {
+    "ParameterKey": "PGAdminPassword",
+    "ParameterValue": "h51ckD37JBks3tzeEdYw"
+  }
+]

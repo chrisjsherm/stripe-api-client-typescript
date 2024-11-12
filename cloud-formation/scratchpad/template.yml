@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ECS Fargate services for Medspaah application with existing VPC and subnet resources
+
+Parameters:
+  PgAdminAccessIP:
+    Type: String
+    Description: Your IP address for accessing PGAdmin (e.g., 203.0.113.5/32)
+  PGAdminEmail:
+    Type: String
+    Description: PGAdmin default user email
+  PGAdminPassword:
+    Type: String
+    Description: PGAdmin default user password
+  PGAdminPort:
+    Type: String
+    Description: Access port for pgAdmin
+    Default: 5050
+
+Resources:
+  ServiceDiscoveryNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties: 
+      Name: medspaah.internal
+      Vpc: !ImportValue VPCId
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: MedspaahCluster
+      ServiceConnectDefaults:
+        Namespace: !GetAtt ServiceDiscoveryNamespace.Arn
+
+  PgAdminSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for PGAdmin access
+      VpcId: !ImportValue VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref PGAdminPort
+          ToPort: !Ref PGAdminPort
+          CidrIp: !Ref PgAdminAccessIP  # Restrict access to specific IP
+
+  SharedFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+      PerformanceMode: generalPurpose
+      FileSystemTags:
+        - Key: Name
+          Value: MedspaahSharedEFS
+
+  PGAdminTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: pgadmin-task
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: 256
+      Memory: 512
+      ContainerDefinitions:
+        - Name: pgadmin
+          Image: "dpage/pgadmin4:8.8"
+          Environment:
+            - Name: PGADMIN_DEFAULT_EMAIL
+              Value: !Ref PGAdminEmail
+            - Name: PGADMIN_DEFAULT_PASSWORD
+              Value: !Ref PGAdminPassword
+          PortMappings:
+            - Name: pgadmin
+              ContainerPort: !Ref PGAdminPort
+              HostPort: !Ref PGAdminPort
+
+  PGAdminService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref PGAdminTaskDefinition
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !ImportValue PublicSubnet1Id
+            - !ImportValue PublicSubnet2Id
+          SecurityGroups:
+            - !Ref PgAdminSecurityGroup
+          AssignPublicIp: ENABLED
+      DesiredCount: 1
+      ServiceConnectConfiguration:
+        Enabled: true
+        Services:
+          - PortName: pgadmin
+
+Outputs:
+  ClusterName:
+    Value: !Ref ECSCluster
+  PGAdminServiceName:
+    Value: !Ref PGAdminService

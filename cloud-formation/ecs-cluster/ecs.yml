@@ -1,0 +1,527 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ECS Fargate services for Medspaah application with existing VPC and subnet resources
+
+Parameters:
+  DBUsername:
+    Type: String
+    Description: Database username
+  DBPassword:
+    Type: String
+    Description: Database password
+  DBName:
+    Type: String
+    Description: Database name
+  PGAdminEmail:
+    Type: String
+    Description: PGAdmin default user email
+  PGAdminPassword:
+    Type: String
+    Description: PGAdmin default user password
+  PgAdminAccessIP:
+    Type: String
+    Description: Your IP address for accessing PGAdmin (e.g., 203.0.113.5/32)
+  OpenSearchPassword:
+    Type: String
+    Description: OpenSearch initial admin password
+  WebApiImage:
+    Type: String
+    Description: Web API container image URI
+  AuthAdminEmail:
+    Type: String
+    Description: Admin email for FusionAuth
+  AuthAdminPassword:
+    Type: String
+    Description: Admin password for FusionAuth
+  AllowedOrigin:
+    Type: String
+    Description: Allowed origin for CORS
+  ApiKeyAppServer:
+    Type: String
+    Description: API key for the application server
+  ApiKeySuperAdmin:
+    Type: String
+    Description: API key for the super admin
+  ApplicationId:
+    Type: String
+    Description: Application ID
+  ApplicationName:
+    Type: String
+    Description: Application name
+  AsymmetricKeyId:
+    Type: String
+    Description: Asymmetric key ID
+  ClientSecret:
+    Type: String
+    Description: Client secret
+  AuthDatabaseHost:
+    Type: String
+    Description: The hostname of the PostgreSQL database
+  AuthDatabaseName:
+    Type: String
+    Default: fusionauth
+    Description: PostgreSQL database name
+  AuthDatabasePort:
+    Type: String
+    Default: 5432
+    Description: PostgreSQL database port
+  AuthDatabaseUser:
+    Type: String
+    Description: PostgreSQL database username
+  DefaultTenantId:
+    Type: String
+    Description: Default tenant ID
+  EmailHost:
+    Type: String
+    Description: Email server host
+  EmailPassword:
+    Type: String
+    Description: Email server password
+  EmailPort:
+    Type: Number
+    Default: 587
+    Description: Email server port
+  EmailTemplateFromAddress:
+    Type: String
+    Description: Email template from address
+  EmailTemplateFromName:
+    Type: String
+    Description: Email template from name
+  ExternalUrl:
+    Type: String
+    Description: External URL for the FusionAuth application
+  AuthKickstartFile:
+    Type: String
+    Description: Kickstart file for FusionAuth
+  AuthAppMemory:
+    Type: String
+    Description: Memory for FusionAuth application
+  AuthAppRuntimeMode:
+    Type: String
+    Description: Runtime mode for FusionAuth application
+  GroupOrganizationAdministratorsId:
+    Type: String
+    Description: Group organization administrators ID
+  GroupSubscriptionBusinessAnnualId:
+    Type: String
+    Description: Group subscription business annual ID
+  GroupSubscriptionStartupAnnualId:
+    Type: String
+    Description: Group subscription startup annual ID
+  LogoutUrl:
+    Type: String
+    Description: Logout URL
+  BtxAssistantReadWriteId:
+    Type: String
+    Description: BTX assistant read/write role ID
+  BtxAssistantReadWriteName:
+    Type: String
+    Description: BTX assistant read/write role name
+  OrganizationAdministratorId:
+    Type: String
+    Description: Organization administrator role ID
+  OrganizationAdministratorName:
+    Type: String
+    Description: Organization administrator role name
+  WebhookUrl:
+    Type: String
+    Description: Webhook URL
+  
+Resources:
+  ServiceDiscoveryNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties: 
+      Name: medspaah.internal
+      Vpc: !ImportValue VPCId
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: MedspaahCluster
+      ServiceConnectDefaults:
+        Namespace: !GetAtt ServiceDiscoveryNamespace.Arn
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access between containers and limited external access
+      VpcId: !ImportValue VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 9011
+          ToPort: 9011
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: "0.0.0.0/0"
+
+  PgAdminSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for PGAdmin access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref PgAdminAccessIP  # Restrict access to specific IP
+
+  SharedFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+      PerformanceMode: generalPurpose
+      FileSystemTags:
+        - Key: Name
+          Value: MedspaahSharedEFS
+
+  # Mount targets in private subnets
+  MountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref SharedFileSystem
+      SubnetId: !ImportValue PrivateSubnet1Id
+      SecurityGroups: [!Ref ECSSecurityGroup]
+
+  MountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref SharedFileSystem
+      SubnetId: !ImportValue PrivateSubnet2Id
+      SecurityGroups: [!Ref ECSSecurityGroup]
+
+  # Task Definitions
+  DBTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: db-task
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: 512
+      Memory: 1024
+      Volumes:
+        - Name: postgres-data
+          EfsVolumeConfiguration:
+            FileSystemId: !Ref SharedFileSystem
+      ContainerDefinitions:
+        - Name: db
+          Image: "postgres:16.0-bookworm"
+          Environment:
+            - Name: PGDATA
+              Value: "/var/lib/postgresql/data/pgdata"
+            - Name: POSTGRES_USER
+              Value: !Ref DBUsername
+            - Name: POSTGRES_PASSWORD
+              Value: !Ref DBPassword
+            - Name: POSTGRES_DB
+              Value: !Ref DBName
+          MountPoints:
+            - SourceVolume: postgres-data
+              ContainerPath: /postgres-data
+          HealthCheck:
+            Command: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+            Interval: 5
+            Timeout: 5
+            Retries: 3
+          PortMappings:
+            - Name: db
+              ContainerPort: 5432
+              HostPort: 5432
+
+  PGAdminTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: pgadmin-task
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: 256
+      Memory: 512
+      ContainerDefinitions:
+        - Name: pgadmin
+          Image: "dpage/pgadmin4:8.8"
+          Environment:
+            - Name: PGADMIN_DEFAULT_EMAIL
+              Value: !Ref PGAdminEmail
+            - Name: PGADMIN_DEFAULT_PASSWORD
+              Value: !Ref PGAdminPassword
+          PortMappings:
+            - Name: pgadmin
+              ContainerPort: 80
+              HostPort: 5050
+
+  SearchTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: search-task
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: 1024
+      Memory: 2048
+      Volumes:
+        - Name: opensearch-data
+          EfsVolumeConfiguration:
+            FileSystemId: !Ref SharedFileSystem
+      ContainerDefinitions:
+        - Name: search
+          Image: "public.ecr.aws/opensearchproject/opensearch:2"
+          Environment:
+            - Name: cluster.name
+              Value: "fusionauth"
+            - Name: discovery.type
+              Value: "single-node"
+            - Name: node.name
+              Value: "search"
+            - Name: plugins.security.disabled
+              Value: "true"
+            - Name: bootstrap.memory_lock
+              Value: "true"
+            - Name: OPENSEARCH_JAVA_OPTS
+              Value: "-Xms512m -Xmx512m"
+            - Name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+              Value: !Ref OpenSearchPassword
+          PortMappings:
+            - Name: search
+              ContainerPort: 9200
+              HostPort: 9200
+          MountPoints:
+            - SourceVolume: opensearch-data
+              ContainerPath: /opensearch-data
+
+
+  FusionAuthTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: fusionauth-task
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: 512
+      Memory: 1024
+      ContainerDefinitions:
+        - Name: fusionauth
+          Image: "fusionauth/fusionauth-app:1.49.2"
+          Environment:
+            - Name: ADMIN_EMAIL
+              Value: !Ref AuthAdminEmail
+            - Name: ADMIN_PASSWORD
+              Value: !Ref AuthAdminPassword
+            - Name: ALLOWED_ORIGIN
+              Value: !Ref AllowedOrigin
+            - Name: API_KEY__APP_SERVER
+              Value: !Ref ApiKeyAppServer
+            - Name: API_KEY__SUPER_ADMIN
+              Value: !Ref ApiKeySuperAdmin
+            - Name: APPLICATION_ID
+              Value: !Ref ApplicationId
+            - Name: APPLICATION_NAME
+              Value: !Ref ApplicationName
+            - Name: ASYMMETRIC_KEY_ID
+              Value: !Ref AsymmetricKeyId
+            - Name: CLIENT_SECRET
+              Value: !Ref ClientSecret
+            - Name: DATABASE_URL
+              Value: !Sub "jdbc:postgresql://DBService:5432/${AuthDatabaseName}"
+            - Name: DATABASE_PASSWORD
+              Value: !Ref DBPassword
+            - Name: DATABASE_ROOT_PASSWORD
+              Value: !Ref DBPassword
+            - Name: DATABASE_ROOT_USERNAME
+              Value: !Ref DBUsername
+            - Name: DATABASE_USERNAME
+              Value: !Ref AuthDatabaseUser
+            - Name: DEFAULT_TENANT_ID
+              Value: !Ref DefaultTenantId
+            - Name: EMAIL_HOST
+              Value: !Ref EmailHost
+            - Name: EMAIL_PORT
+              Value: !Ref EmailPort
+            - Name: EMAIL_PASSWORD
+              Value: !Ref EmailPassword
+            - Name: EMAIL_USERNAME
+              Value: !Ref EmailUsername
+            - Name: EMAIL_TEMPLATE_FROM_ADDRESS
+              Value: !Ref EmailTemplateFromAddress
+            - Name: EMAIL_TEMPLATE_FROM_NAME
+              Value: !Ref EmailTemplateFromName
+            - Name: EXTERNAL_URL
+              Value: !Ref ExternalUrl
+            - Name: FUSIONAUTH_APP_KICKSTART_FILE
+              Value: !Ref AuthKickstartFile
+            - Name: FUSIONAUTH_APP_MEMORY
+              Value: !Ref AuthAppMemory
+            - Name: FUSIONAUTH_APP_RUNTIME_MODE
+              Value: !Ref AuthAppRuntimeMode
+            - Name: GROUP__ORGANIZATION_ADMINISTRATORS_ID
+              Value: !Ref GroupOrganizationAdministratorsId
+            - Name: GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID
+              Value: !Ref GroupSubscriptionBusinessAnnualId
+            - Name: GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID
+              Value: !Ref GroupSubscriptionStartupAnnualId
+            - Name: LOGOUT_URL
+              Value: !Ref LogoutUrl
+            - Name: ROLE__BTX_ASSISTANT_READ_WRITE_ID
+              Value: !Ref BtxAssistantReadWriteId
+            - Name: ROLE__BTX_ASSISTANT_READ_WRITE_NAME
+              Value: !Ref BtxAssistantReadWriteName
+            - Name: ROLE__ORGANIZATION_ADMINISTRATOR_ID
+              Value: !Ref OrganizationAdministratorId
+            - Name: ROLE__ORGANIZATION_ADMINISTRATOR_NAME
+              Value: !Ref OrganizationAdministratorName
+            - Name: SEARCH_SERVERS
+              Value: !Sub "http://SearchService:9200"
+            - Name: SEARCH_TYPE
+              Value: "elasticsearch"
+            - Name: WEBHOOK_URL
+              Value: !Ref WebhookUrl
+          HealthCheck:
+            Command: ["CMD-SHELL", "curl -f http://localhost:9011/api/status || exit 1"]
+            Interval: 60
+            Timeout: 10
+            Retries: 5
+            StartPeriod: 60
+          PortMappings:
+            - Name: fusionauth
+              ContainerPort: 9011
+              HostPort: 9011
+
+  WebApiTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: web-api-task
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: 256
+      Memory: 512
+      ContainerDefinitions:
+        - Name: web-api
+          Image: !Ref WebApiImage
+          Environment:
+            - Name: WEB_API_UPSERT_SEED_DATA
+              Value: "true"
+          HealthCheck:
+            Command: ["CMD-SHELL", "curl -f http://localhost:4242/health || exit 1"]
+            Interval: 10
+            Timeout: 10
+            Retries: 5
+            StartPeriod: 30
+          PortMappings:
+            - Name: web-api
+              ContainerPort: 4242
+              HostPort: 4242
+
+  # ECS Services
+  DBService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref DBTaskDefinition
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !ImportValue PrivateSubnet1Id
+            - !ImportValue PrivateSubnet2Id
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          AssignPublicIp: DISABLED
+      DesiredCount: 1
+      ServiceConnectConfiguration:
+        Enabled: true
+        Services:
+          - PortName: db
+
+  PGAdminService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref PGAdminTaskDefinition
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !ImportValue PublicSubnet1Id
+            - !ImportValue PublicSubnet2Id
+          SecurityGroups:
+            - !Ref PgAdminSecurityGroup
+          AssignPublicIp: ENABLED
+      DesiredCount: 1
+      ServiceConnectConfiguration:
+        Enabled: true
+        Services:
+          - PortName: pgadmin
+
+  SearchService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref SearchTaskDefinition
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !ImportValue PrivateSubnet1Id
+            - !ImportValue PrivateSubnet2Id
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          AssignPublicIp: DISABLED
+      DesiredCount: 1
+      ServiceConnectConfiguration:
+        Enabled: true
+        Services:
+          - PortName: search
+
+  FusionAuthService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref FusionAuthTaskDefinition
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !ImportValue PublicSubnet1Id
+            - !ImportValue PublicSubnet2Id
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          AssignPublicIp: ENABLED
+      DesiredCount: 1
+      ServiceConnectConfiguration:
+        Enabled: true
+        Services:
+          - PortName: fusionauth
+
+  WebApiService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref WebApiTaskDefinition
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !ImportValue PublicSubnet1Id
+            - !ImportValue PublicSubnet2Id
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          AssignPublicIp: ENABLED
+      DesiredCount: 1
+      ServiceConnectConfiguration:
+        Enabled: true
+        Services:
+          - PortName: web-api
+
+Outputs:
+  ClusterName:
+    Value: !Ref ECSCluster
+  DatabaseServiceName:
+    Value: !Ref DBService
+  PGAdminServiceName:
+    Value: !Ref PGAdminService
+  SearchServiceName:
+    Value: !Ref SearchService
+  FusionAuthServiceName:
+    Value: !Ref FusionAuthService
+  WebApiServiceName:
+    Value: !Ref WebApiService

@@ -18,6 +18,7 @@
     "emailTemplateFromAddress": "#{ENV.EMAIL_TEMPLATE_FROM_ADDRESS}",
     "fusionAuthAppUrl": "#{ENV.EXTERNAL_URL}",
     "group_organizationAdministrators_id": "#{ENV.GROUP__ORGANIZATION_ADMINISTRATORS_ID}",
+    "group_patients_id": "#{ENV.AUTH_GROUP_ID__PATIENTS}",
     "group_subscription_startup_annual_id": "#{ENV.GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID}",
     "group_subscription_business_annual_id": "#{ENV.GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID}",
     "logoutURL": "#{ENV.LOGOUT_URL}",
@@ -25,6 +26,8 @@
     "role_btxAssistant_readWrite_name": "#{ENV.ROLE__BTX_ASSISTANT_READ_WRITE_NAME}",
     "role_organizationAdministrator_id": "#{ENV.ROLE__ORGANIZATION_ADMINISTRATOR_ID}",
     "role_organizationAdministrator_name": "#{ENV.ROLE__ORGANIZATION_ADMINISTRATOR_NAME}",
+    "role_patient_id": "#{ENV.ROLE__PATIENT_ID}",
+    "role_patient_name": "#{ENV.ROLE__PATIENT_NAME}",
     "webhookUrl": "#{ENV.WEBHOOK_URL}"
   },
   "apiKeys": [
@@ -220,6 +223,11 @@
               "description": "manage the organization associated with your user account",
               "id": "#{role_organizationAdministrator_id}",
               "name": "#{role_organizationAdministrator_name}"
+            },
+            {
+              "description": "manage own patient record",
+              "id": "#{role_patient_id}",
+              "name": "#{role_patient_name}"
             }
           ]
         }
@@ -277,6 +285,16 @@
           "name": "Organization Administrators"
         },
         "roleIds": ["#{role_organizationAdministrator_id}"]
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/group/#{group_patients_id}",
+      "body": {
+        "group": {
+          "name": "Patients"
+        },
+        "roleIds": ["#{role_patient_id}"]
       }
     },
     {

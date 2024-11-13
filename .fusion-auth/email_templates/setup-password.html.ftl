@@ -3,7 +3,7 @@
 <p>
   Your organization has invited you to create an account. Please review our
   <a href="https://app.medspaah.com/terms-of-service">Terms of Service</a> and then visit the URL below to set your password. By setting your password,
-  you are agreeing to the <a href="https://app.medspaah.com/terms-of-service">Terms of Service</a>
+  you are agreeing to the <a href="https://app.medspaah.com/terms-of-service">Terms of Service</a>.
 <p>
 
 <p>

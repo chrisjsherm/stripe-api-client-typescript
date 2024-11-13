@@ -8,7 +8,7 @@ import { handleLogout } from "./controllers/logout.controller";
 import { onFusionAuthEvent } from "./controllers/on-fusion-auth-event.controller";
 import { onStripeEvent } from "./controllers/on-stripe-event.controller";
 import { organizationsRouter } from "./controllers/organization.controller";
-import { patientsRouter } from "./controllers/patients.controller";
+import { patientRouter } from "./controllers/patient.controller";
 import { paymentIntentsRouter } from "./controllers/payment-intent.controller";
 import { physicalLocationsRouter } from "./controllers/physical-locations.controller";
 import { productSubscriptionsRouter } from "./controllers/product-subscriptions.controller";
@@ -117,7 +117,7 @@ export async function startServer(dataSource: DataSource): Promise<void> {
   app.use("/organizations/me/physical-locations", physicalLocationsRouter);
 
   // Patients API.
-  app.use("/organizations/me/patients", patientsRouter);
+  app.use("/organizations/me/patients", patientRouter);
 
   // Payment Intents API
   app.use("/payment-intent", hasAnyRole([]), paymentIntentsRouter);

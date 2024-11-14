@@ -9,6 +9,7 @@ import { getEnvironmentConfiguration } from "../helpers/get-environment-configur
 import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { hasAnyRole } from "../helpers/has-any-role.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
+import { searchAuthUsersByGroup$ } from "../helpers/search-auth-users-by-group.helper";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 
 /**
@@ -24,6 +25,11 @@ patientRouter.post(
   "/",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
   createPatient
+);
+patientRouter.post(
+  "/search",
+  hasAnyRole([environment.auth.role_organizationAdministrator]),
+  searchPatients
 );
 
 const config = getEnvironmentConfiguration();
@@ -146,6 +152,42 @@ async function getPatients(req: Request, res: Response): Promise<void> {
     onErrorProcessingHttpRequest(
       err,
       `An error occurred retrieving patients.`,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+}
+
+/**
+ * Fuzzy search for patients associated with the requesting user's organization.
+ * @param req HTTP request
+ * @param res HTTP response
+ */
+async function searchPatients(req: Request, res: Response): Promise<void> {
+  const searchTerm: string = req.body.query;
+
+  try {
+    const { organizationId } = decodeFusionAuthAccessToken(req);
+    if (!organizationId) {
+      throw createError.BadRequest(
+        "Your account is not associated with an organization."
+      );
+    }
+
+    const patients = await searchAuthUsersByGroup$(
+      authClient,
+      organizationId,
+      config.auth.groupId_patients,
+      searchTerm
+    );
+
+    res.json({
+      data: patients,
+    });
+  } catch (err) {
+    onErrorProcessingHttpRequest(
+      err,
+      `An error occurred searching for patients.`,
       StatusCodes.INTERNAL_SERVER_ERROR,
       res
     );

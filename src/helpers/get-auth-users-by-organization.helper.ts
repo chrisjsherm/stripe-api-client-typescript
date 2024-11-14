@@ -27,10 +27,6 @@ export async function getUsersByOrganization$(
           order: Sort.asc,
         },
         {
-          name: "email",
-          order: Sort.asc,
-        },
-        {
           name: "insertInstant",
           order: Sort.asc,
         },

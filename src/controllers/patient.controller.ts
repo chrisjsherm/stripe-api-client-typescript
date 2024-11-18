@@ -146,7 +146,7 @@ async function getPatients(req: Request, res: Response): Promise<void> {
       authClient
     );
     res.json({
-      data: patients,
+      data: mapPublicPatientFields(patients),
     });
   } catch (err) {
     onErrorProcessingHttpRequest(
@@ -182,7 +182,7 @@ async function searchPatients(req: Request, res: Response): Promise<void> {
     );
 
     res.json({
-      data: patients,
+      data: mapPublicPatientFields(patients),
     });
   } catch (err) {
     onErrorProcessingHttpRequest(
@@ -192,4 +192,25 @@ async function searchPatients(req: Request, res: Response): Promise<void> {
       res
     );
   }
+}
+
+/**
+ * Map an array of patients to an array of patients with only public fields for
+ * sending to the client.
+ * @param patients Patients to map
+ * @returns Array of patients with only public fields
+ */
+function mapPublicPatientFields(patients: User[]): Partial<User[]> {
+  return patients.map((user: User) => {
+    return {
+      active: user.active,
+      email: user.email,
+      firstName: user.firstName,
+      id: user.id,
+      lastName: user.lastName,
+      memberships: user.memberships,
+      mobilePhone: user.mobilePhone,
+      verified: user.verified,
+    };
+  });
 }

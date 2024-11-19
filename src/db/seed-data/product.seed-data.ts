@@ -16,7 +16,7 @@ export async function insertSeedProducts(
         id: "27da8390-6606-4283-b793-6f8eb282476d",
         title: "Startup",
         subtitle: "Organizations with up to five clinicians",
-        priceInBaseUnits: 6999,
+        priceInBaseUnits: 47999,
         currencyCode: "USD",
         groupMembershipsCsv: environment.auth.groupId_subscriptionStartupAnnual,
         statementDescriptorSuffix: "1yr subscribe",
@@ -28,7 +28,7 @@ export async function insertSeedProducts(
         id: "d135c4c4-d45d-4b74-8419-0cc6f51c27f5",
         title: "Business",
         subtitle: "Organizations with up to 25 clinicians",
-        priceInBaseUnits: 27999,
+        priceInBaseUnits: 269999,
         currencyCode: "USD",
         groupMembershipsCsv:
           environment.auth.groupId_subscriptionBusinessAnnual,

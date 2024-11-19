@@ -356,7 +356,7 @@ docker compose --profile prod --profile debug down
 2. On your <u>local machine</u>, build the web API Docker image:
 
    ```shell
-   docker build -t medspaah:version .
+   docker build -t medspaah:<version> .
    ```
 
 3. Push the image to ECR: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
@@ -413,8 +413,8 @@ docker compose --profile prod --profile debug down
    docker-compose --env-file .env --env-file .env.production.remote \
      --profile prod config
 
-   docker-compose --env-file .env --env-file .env.production.remote --profile pull
-   docker-compose --env-file .env --env-file .env.production.remote --profile up -d
+   docker-compose --env-file .env --env-file .env.production.remote --profile prod pull
+   docker-compose --env-file .env --env-file .env.production.remote --profile prod up -d
    docker-compose logs -f # Or: docker-compose logs <service-name>
    ```
 

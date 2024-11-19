@@ -1,5 +1,6 @@
 import FusionAuthClient, { User } from "@fusionauth/typescript-client";
 import * as createError from "http-errors";
+import { StatusCodes } from "http-status-codes";
 
 /**
  * Get auth user by ID.
@@ -14,17 +15,21 @@ export async function getAuthUserById$(
   organizationId: string,
   authClient: FusionAuthClient
 ): Promise<User> {
-  const getUserResult = await authClient.retrieveUser(id);
-  if (getUserResult.exception) {
-    throw getUserResult.exception;
-  }
+  try {
+    const getUserResult = await authClient.retrieveUser(id);
+    if (
+      getUserResult.response.user === undefined ||
+      getUserResult.response.user.data?.organizationId !== organizationId
+    ) {
+      throw createError.NotFound(`Could not find user ${id}.`);
+    }
 
-  if (
-    getUserResult.response.user === undefined ||
-    getUserResult.response.user.data?.organizationId !== organizationId
-  ) {
-    throw createError.NotFound(`Could not find user ${id}.`);
-  }
+    return getUserResult.response.user;
+  } catch (err: any) {
+    if (err?.statusCode === StatusCodes.NOT_FOUND) {
+      throw createError.NotFound(`Could not find user ${id}.`);
+    }
 
-  return getUserResult.response.user;
+    throw err;
+  }
 }

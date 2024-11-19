@@ -12,6 +12,7 @@ import {
   BotulinumToxinTreatment,
   IBotulinumToxinTreatmentViewModelCreate,
   IBotulinumToxinTreatmentViewModelRead,
+  schema,
 } from "../data-models/entities/botulinum-toxin-treatment.entity";
 import {
   BotulinumToxinTreatment_JOIN_BotulinumToxinPattern,
@@ -29,12 +30,18 @@ import { getFusionAuth } from "../helpers/get-fusion-auth.helper";
 import { hasAnyRole } from "../helpers/has-any-role.helper";
 import { onErrorProcessingHttpRequest } from "../helpers/on-error-processing-http-request.helper";
 import { generateQueryParamValidator } from "../helpers/validate-query-params.middleware";
+import { generateRequestBodyValidator } from "../helpers/validate-request-body.middleware";
 import { ConstantConfiguration } from "../services/constant-configuration.service";
 import { getToxinTreatmentsQueryParamsJsonSchema } from "./ajv/get-toxin-treatments-query-params.schema";
 
 export const toxinTreatmentsRouter = Router();
 
-toxinTreatmentsRouter.post("/", hasAnyRole([]), createToxinTreatment);
+toxinTreatmentsRouter.post(
+  "/",
+  hasAnyRole([]),
+  generateRequestBodyValidator(schema),
+  createToxinTreatment
+);
 toxinTreatmentsRouter.get(
   "/",
   hasAnyRole([environment.auth.role_organizationAdministrator]),
@@ -77,9 +84,13 @@ async function createToxinTreatment(
       },
     });
 
+    // Verify the patient exists in this organization.
+    await getAuthUserById$(treatment.patientId, organizationId, authClient);
+
     const treatmentRepo = AppDataSource.getRepository(BotulinumToxinTreatment);
     const savedTreatment = await treatmentRepo
       .create({
+        patientId: treatment.patientId,
         clinicianId: userId,
         physicalLocationId: treatment.physicalLocationId,
       })
@@ -98,6 +109,7 @@ async function createToxinTreatment(
     res.json({
       data: {
         id: savedTreatment.id,
+        patientId: savedTreatment.patientId,
         clinicianId: savedTreatment.clinicianId,
         createdDateTime: savedTreatment.createdDateTime,
       },

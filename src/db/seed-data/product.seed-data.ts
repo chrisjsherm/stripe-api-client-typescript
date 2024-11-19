@@ -15,7 +15,7 @@ export async function insertSeedProducts(
       {
         id: "27da8390-6606-4283-b793-6f8eb282476d",
         title: "Startup",
-        subtitle: "Train up to five professionals",
+        subtitle: "Organizations with up to five clinicians",
         priceInBaseUnits: 6999,
         currencyCode: "USD",
         groupMembershipsCsv: environment.auth.groupId_subscriptionStartupAnnual,
@@ -27,7 +27,7 @@ export async function insertSeedProducts(
       {
         id: "d135c4c4-d45d-4b74-8419-0cc6f51c27f5",
         title: "Business",
-        subtitle: "Train up to 25 professionals",
+        subtitle: "Organizations with up to 25 clinicians",
         priceInBaseUnits: 27999,
         currencyCode: "USD",
         groupMembershipsCsv:

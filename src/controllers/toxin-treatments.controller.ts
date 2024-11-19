@@ -317,6 +317,7 @@ async function getToxinTreatmentById(
         id: true,
         createdDateTime: true,
         clinicianId: true,
+        patientId: true,
         physicalLocation: {
           id: true,
           name: true,
@@ -393,6 +394,12 @@ async function getToxinTreatmentById(
       authClient
     );
 
+    const patient = await getAuthUserById$(
+      treatment.patientId,
+      organizationId,
+      authClient
+    );
+
     res.json({
       data: {
         id: treatment.id,
@@ -401,6 +408,11 @@ async function getToxinTreatmentById(
           id: treatment.clinicianId,
           firstName: clinician.firstName,
           lastName: clinician.lastName,
+        },
+        patient: {
+          id: patient.id,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
         },
         currencyCode: ConstantConfiguration.currencyCodeDefault,
         physicalLocation: treatment.physicalLocation,

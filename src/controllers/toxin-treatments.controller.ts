@@ -12,7 +12,7 @@ import {
   BotulinumToxinTreatment,
   IBotulinumToxinTreatmentViewModelCreate,
   IBotulinumToxinTreatmentViewModelRead,
-  schema,
+  schema as createTreatmentSchema,
 } from "../data-models/entities/botulinum-toxin-treatment.entity";
 import {
   BotulinumToxinTreatment_JOIN_BotulinumToxinPattern,
@@ -39,7 +39,7 @@ export const toxinTreatmentsRouter = Router();
 toxinTreatmentsRouter.post(
   "/",
   hasAnyRole([]),
-  generateRequestBodyValidator(schema),
+  generateRequestBodyValidator(createTreatmentSchema),
   createToxinTreatment
 );
 toxinTreatmentsRouter.get(

@@ -26,8 +26,6 @@
     "role_btxAssistant_readWrite_name": "#{ENV.ROLE__BTX_ASSISTANT_READ_WRITE_NAME}",
     "role_organizationAdministrator_id": "#{ENV.ROLE__ORGANIZATION_ADMINISTRATOR_ID}",
     "role_organizationAdministrator_name": "#{ENV.ROLE__ORGANIZATION_ADMINISTRATOR_NAME}",
-    "role_patient_id": "#{ENV.ROLE__PATIENT_ID}",
-    "role_patient_name": "#{ENV.ROLE__PATIENT_NAME}",
     "webhookUrl": "#{ENV.WEBHOOK_URL}"
   },
   "apiKeys": [
@@ -223,11 +221,6 @@
               "description": "manage the organization associated with your user account",
               "id": "#{role_organizationAdministrator_id}",
               "name": "#{role_organizationAdministrator_name}"
-            },
-            {
-              "description": "manage own patient record",
-              "id": "#{role_patient_id}",
-              "name": "#{role_patient_name}"
             }
           ]
         }
@@ -294,7 +287,7 @@
         "group": {
           "name": "Patients"
         },
-        "roleIds": ["#{role_patient_id}"]
+        "roleIds": []
       }
     },
     {

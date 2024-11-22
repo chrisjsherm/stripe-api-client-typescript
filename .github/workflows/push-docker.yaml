@@ -16,11 +16,11 @@ on:
         default: "latest"
       lifecycle_policy_file:
         description: Path to the ECR image lifecycle policy
-        default: "aws/ecr-lifecycle-policy.json"
+        default: "ecr-lifecycle-policy.json"
         type: string
       backend_s3_bucket:
         description: Name of the S3 bucket for Terraform backend
-        default: "medspaah/github-actions_web-api"
+        default: "medspaah"
         type: string
       backend_dynamodb_table:
         description: DynamoDB table for State lock

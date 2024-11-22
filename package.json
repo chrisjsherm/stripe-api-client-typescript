@@ -1,6 +1,6 @@
 {
   "name": "stripe-api-client-typescript",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Stripe API client written in typescript",
   "main": "src/index.js",
   "scripts": {

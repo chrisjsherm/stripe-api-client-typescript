@@ -142,7 +142,7 @@ services:
       - ./.fusion-auth:/usr/local/fusionauth/kickstart
 
   web-api:
-    image: ${WEB_API_IMAGE:-258996848737.dkr.ecr.us-east-1.amazonaws.com/medspaah:latest}
+    image: ${WEB_API_DOCKER_IMAGE_LOCATION}
     profiles:
       - prod
     restart: always

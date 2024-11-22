@@ -175,7 +175,65 @@ jobs:
           WEB_API_UPSERT_SEED_DATA: ${{secrets.WEB_API_UPSERT_SEED_DATA}},
 
         run: |
-          docker build "${{ inputs.docker_build_dir }}" -f "${{ inputs.path_to_dockerfile }}" -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker build \
+            --build-arg AUTH_ADMIN_EMAIL="${AUTH_ADMIN_EMAIL}" \
+            --build-arg AUTH_ADMIN_PASSWORD="${AUTH_ADMIN_PASSWORD}" \
+            --build-arg AUTH_API_KEY__APP_SERVER="${AUTH_API_KEY__APP_SERVER}" \
+            --build-arg AUTH_API_KEY__SUPER_ADMIN="${AUTH_API_KEY__SUPER_ADMIN}" \
+            --build-arg AUTH_APPLICATION_ID="${AUTH_APPLICATION_ID}" \
+            --build-arg AUTH_APPLICATION_NAME="${AUTH_APPLICATION_NAME}" \
+            --build-arg AUTH_ASYMMETRIC_KEY_ID="${AUTH_ASYMMETRIC_KEY_ID}" \
+            --build-arg AUTH_CONTAINER_URL="${AUTH_CONTAINER_URL}" \
+            --build-arg AUTH_DATABASE_PASSWORD="${AUTH_DATABASE_PASSWORD}" \
+            --build-arg AUTH_DATABASE_USERNAME="${AUTH_DATABASE_USERNAME}" \
+            --build-arg AUTH_DEFAULT_TENANT_ID="${AUTH_DEFAULT_TENANT_ID}" \
+            --build-arg AUTH_EMAIL_HOST="${AUTH_EMAIL_HOST}" \
+            --build-arg AUTH_EMAIL_PORT="${AUTH_EMAIL_PORT}" \
+            --build-arg AUTH_EMAIL_TEMPLATE_FROM_ADDRESS="${AUTH_EMAIL_TEMPLATE_FROM_ADDRESS}" \
+            --build-arg AUTH_EMAIL_TEMPLATE_FROM_NAME="${AUTH_EMAIL_TEMPLATE_FROM_NAME}" \
+            --build-arg AUTH_EXTERNAL_URL="${AUTH_EXTERNAL_URL}" \
+            --build-arg AUTH_FUSIONAUTH_APP_KICKSTART_FILE="${AUTH_FUSIONAUTH_APP_KICKSTART_FILE}" \
+            --build-arg AUTH_FUSIONAUTH_APP_MEMORY="${AUTH_FUSIONAUTH_APP_MEMORY}" \
+            --build-arg AUTH_FUSIONAUTH_APP_RUNTIME_MODE="${AUTH_FUSIONAUTH_APP_RUNTIME_MODE}" \
+            --build-arg AUTH_GROUP__ORGANIZATION_ADMINISTRATORS_ID="${AUTH_GROUP__ORGANIZATION_ADMINISTRATORS_ID}" \
+            --build-arg AUTH_GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID="${AUTH_GROUP__SUBSCRIPTION_BUSINESS_ANNUAL_ID}" \
+            --build-arg AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID="${AUTH_GROUP__SUBSCRIPTION_STARTUP_ANNUAL_ID}" \
+            --build-arg AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS="${AUTH_GROUP_ID__ORGANIZATION_ADMINISTRATORS}" \
+            --build-arg AUTH_GROUP_ID__PATIENTS="${AUTH_GROUP_ID__PATIENTS}" \
+            --build-arg AUTH_GROUP_ID__SUBSCRIPTION_BUSINESS_ANNUAL_REV_0="${AUTH_GROUP_ID__SUBSCRIPTION_BUSINESS_ANNUAL_REV_0}" \
+            --build-arg AUTH_GROUP_ID__SUBSCRIPTION_STARTUP_ANNUAL_REV_0="${AUTH_GROUP_ID__SUBSCRIPTION_STARTUP_ANNUAL_REV_0}" \
+            --build-arg AUTH_LOGOUT_URL="${AUTH_LOGOUT_URL}" \
+            --build-arg AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_ID="${AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_ID}" \
+            --build-arg AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME="${AUTH_ROLE__BTX_ASSISTANT_READ_WRITE_NAME}" \
+            --build-arg AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_ID="${AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_ID}" \
+            --build-arg AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME="${AUTH_ROLE__ORGANIZATION_ADMINISTRATOR_NAME}" \
+            --build-arg AUTH_WEBHOOK_URL="${AUTH_WEBHOOK_URL}" \
+            --build-arg AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
+            --build-arg AWS_REGION="${AWS_REGION}" \
+            --build-arg AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
+            --build-arg CAPTCHA_ENABLED="${CAPTCHA_ENABLED}" \
+            --build-arg CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH="${CAPTCHA_SECRET_KEY_AWS_SSM_PARAMETER_PATH}" \
+            --build-arg CUSTOMER_CONTACT_SUBJECT_SUFFIX="${CUSTOMER_CONTACT_SUBJECT_SUFFIX}" \
+            --build-arg CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL="${CUSTOMER_CONTACT_TO_AWS_SES_VALIDATED_EMAIL}" \
+            --build-arg DB_HOST="${DB_HOST}" \
+            --build-arg DB_NAME="${DB_NAME}" \
+            --build-arg DB_PASSWORD="${DB_PASSWORD}" \
+            --build-arg DB_PORT="${DB_PORT}" \
+            --build-arg DB_USERNAME="${DB_USERNAME}" \
+            --build-arg OPENSEARCH_INITIAL_ADMIN_PASSWORD="${OPENSEARCH_INITIAL_ADMIN_PASSWORD}" \
+            --build-arg PG_ADMIN_DEFAULT_USER_EMAIL="${PG_ADMIN_DEFAULT_USER_EMAIL}" \
+            --build-arg PG_ADMIN_DEFAULT_USER_PASSWORD="${PG_ADMIN_DEFAULT_USER_PASSWORD}" \
+            --build-arg PG_ADMIN_PORT="${PG_ADMIN_PORT}" \
+            --build-arg STRIPE_API_KEY="${STRIPE_API_KEY}" \
+            --build-arg STRIPE_WEBHOOK_SIGNING_KEY="${STRIPE_WEBHOOK_SIGNING_KEY}" \
+            --build-arg UI_ORIGIN="${UI_ORIGIN}" \
+            --build-arg WEB_API_PAYLOAD_LIMIT="${WEB_API_PAYLOAD_LIMIT}" \
+            --build-arg WEB_API_REQUEST_TIMEOUT_MS="${WEB_API_REQUEST_TIMEOUT_MS}" \
+            --build-arg WEB_API_RETRY_DELAY_MS="${WEB_API_RETRY_DELAY_MS}" \
+            --build-arg WEB_API_SERVER_PORT="${WEB_API_SERVER_PORT}" \
+            --build-arg WEB_API_UPSERT_SEED_DATA="${WEB_API_UPSERT_SEED_DATA}" \
+            "${{ inputs.docker_build_dir }}" -f "${{ inputs.path_to_dockerfile }}" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$ECR_REPOSITORY"
           echo "image_tag=$IMAGE_TAG" 

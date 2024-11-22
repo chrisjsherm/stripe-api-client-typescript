@@ -9,7 +9,7 @@
     "env:prod:local": "./node_modules/.bin/dotenvx run -f .env.production.local -f .env -- ts-node ./src/environment/environment.main.ts",
     "env:prod:remote": "./node_modules/.bin/dotenvx run -f .env.production.remote -f .env -- ts-node ./src/environment/environment.main.ts",
     "clean": "rimraf dist/*",
-    "build": "npm run clean && npm run env:prod:remote && tsc",
+    "build": "npm run clean && ts-node ./src/environment/environment.main.ts && tsc",
     "build:local": "npm run clean && npm run env:prod:local && tsc",
     "sync-env": "./node_modules/.bin/dotenvx run -f .env.production.remote -f .env -- ts-node ./src/environment/helpers/update-github-secrets.ts",
     "server": "node dist/index.js",

@@ -3,13 +3,18 @@ FROM node:18-slim AS npm-builder
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl
 
+# Copy package.json and lock files for dependencies installation.
 COPY package*.json ./app/
 WORKDIR /app
 RUN npm install
 
 # Copy the application directory (excludes .dockerignore contents).
-COPY / ./
+COPY src ./src
+COPY .env ./.env
+COPY .env.production.remote ./.env.production.remote
+COPY tsconfig.json ./tsconfig.json
 
+# Define arguments for the NPM build task to use as environment variables.
 ARG AUTH_ADMIN_EMAIL
 ARG AUTH_ADMIN_PASSWORD
 ARG AUTH_API_KEY__APP_SERVER
@@ -67,11 +72,26 @@ ARG WEB_API_RETRY_DELAY_MS
 ARG WEB_API_SERVER_PORT
 ARG WEB_API_UPSERT_SEED_DATA
 
-# Define an argument for the NPM build task.
+# Allow modifying which NPM task gets called to build.
+# e.g., `docker build --build-arg NPM_BUILD_TASK=build:local -t medspaah:local .`
 ARG NPM_BUILD_TASK="build"
 
-# Use the argument in the build step.
+# Build the application.
 RUN npm run ${NPM_BUILD_TASK}
 
+# Base image for the web server stage.
+FROM node:18-slim AS web-server
+
+# Copy package.json and lock files and install only production dependencies.
+COPY package*.json ./app/
+WORKDIR /app
+RUN npm install --omit=dev
+
+# Copy the built application files from the npm-builder stage.
+COPY --from=npm-builder /app/dist /app/dist
+
+# Expose the server's listening port.
 EXPOSE 4242
+
+# Command to start the server.
 CMD [ "node", "dist/index.js" ]

@@ -10,8 +10,6 @@ RUN npm install
 
 # Copy the application directory (excludes .dockerignore contents).
 COPY src ./src
-COPY .env ./.env
-COPY .env.production.remote ./.env.production.remote
 COPY tsconfig.json ./tsconfig.json
 
 # Define arguments for the NPM build task to use as environment variables.
@@ -88,7 +86,7 @@ WORKDIR /app
 RUN npm install --omit=dev
 
 # Copy the built application files from the npm-builder stage.
-COPY --from=npm-builder /app/dist /app/dist
+COPY --from=npm-builder /app/dist ./dist
 
 # Expose the server's listening port.
 EXPOSE 4242

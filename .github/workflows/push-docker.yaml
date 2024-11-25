@@ -120,6 +120,7 @@ jobs:
 
         run: |
           docker build \
+            --build-arg SKIP_ENV="true" \
             --build-arg AUTH_ADMIN_EMAIL="${{ secrets.AUTH_ADMIN_EMAIL }}" \
             --build-arg AUTH_ADMIN_PASSWORD="${{ secrets.AUTH_ADMIN_PASSWORD }}" \
             --build-arg AUTH_API_KEY__APP_SERVER="${{ secrets.AUTH_API_KEY__APP_SERVER }}" \

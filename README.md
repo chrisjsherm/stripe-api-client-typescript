@@ -2,6 +2,48 @@
 
 Web API for the MedSpaah platform. Written in TypeScript.
 
+## Develop
+
+These instructions run the web API server via an NPM task and other services
+via Docker containers. To run the UI, clone the
+[UI repo](https://github.com/chrisjsherm/ng-med-spa) and follow its README.
+Then complete the following:
+
+1. Open a terminal and run:
+   ```shell
+   docker compose --profile debug --profile inspect_db up -d
+   ```
+2. Open a terminal and run: `npm start`
+3. Open a terminal and run (skip if done recently): `stripe login`
+4. After logging in to Stripe, run:
+
+   ```
+   stripe listen --forward-to localhost:4242/webhooks/stripe
+   ```
+
+   > Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
+
+   > Open another terminal and run: `stripe trigger --help` to see a list of
+   > Stripe events you can generate for testing purposes.
+
+To stop and remove the Docker containers:
+
+```shell
+docker compose --profile debug --profile inspect_db down
+```
+
+To also remove the Docker volumes:
+
+```shell
+docker compose --profile debug --profile inspect_db down -v
+```
+
+To stop the containers without removing them:
+
+```shell
+docker compose --profile debug --profile inspect_db stop
+```
+
 ## Configuration
 
 1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli).
@@ -20,9 +62,9 @@ starts.
 To access the local FusionAuth instance, visit the [FusionAuth Dashboard](http://localhost:9011/admin/)
 instance created by the `docker-compose.yml` file.
 
-#### Terraform
+#### Modify FusionAuth configuration
 
-To modify or add to the configuration of an existing FusionAuth instance, use Terraform.
+To make changes to an existing FusionAuth instance, use Terraform.
 
 To modify an existing resource, import the resource you want to modify, just
 as we have done with the default tenant (see `/.fusion-auth/terraform/tenants.tf`).
@@ -53,7 +95,7 @@ container will create a database and user with the environment parameters
 specified in `.env`. The container will not automatically create these resources
 on subsequent starts without deleting the volume attached to the container.
 
-To take actions on the database later, start a `bash` shell inside the container:
+To take direct action on the database, start a `bash` shell inside the container:
 
 ```
 docker exec -it <container-name> bash
@@ -132,52 +174,11 @@ Store. Be sure to update the AWS and Turnstile `.env` variables.
 We use nginx as a reverse proxy.
 
 1. Place your certificate, private key, and root certificate files in the `/nginx/ssl` directory. Update the `nginx.conf` file to match the names of these files.
-2. Generate a Diffie-Hellman key:
+2. Generate a Diffie-Hellman key for the ssl directory:
    ```shell
    cd /nginx/ssl
    openssl dhparam -out dhparam.pem 4096
    ```
-
-## Develop
-
-These instructions run the web API server locally and other services
-via Docker containers. To run the UI, first clone the [UI repo](https://github.com/chrisjsherm/ng-med-spa)
-and follow its README. Then complete the following:
-
-1. Open a terminal and run:
-   ```shell
-   docker compose --profile debug --profile inspect_db up -d
-   ```
-2. Open a terminal and run: `npm start`
-3. Open a terminal and run (skip if done recently): `stripe login`
-4. After logging in to Stripe, run:
-
-   ```
-   stripe listen --forward-to localhost:4242/webhooks/stripe
-   ```
-
-   > Verify the webhook signing secret in `.env` matches the one displayed in the terminal.
-
-   > Open another terminal and run: `stripe trigger --help` to see a list of
-   > Stripe events you can generate for testing purposes.
-
-To stop and remove the Docker containers:
-
-```shell
-docker compose --profile debug --profile inspect_db down
-```
-
-To also remove the Docker volumes:
-
-```shell
-docker compose --profile debug --profile inspect_db down -v
-```
-
-To stop the containers without removing them:
-
-```shell
-docker compose --profile debug --profile inspect_db stop
-```
 
 ### Production emulator
 
